@@ -1,3 +1,5 @@
+Built ontop of code written for Leo_navigation_tutorial by Leo Rover devs:
+
 # leo_navigation
 
 This package was created as part of the [Autonomous Navigation tutorial] for Leo Rover. It provides configuration for SLAM and autonomous navigation for Leo Rover equipped with IMU and LiDAR sensors. 
