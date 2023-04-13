@@ -1,5 +1,6 @@
+<?xml version="1.0"?>
 <launch>
-  <arg name="map_file" />
+  <arg name="map_file" default="$(find leo_navigation)/maps/deskspace.yaml"/>
 
   <node name="map_server"
     pkg="map_server"

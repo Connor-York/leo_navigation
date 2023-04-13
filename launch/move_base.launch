@@ -1,5 +1,5 @@
 <launch>
-  <remap from="odom" to="odometry/filtered" />
+  <remap from="odom" to="odometry/filtered/global" />
   <remap from="cmd_vel" to="nav_vel" />
 
   <node name="move_base"
