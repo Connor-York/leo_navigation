@@ -136,8 +136,8 @@ class Patroller():
     def feedback_cb(self, feedback):
         #To print current pose at each feedback:
         #rospy.loginfo("Feedback for goal "+str(self.goal_cnt)+": "+str(feedback))
-        rospy.loginfo("Feedback for goal pose "+str(self.goal_cnt+1)+" received")
-        #j = 1
+        #rospy.loginfo("Feedback for goal pose "+str(self.goal_cnt+1)+" received")
+        #honestly just leave these commented out they just fill up the output and dont tell you much useful stuff >:(
         
     
 if __name__ == '__main__':
