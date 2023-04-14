@@ -143,11 +143,11 @@ class Patroller():
 if __name__ == '__main__':
     try:
         
-        MoveBaseSeq(waypoints,theta)
+        Patroller()
         rospy.loginfo("DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONEDONDEONDEONDE")
         
-        theta.reverse()
-        waypoints.reverse()
-        MoveBaseSeq(waypoints,theta)
+        #theta.reverse()
+        #waypoints.reverse()
+        #MoveBaseSeq(waypoints,theta)
     except rospy.ROSInterruptException:
         rospy.loginfo("Navigation finished.")
