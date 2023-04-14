@@ -38,7 +38,7 @@ class Patroller():
         yaweulerangles_seq = self.theta #coordinates for each waypoint
 
         #Convert waypoint & heading values into a list of robot poses (quaternions?) -----------
-        self.quat_seq = list()
+        quat_seq = list()
         #List of goal poses:
         self.pose_seq = list()
         self.goal_cnt = 0
