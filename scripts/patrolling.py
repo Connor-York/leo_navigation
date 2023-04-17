@@ -79,6 +79,10 @@ class Patroller():
 
     def done_cb(self, status, result):
         self.goal_cnt += 1
+        if status == 1:
+            rospy.loginfo("status 1 active/processing")
+        if status == 0:
+            rospy.loginfo("status 0 pending")
     # Reference for terminal status values: http://docs.ros.org/diamondback/api/actionlib_msgs/html/msg/GoalStatus.html
         if status == 2:
             rospy.loginfo("Goal pose "+str(self.goal_cnt)+" received a cancel request after it started executing, completed execution!")
@@ -138,8 +142,8 @@ class Patroller():
 
     def feedback_cb(self, feedback):
         #To print current pose at each feedback:
-        rospy.loginfo("Feedback for goal "+str(self.goal_cnt)+": "+str(feedback))
-        rospy.loginfo("Feedback for goal pose "+str(self.goal_cnt+1)+" received")
+        #rospy.loginfo("Feedback for goal "+str(self.goal_cnt)+": "+str(feedback))
+        #rospy.loginfo("Feedback for goal pose "+str(self.goal_cnt+1)+" received")
         j = 1 #filler thing cause it gave me an error god i hate coding 
                 
     
