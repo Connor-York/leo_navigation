@@ -133,6 +133,7 @@ class Patroller():
             rospy.loginfo("Goal pose "+str(self.goal_cnt)+" received a cancel request before it started executing, successfully cancelled!")
 
     def active_cb(self):
+        rospy.loginfo("ACTIVE CALL BACK ----------------------===========----")
         rospy.loginfo("Goal pose "+str(self.goal_cnt+1)+" is now being processed by the Action Server...")
 
     def feedback_cb(self, feedback):
@@ -140,8 +141,7 @@ class Patroller():
         #rospy.loginfo("Feedback for goal "+str(self.goal_cnt)+": "+str(feedback))
         #rospy.loginfo("Feedback for goal pose "+str(self.goal_cnt+1)+" received")
         j = 1 #filler thing cause it gave me an error god i hate coding 
-        #honestly just leave these commented out they just fill up the output and dont tell you much useful stuff >:(
-        
+                
     
 if __name__ == '__main__':
     try:
