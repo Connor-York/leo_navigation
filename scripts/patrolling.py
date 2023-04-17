@@ -79,7 +79,7 @@ class Patroller():
 
     def done_cb(self, status, result):
         self.goal_cnt += 1
-        rospy.loginfo("status:"+str(status))
+        rospy.loginfo("result: "+str(result))
         if status == 1:
             rospy.loginfo("status 1 active/processing")
         if status == 0:
