@@ -72,7 +72,9 @@ class Patroller():
         goal.target_pose.pose = self.pose_seq[self.goal_cnt]
         rospy.loginfo("Sending goal pose "+str(self.goal_cnt+1)+" to Action Server")
         rospy.loginfo(str(self.pose_seq[self.goal_cnt]))
+        rospy.loginfo("sending goal ..........................")
         self.client.send_goal(goal, self.done_cb, self.active_cb, self.feedback_cb)
+        rospy.loginfo("goal sent?")
         rospy.spin()
 
     def done_cb(self, status, result):
@@ -94,8 +96,8 @@ class Patroller():
                     #    return
                     #rospy.loginfo("Connected to move base server")
                     #rospy.loginfo("Starting goals achievements ...")
-
-                    self.movebase_client()            
+                    rospy.loginfo("calling movebase_client again")
+                    self.movebase_client()      
                     #next_goal = MoveBaseGoal()
                     #next_goal.target_pose.header.frame_id = "map"
                     #next_goal.target_pose.header.stamp = rospy.Time.now()
