@@ -84,7 +84,9 @@ class Patroller():
         rospy.spin()
 
     def status_cb(self, msg):
-        rospy.loginfo(msg.status_list[0].status)
+        #rospy.loginfo(msg.status_list[0].status)
+        rospy.loginfo(self.client.get_state)
+
 
     def done_cb(self, status, result):
         j=1
