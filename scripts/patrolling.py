@@ -81,7 +81,7 @@ class Patroller():
         rospy.loginfo("sending goal ..........................")
         self.client.send_goal(goal, self.done_cb, self.active_cb, self.feedback_cb)
         rospy.loginfo("goal sent?")
-        if client.get_state() == 3:
+        if self.client.get_state() == 3:
             rospy.loginfo("TEST TEST TEST")
         rospy.spin()
 
