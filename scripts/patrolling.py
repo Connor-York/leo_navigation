@@ -66,7 +66,7 @@ class Patroller():
 
         #Initiate status subscriber 
         self.status_subscriber = rospy.Subscriber(
-            "/move_base/status/status_list" GoalStatus, self.status_cb
+            "/move_base/status/status_list", GoalStatus, self.status_cb
         )
 
         self.movebase_client()
