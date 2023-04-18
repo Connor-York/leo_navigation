@@ -81,11 +81,11 @@ class Patroller():
         self.client.send_goal(goal, self.done_cb, self.active_cb, self.feedback_cb)
         rospy.spin()
 
-    def status_cb(self):
+    def status_cb(self,msg):
         #rospy.loginfo(msg.status_list[0].status)
         #rospy.loginfo(self.client.get_state())
         status = self.client.get_state()
-        rospy.loginfo("TESTESTETESTSETSETSETSETSETSTESTESTSET")
+        #rospy.loginfo("TESTESTETESTSETSETSETSETSETSTESTESTSET")
         rospy.loginfo(status)
 
         if status == 3: 
