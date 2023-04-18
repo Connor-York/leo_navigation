@@ -84,7 +84,7 @@ class Patroller():
     def status_cb(self, msg):
         #rospy.loginfo(msg.status_list[0].status)
         #rospy.loginfo(self.client.get_state())
-        status = msg.status_list[0].status
+        status = self.client.get_state()
 
         if status == 3: 
             self.goal_cnt +=1
