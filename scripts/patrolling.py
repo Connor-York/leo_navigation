@@ -85,6 +85,8 @@ class Patroller():
         #rospy.loginfo(msg.status_list[0].status)
         #rospy.loginfo(self.client.get_state())
         status = self.client.get_state()
+        rospy.loginfo("TESTESTETESTSETSETSETSETSETSTESTESTSET")
+        rospy.loginfo(status)
 
         if status == 3: 
             self.goal_cnt +=1
@@ -99,7 +101,7 @@ class Patroller():
                 #return
 
     def done_cb(self, status, result):
-        j=1
+        rospy.loginfo("done callback")
         # # Leaving empty cause it's not needed, but don't want no callback just incase.
         #     self.goal_cnt += 1
         #     rospy.loginfo("result: "+str(result))
@@ -161,7 +163,6 @@ class Patroller():
         #         rospy.loginfo("Goal pose "+str(self.goal_cnt)+" received a cancel request before it started executing, successfully cancelled!")
 
     def active_cb(self):
-        rospy.loginfo("ACTIVE CALL BACK ----------------------===========----")
         rospy.loginfo("Goal pose "+str(self.goal_cnt+1)+" is now being processed by the Action Server...")
 
     def feedback_cb(self, feedback):
