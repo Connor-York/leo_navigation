@@ -81,7 +81,7 @@ class Patroller():
         self.client.send_goal(goal, self.done_cb, self.active_cb, self.feedback_cb)
         rospy.spin()
 
-    def status_cb(self, msg):
+    def status_cb(self):
         #rospy.loginfo(msg.status_list[0].status)
         #rospy.loginfo(self.client.get_state())
         status = self.client.get_state()
@@ -102,6 +102,7 @@ class Patroller():
 
     def done_cb(self, status, result):
         rospy.loginfo("done callback")
+        status_cb()
         # # Leaving empty cause it's not needed, but don't want no callback just incase.
         #     self.goal_cnt += 1
         #     rospy.loginfo("result: "+str(result))
