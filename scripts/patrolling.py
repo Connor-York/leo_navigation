@@ -64,7 +64,7 @@ class Patroller():
         rospy.loginfo("Connected to move base server")
         rospy.loginfo("Starting goals achievements ...")
 
-        #Initiate status subscriber 
+        Initiate status subscriber 
         self.status_subscriber = rospy.Subscriber(
             "/move_base/status", GoalStatusArray, self.status_cb
         )
@@ -78,17 +78,25 @@ class Patroller():
         goal.target_pose.pose = self.pose_seq[self.goal_cnt]
         rospy.loginfo("Sending goal pose "+str(self.goal_cnt+1)+" to Action Server")
         rospy.loginfo(str(self.pose_seq[self.goal_cnt]))
-        rospy.loginfo("sending goal ..........................")
         self.client.send_goal(goal, self.done_cb, self.active_cb, self.feedback_cb)
-        rospy.loginfo("goal sent?")
-        if self.client.get_state() == 3:
-            rospy.loginfo("TEST TEST TEST")
         rospy.spin()
 
     def status_cb(self, msg):
         #rospy.loginfo(msg.status_list[0].status)
-        rospy.loginfo(self.client.get_state())
+        #rospy.loginfo(self.client.get_state())
+        status = msg.status_list[0].status
 
+        if status == 3: 
+            self.goal_cnt +=1
+            rospy.loginfo("Goal pose "+str(self.goal_cnt)+" reached") 
+            if self.goal_cnt< len(self.pose_seq):
+                rospy.loginfo("Moving onto next goal...")
+                self.movebase_client()
+            else:
+                rospy.loginfo("Final goal pose reached!")
+                rospy.signal_shutdown("Final goal pose reached!")
+                exit()
+                #return
 
     def done_cb(self, status, result):
         j=1
