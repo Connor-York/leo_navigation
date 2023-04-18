@@ -87,6 +87,7 @@ class Patroller():
         rospy.loginfo(msg)
 
     def done_cb(self, status, result):
+        j=1
         # # Leaving empty cause it's not needed, but don't want no callback just incase.
         #     self.goal_cnt += 1
         #     rospy.loginfo("result: "+str(result))
