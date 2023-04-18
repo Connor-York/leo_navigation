@@ -6,7 +6,7 @@ import pandas as pd
 import rospkg
 import actionlib
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
-from actionlib_msgs.msg import GoalStatus
+from actionlib_msgs.msg import GoalStatus, GoalStatusArray
 from geometry_msgs.msg import Pose, Point, Quaternion
 from tf.transformations import quaternion_from_euler
 
@@ -66,7 +66,7 @@ class Patroller():
 
         #Initiate status subscriber 
         self.status_subscriber = rospy.Subscriber(
-            "/move_base/status/status_list", GoalStatus, self.status_cb
+            "/move_base/status", GoalStatusArray, self.status_cb
         )
 
         self.movebase_client()
