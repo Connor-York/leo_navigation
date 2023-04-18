@@ -64,7 +64,7 @@ class Patroller():
         rospy.loginfo("Connected to move base server")
         rospy.loginfo("Starting goals achievements ...")
 
-        Initiate status subscriber 
+        #Initiate status subscriber 
         self.status_subscriber = rospy.Subscriber(
             "/move_base/status", GoalStatusArray, self.status_cb
         )
