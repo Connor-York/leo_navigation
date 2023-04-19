@@ -79,7 +79,7 @@ class Patroller():
         goal.target_pose.pose = self.pose_seq[self.goal_cnt]
         rospy.loginfo("Sending goal pose " +
                       str(self.goal_cnt+1)+" to Action Server")
-        rospy.loginfo(str(self.pose_seq[self.goal_cnt]))
+        #rospy.loginfo(str(self.pose_seq[self.goal_cnt]))
         self.client.send_goal(goal) # self.done_cb, self.active_cb, self.feedback_cb)
         rospy.loginfo("==========* GOAL SENT *==========")
         
@@ -92,7 +92,7 @@ class Patroller():
 
         if status == 3:
             self.goal_cnt +=1
-            rospy.loginfo("Goal pose "+str(self.goal_cnt)+" reached")
+            #rospy.loginfo("Goal pose "+str(self.goal_cnt)+" reached")
             if self.goal_cnt< len(self.pose_seq):
                 rospy.loginfo("Moving onto next goal...")
                 self.movebase_client()
@@ -100,7 +100,8 @@ class Patroller():
                 rospy.loginfo("Final goal pose reached!")
                 rospy.signal_shutdown("Final goal pose reached!")
                 exit()
-              # return
+                #rospy.loginfo("Repeating patrol ...")
+                #self.goal_cnt = 0
 
     def done_cb(self, status, result):
         rospy.loginfo("done callback")
