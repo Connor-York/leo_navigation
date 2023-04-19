@@ -142,7 +142,7 @@ if __name__ == '__main__':
 
         Patroller()
         rospy.spin()
-
+ 
         # theta.reverse()
         # waypoints.reverse()
         # MoveBaseSeq(waypoints,theta)
