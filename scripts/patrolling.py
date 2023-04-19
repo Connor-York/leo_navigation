@@ -81,7 +81,8 @@ class Patroller():
                       str(self.goal_cnt+1)+" to Action Server")
         rospy.loginfo(str(self.pose_seq[self.goal_cnt]))
         self.client.send_goal(goal) # self.done_cb, self.active_cb, self.feedback_cb)
-        rospy.spin()
+        
+        
 
     def status_cb(self, msg):
         # rospy.loginfo(msg.status_list[0].status)
@@ -185,6 +186,7 @@ if __name__ == '__main__':
     try:
 
         Patroller()
+        rospy.spin()
         rospy.loginfo(
             "DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONEDONDEONDEONDE")
 
