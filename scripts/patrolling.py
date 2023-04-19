@@ -81,6 +81,7 @@ class Patroller():
                       str(self.goal_cnt+1)+" to Action Server")
         rospy.loginfo(str(self.pose_seq[self.goal_cnt]))
         self.client.send_goal(goal) # self.done_cb, self.active_cb, self.feedback_cb)
+        rospy.loginfo("==========* GOAL SENT *==========")
         
         
 
