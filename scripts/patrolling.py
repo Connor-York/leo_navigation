@@ -92,7 +92,7 @@ class Patroller():
 
         if status == 3:
             self.goal_cnt +=1
-            #rospy.loginfo("Goal pose "+str(self.goal_cnt)+" reached")
+            rospy.loginfo("Goal pose "+str(self.goal_cnt)+" reached")
             if self.goal_cnt< len(self.pose_seq):
                 rospy.loginfo("Moving onto next goal...")
                 self.movebase_client()
@@ -102,6 +102,7 @@ class Patroller():
                 #exit()
                 rospy.loginfo("Repeating patrol ...")
                 self.goal_cnt = 0
+                self.movebase_client()
 
 if __name__ == '__main__':
     try:
