@@ -90,7 +90,7 @@ class Patroller():
         status = self.client.get_state()
         # rospy.loginfo("TESTESTETESTSETSETSETSETSETSTESTESTSET")
         rospy.loginfo(status)
-
+        
         # if status == 3:
         #     self.goal_cnt +=1
         #     rospy.loginfo("Goal pose "+str(self.goal_cnt)+" reached")
@@ -108,7 +108,7 @@ class Patroller():
         # status_cb()
         # # Leaving empty cause it's not needed, but don't want no callback just incase.
         self.goal_cnt += 1
-        rospy.loginfo("result: "+str(result))
+        #rospy.loginfo("result: "+str(result))
         if status == 1:
             rospy.loginfo("status 1 active/processing")
         if status == 0:
