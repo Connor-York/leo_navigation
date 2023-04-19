@@ -65,10 +65,10 @@ class Patroller():
         rospy.loginfo("Connected to move base server")
         rospy.loginfo("Starting goals achievements ...")
 
-        # Initiate status subscriber -- unused, keeping for reference
-        # self.status_subscriber = rospy.Subscriber(
-        #     "/move_base/status", GoalStatusArray, self.status_cb
-        # )
+        # Initiate status subscriber
+        self.status_subscriber = rospy.Subscriber(
+            "/move_base/status", GoalStatusArray, self.status_cb
+        )
 
         self.movebase_client()
 
@@ -77,64 +77,83 @@ class Patroller():
         goal.target_pose.header.frame_id = "map"
         goal.target_pose.header.stamp = rospy.Time.now()
         goal.target_pose.pose = self.pose_seq[self.goal_cnt]
-        rospy.loginfo("Sending goal pose "+str(self.goal_cnt+1)+" to Action Server")
+        rospy.loginfo("Sending goal pose " +
+                      str(self.goal_cnt+1)+" to Action Server")
         rospy.loginfo(str(self.pose_seq[self.goal_cnt]))
-        self.client.send_goal(goal, self.done_cb, self.active_cb, self.feedback_cb)
-        #rospy.loginfo(client.get_state())
+        self.client.send_goal(goal) # self.done_cb, self.active_cb, self.feedback_cb)
+        rospy.loginfo("==========* GOAL SENT *==========")
         
+        
+
+    def status_cb(self, msg):
+
+        status = self.client.get_state()
+        rospy.loginfo(status)
+
+        if status == 3:
+            self.goal_cnt +=1
+            rospy.loginfo("Goal pose "+str(self.goal_cnt)+" reached")
+            if self.goal_cnt< len(self.pose_seq):
+                rospy.loginfo("Moving onto next goal...")
+                self.movebase_client()
+            else:
+                rospy.loginfo("Final goal pose reached!")
+                rospy.signal_shutdown("Final goal pose reached!")
+                exit()
+              # return
 
     def done_cb(self, status, result):
         rospy.loginfo("done callback")
-        self.goal_cnt += 1
-        if status == 1:
-            rospy.loginfo("status 1 active/processing")
-        if status == 0:
-            rospy.loginfo("status 0 pending")
-    # Reference for terminal status values: http://docs.ros.org/diamondback/api/actionlib_msgs/html/msg/GoalStatus.html
-        if status == 2:
-            rospy.loginfo("Goal pose "+str(self.goal_cnt) +
-                          " received a cancel request after it started executing, completed execution!")
+    #     self.goal_cnt += 1
+    #     if status == 1:
+    #         rospy.loginfo("status 1 active/processing")
+    #     if status == 0:
+    #         rospy.loginfo("status 0 pending")
+    # # Reference for terminal status values: http://docs.ros.org/diamondback/api/actionlib_msgs/html/msg/GoalStatus.html
+    #     if status == 2:
+    #         rospy.loginfo("Goal pose "+str(self.goal_cnt) +
+    #                       " received a cancel request after it started executing, completed execution!")
 
-        if status == 3:
-            rospy.loginfo("Goal pose "+str(self.goal_cnt)+" reached")
-            if self.goal_cnt < len(self.pose_seq):
+    #     if status == 3:
+    #         rospy.loginfo("Goal pose "+str(self.goal_cnt)+" reached")
+    #         if self.gsoal_cnt < len(self.pose_seq):
 
-                rospy.loginfo("calling movebase_client again")
-                self.movebase_client()
+    #             rospy.loginfo("calling movebase_client again")
+    #             self.movebase_client()
 
-            else:
-                rospy.loginfo("Final goal pose reached!")
-                # rospy.signal_shutdown("Final goal pose reached!")
-                # exit()
-                return
+    #         else:
+    #             rospy.loginfo("Final goal pose reached!")
+    #             # rospy.signal_shutdown("Final goal pose reached!")
+    #             # exit()
+    #             return
 
-            if status == 4:
-                rospy.loginfo("Goal pose "+str(self.goal_cnt) + \
-                              " was aborted by the Action Server")
-                rospy.signal_shutdown(
-                    "Goal pose "+str(self.goal_cnt)+" aborted, shutting down!")
-                return
+    #         if status == 4:
+    #             rospy.loginfo("Goal pose "+str(self.goal_cnt) + \
+    #                           " was aborted by the Action Server")
+    #             rospy.signal_shutdown(
+    #                 "Goal pose "+str(self.goal_cnt)+" aborted, shutting down!")
+    #             return
 
-            if status == 5:
-                rospy.loginfo("Goal pose "+str(self.goal_cnt) + \
-                              " has been rejected by the Action Server")
-                rospy.signal_shutdown(
-                    "Goal pose "+str(self.goal_cnt)+" rejected, shutting down!")
-                return
+    #         if status == 5:
+    #             rospy.loginfo("Goal pose "+str(self.goal_cnt) + \
+    #                           " has been rejected by the Action Server")
+    #             rospy.signal_shutdown(
+    #                 "Goal pose "+str(self.goal_cnt)+" rejected, shutting down!")
+    #             return
 
-            if status == 8:
-                rospy.loginfo("Goal pose "+str(self.goal_cnt) + \
-                              " received a cancel request before it started executing, successfully cancelled!")
+    #         if status == 8:
+    #             rospy.loginfo("Goal pose "+str(self.goal_cnt) + \
+    #                           " received a cancel request before it started executing, successfully cancelled!")
 
-    def active_cb(self):
-        rospy.loginfo("Goal pose "+str(self.goal_cnt+1) + \
-                      " is now being processed by the Action Server...")
+    # def active_cb(self):
+    #     rospy.loginfo("Goal pose "+str(self.goal_cnt+1) + \
+    #                   " is now being processed by the Action Server...")
 
-    def feedback_cb(self, feedback):
-        # To print current pose at each feedback:
-        # rospy.loginfo("Feedback for goal "+str(self.goal_cnt)+": "+str(feedback))
-        # rospy.loginfo("Feedback for goal pose "+str(self.goal_cnt+1)+" received")
-        j = 1  # filler thing cause it gave me an error god i hate coding
+    # def feedback_cb(self, feedback):
+    #     # To print current pose at each feedback:
+    #     # rospy.loginfo("Feedback for goal "+str(self.goal_cnt)+": "+str(feedback))
+    #     # rospy.loginfo("Feedback for goal pose "+str(self.goal_cnt+1)+" received")
+    #     j = 1  # filler thing cause it gave me an error god i hate coding
 
 
 if __name__ == '__main__':
@@ -142,7 +161,7 @@ if __name__ == '__main__':
 
         Patroller()
         rospy.spin()
- 
+
         # theta.reverse()
         # waypoints.reverse()
         # MoveBaseSeq(waypoints,theta)
