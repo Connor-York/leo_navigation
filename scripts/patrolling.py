@@ -97,7 +97,7 @@ class Patroller():
 
         if status == 3:
             rospy.loginfo("Goal pose "+str(self.goal_cnt)+" reached")
-            if self.gsoal_cnt < len(self.pose_seq):
+            if self.goal_cnt < len(self.pose_seq):
 
                 rospy.loginfo("calling movebase_client again")
                 self.movebase_client()
