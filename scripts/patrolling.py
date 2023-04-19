@@ -98,10 +98,10 @@ class Patroller():
                 self.movebase_client()
             else:
                 rospy.loginfo("Final goal pose reached!")
-                rospy.signal_shutdown("Final goal pose reached!")
-                exit()
-                #rospy.loginfo("Repeating patrol ...")
-                #self.goal_cnt = 0
+                #rospy.signal_shutdown("Final goal pose reached!")
+                #exit()
+                rospy.loginfo("Repeating patrol ...")
+                self.goal_cnt = 0
 
     def done_cb(self, status, result):
         rospy.loginfo("done callback")
