@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import rospy
 import actionlib
@@ -18,7 +18,7 @@ def spin_robot():
 
     # Set up goal position and orientation for move_base
     goal = MoveBaseGoal()
-    goal.target_pose.header.frame_id = "base_link"
+    goal.target_pose.header.frame_id = "map"
     goal.target_pose.header.stamp = rospy.Time.now()
     goal.target_pose.pose.orientation.w = 1.0
 

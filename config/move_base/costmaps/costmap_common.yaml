@@ -33,7 +33,7 @@ obstacle_layer:
     max_obstacle_height: 0.3
     inf_is_valid: false
 
-# http://wiki.ros.org/costmap_2d/hydro/inflation
-inflation_layer:
-  inflation_radius: 0.4
+# http://wiki.ros.org/costmap_2d/hydro/inflation <inflation radius default 0.4>
+inflation_layer: 
+  inflation_radius: 0.1
   cost_scaling_factor: 30.0
