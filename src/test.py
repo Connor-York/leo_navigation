@@ -20,18 +20,19 @@ def spin_robot():
     goal = MoveBaseGoal()
     goal.target_pose.header.frame_id = "map"
     goal.target_pose.header.stamp = rospy.Time.now()
-    goal.target_pose.pose.orientation.w = 1.0
-
+   # goal.target_pose.pose.orientation.w = 1.0
+    rospy.loginfo("HERE HERE HERE")
     # Spin robot on the spot for 10 seconds
     t_end = rospy.Time.now() + rospy.Duration(10)
     while rospy.Time.now() < t_end:
+        rospy.loginfo("HERE 2 ")
         goal.target_pose.pose.position.x = 0
         goal.target_pose.pose.position.y = 0
         goal.target_pose.pose.position.z = 0
         move_base_client.send_goal(goal)
         move_base_client.wait_for_result()
         vel_msg = Twist()
-        vel_msg.angular.z = 1.0
+        vel_msg.angular.z = 10.0
         vel_pub.publish(vel_msg)
 
     # Stop the robot
