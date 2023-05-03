@@ -3,7 +3,7 @@
     
     <include file="$(find leo_navigation)/launch/slam.launch" />
 
-    <node pkg="leo_navigation" type="test.py" name="patroller" output="screen">
+    <node pkg="leo_navigation" type="patrollings_slow.py" name="patroller" output="screen">
     
     <!-- Load Sequence of Points (Cartesian Coordinates wrt "map" RF, in meters) -->
         <rosparam param="p_seq">[1.919190764427185,-0.00014448871661443263,0,3.652,-0.475,0,3.783,-3.283,0,0.385,-3.148,0]</rosparam>
