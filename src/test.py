@@ -13,10 +13,10 @@ def spin_robot():
     vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
 
     # Spin robot on the spot for 10 seconds
-    t_end = rospy.Time.now() + rospy.Duration(10)
+    t_end = rospy.Time.now() + rospy.Duration(5)
     while rospy.Time.now() < t_end:
         vel_msg = Twist()
-        vel_msg.angular.z = 5.0
+        vel_msg.angular.z = 7.0
         vel_pub.publish(vel_msg)
 
     # Stop the robot
