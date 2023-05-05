@@ -9,6 +9,7 @@ from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from actionlib_msgs.msg import GoalStatus, GoalStatusArray
 from geometry_msgs.msg import Pose, Point, Quaternion
 from tf.transformations import quaternion_from_euler
+from geometry_msgs.msg import Twist
 
 
 class Patroller():
@@ -117,8 +118,10 @@ class Patroller():
         while rospy.Time.now() < t_end:
             vel_msg = Twist()
             vel_msg.angular.z = 7.0
-            vel_pub.publish(vel_msg)
+            self.vel_pub.publish(vel_msg)
+            rospy.loginfo("midspin")
 
+        rospy.loginfo("Spin Done")
         # Stop the robot
         vel_msg = Twist()
         self.vel_pub.publish(vel_msg)
