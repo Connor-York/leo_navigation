@@ -3,7 +3,8 @@
     
     <!--include file="$(find leo_navigation)/launch/slam.launch" /-->
 
-    <node pkg="leo_navigation" type="patrolling.py" name="patroller" output="screen">    
+    <node pkg="leo_navigation" type="waypoint_saver.py" name="waypoint saver" output="screen">
+
     </node>
 
 
