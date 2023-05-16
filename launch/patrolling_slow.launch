@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+    
+    <!--include file="$(find leo_navigation)/launch/slam.launch" /-->
+
+    <node pkg="leo_navigation" type="patrolling_slow.py" name="patroller" output="screen">    
+    </node>
+
+
+
+</launch>
