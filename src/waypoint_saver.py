@@ -13,7 +13,7 @@ CSV_path = (package_path + "/waypoints/TEST.csv")
 
 
 def callback(msg):
-        with open(CSV_path, "w", newline="") as file:
+        with open(CSV_path, "a", newline="") as file:
             writer = csv.writer(file)
             writer.writerow([msg.point.x, msg.point.y, 0])
 

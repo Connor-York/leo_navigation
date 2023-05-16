@@ -23,7 +23,7 @@ class Patroller():
         # gets csv file path
         rp = rospkg.RosPack()
         package_path = rp.get_path('leo_navigation')
-        CSV_path = (package_path + "/waypoints/bigmap.csv")
+        CSV_path = (package_path + "/waypoints/Experiment.csv")
 
         # converts waypoints text file into a list of points to follow
         df = pd.read_csv(CSV_path, sep=',', header=None)
