@@ -21,5 +21,6 @@
   <exec_depend>global_planner</exec_depend>
   <exec_depend>twist_mux</exec_depend>
   <exec_depend>gmapping</exec_depend>
+  <exec_depend>laser_filters</exec_depend>
 
 </package>
