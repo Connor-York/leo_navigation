@@ -7,7 +7,7 @@ mag_bias_y: 0.0
 mag_bias_z: 0.0
 orientation_stddev: 0.0
 
-world_frame: nwu
+world_frame: map #nwu
 use_mag: true #false
 use_magnetic_field_msg: false
 publish_tf: true
