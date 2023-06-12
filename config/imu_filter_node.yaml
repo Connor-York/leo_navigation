@@ -10,7 +10,7 @@ orientation_stddev: 0.0
 world_frame: nwu
 use_mag: true #false
 use_magnetic_field_msg: false
-publish_tf: false
+publish_tf: true
 # fixed_frame: odom
 # reverse_tf: false
 constant_dt: 0.0
