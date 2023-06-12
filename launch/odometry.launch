@@ -2,6 +2,13 @@
 <launch>
   <arg name="three_d" default="true" />
 
+  <!--rosrun um7 um7_driver _port:=/dev/ttyUSB0 _frame_id:=imu2_frame imu:=imu2-->
+  <node name="um7" pkg="um7_driver" type="um7"/>
+    <param name="port" value="/dev/ttyUSB0"/>
+    <param name="frame_id" value="imu2_frame"/>
+    <remap from="imu" to="imu2"/>
+  </node>
+
   <node if="$(arg three_d)"
     name="imu_filter_node"
     pkg="imu_filter_madgwick"
