@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <launch>
   <arg name="cmd_vel_out" default="cmd_vel" />
 

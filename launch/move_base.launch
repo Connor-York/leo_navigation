@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <launch>
   <remap from="odom" to="odometry/filtered/global" />
   <remap from="cmd_vel" to="nav_vel" />

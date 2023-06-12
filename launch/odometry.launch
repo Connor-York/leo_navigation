@@ -12,45 +12,46 @@
 
   <!--node pkg="tf" type="static_transform_publisher" name="map_odom_broadcaster" args="0 0 0 0 0 0 utm map 50" /-->
 
-  <node name="ekf_localization_local_node" pkg="robot_localization" type="ekf_localization_node" clear_params="true">
-        <rosparam  command="load" file="$(find leo_navigation)/config/ekf_localization_node/ekf_3d_local.yaml" />
-        <remap from='/odometry/filtered' to='/odometry/filtered/local'/>
-        <!--param name="wait_for_datum" value="true"/-->
-        <!--rosparam param="datum">[51.45130424028355, -2.5998873824234234, 0.0]</rosparam-->
-  </node>
+  <!--node name="ekf_localization_local_node" pkg="robot_localization" type="ekf_localization_node" clear_params="true">
+    <rosparam  command="load" file="$(find leo_navigation)/config/ekf_localization_node/ekf_3d_local.yaml" />
+    <remap from='/odometry/filtered' to='/odometry/filtered/local'/-->
+    <!--param name="wait_for_datum" value="true"/-->
+    <!--rosparam param="datum">[51.45130424028355, -2.5998873824234234, 0.0]</rosparam-->
+  <!--/node--> 
 
   <node name="ekf_localization_global_node" pkg="robot_localization" type="ekf_localization_node" clear_params="true">
-        <rosparam command="load" file="$(find leo_navigation)/config/ekf_localization_node/ekf_3d_global.yaml"/>
-        <remap from='/odometry/filtered' to='/odometry/filtered/global'/>
-	<param name="wait_for_datum" value="true"/>
-	<rosparam param="datum">[51.45159029426437, -2.5996256194687755, 0.0]</rosparam>
+    <rosparam command="load" file="$(find leo_navigation)/config/ekf_localization_node/ekf_3d_global.yaml"/>
+    <remap from='/odometry/filtered' to='/odometry/filtered/global'/>
+	  <param name="wait_for_datum" value="false"/>
+	  <!--rosparam param="datum">[51.45159029426437, -2.5996256194687755, 0.0]</rosparam-->
   </node>
 
-  <node pkg='robot_localization' type='navsat_transform_node' name='navsat_transform_node' respawn='true'>
-        
-        <param name='predict_to_current_time' value='true'/>
-        <param name='delay' value='0.5'/>
-        <param name='frequency' value='50'/>
+  <!--node pkg='robot_localization' type='navsat_transform_node' name='navsat_transform_node' respawn='true'>
+    <param name='predict_to_current_time' value='true'/>
+    <param name='delay' value='0.5'/>
+    <param name='frequency' value='50'/>
 
-	<param name='magnetic_declination_radians' value='0.012749'/>
-	<param name='zero_altitude' value='0'/>
-	<param name='yaw_offset' value='1.57080'/>
+	  <param name='magnetic_declination_radians' value='0.012749'/>
+	  <param name='zero_altitude' value='0'/>
+	  <param name='yaw_offset' value='1.57080'/>
 
-	<!-- Publish the robot's GPS coordinates transformed from the world frame (/odom frame) to the topic '/gps/filtered' --> 
-	<param name='publish_filtered_gps' value='true'/>
+	  <!- Publish the robot's GPS coordinates transformed from the world frame (/odom frame) to the topic '/gps/filtered' -> 
+	  <param name='publish_filtered_gps' value='true'/>
 
-	<!-- Publish the transfrom utm-> world_frame (/odom frame) --> 
-	<param name='broadcast_cartesian_transform' value='true'/>
-	<param name='broadcast_cartesian_transform_as_parent_frame' value='true'/> 
+	  <!- Publish the transfrom utm-> world_frame (/odom frame) -> 
+	  <param name='broadcast_cartesian_transform' value='true'/>
+	  <param name='broadcast_cartesian_transform_as_parent_frame' value='true'/> 
 
-	<!-- Specifying the global frame ORIGIN (/odom - robot's starting position) -->
-       	<param name="wait_for_datum" value="true"/>
-       	<rosparam param="datum">[51.45159029426437, -2.5996256194687755, 0.0]</rosparam>
+	  <!- Specifying the global frame ORIGIN (/odom - robot's starting position) ->
+    <param name="wait_for_datum" value="true"/>
+    <rosparam param="datum">[51.45159029426437, -2.5996256194687755, 0.0]</rosparam>
 
-	<!-- navsat_transform_node subscribing to the project-specific topics --> 
-       	<remap from='/imu/data' to='/imu/data'/>
-	<!--remap from='/gps/fix' to='/navsat/fix'/-->
-        <remap from='/odometry/filtered' to='/odometry/filtered/global'/>
+	  <!- navsat_transform_node subscribing to the project-specific topics -> 
+    <remap from='/imu/data' to='/imu/data'/>
+	  <!-remap from='/gps/fix' to='/navsat/fix'/->
+    <remap from='/odometry/filtered' to='/odometry/filtered/global'/>
+   </node-->
 
-   </node>
+   <!-- WARNING MOST OF THE COMMENTS ARE UNCOMMENTED, SO WHEN UNCOMMENTING, RECOMMENT THEM -->
+
 </launch>
