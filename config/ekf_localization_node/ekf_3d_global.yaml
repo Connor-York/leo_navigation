@@ -7,13 +7,13 @@ transform_time_offset: 0.0
 transform_timeout: 0.0
 print_diagnostics: true
 debug: false
-publish_tf: false
+publish_tf: true
 publish_acceleration: false
 
 map_frame: map
 odom_frame: odom
 base_link_frame: base_footprint
-world_frame: odom #map
+world_frame: map
 
 # x, y, z
 # roll, pitch, yaw
