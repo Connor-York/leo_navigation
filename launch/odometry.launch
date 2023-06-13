@@ -13,6 +13,7 @@
     name="imu_filter_node"
     pkg="imu_filter_madgwick"
     type="imu_filter_node">
+    <remap from="imu" to="imu2"/>
     <rosparam command="load"
       file="$(find leo_navigation)/config/imu_filter_node.yaml" />
   </node>
