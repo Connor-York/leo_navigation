@@ -14,6 +14,7 @@
     pkg="imu_filter_madgwick"
     type="imu_filter_node">
     <remap from="imu" to="imu2"/>
+    <param name="use_magnetic_field_msg" value="false" />
     <rosparam command="load"
       file="$(find leo_navigation)/config/imu_filter_node.yaml" />
   </node>
