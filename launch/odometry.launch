@@ -1,19 +1,19 @@
 <?xml version="1.0"?>
 <launch>
-  <arg name="three_d" default="false" />
+  <arg name="three_d" default="true" />
 
   <!--rosrun um7 um7_driver _port:=/dev/ttyUSB0 _frame_id:=imu2_frame imu:=imu2-->
-  <node name="um7_driver" pkg="um7" type="um7_driver">
+  <!--node name="um7_driver" pkg="um7" type="um7_driver">
     <param name="port" value="/dev/ttyUSB0"/>
     <param name="frame_id" value="imu2_frame"/>
     <remap from="imu" to="imu2"/>
-  </node>
+  </node-->
 
   <node if="$(arg three_d)"
     name="imu_filter_node"
     pkg="imu_filter_madgwick"
     type="imu_filter_node">
-    <remap from="imu" to="imu2"/>
+    <!--remap from="imu" to="imu2"/-->
     <param name="use_magnetic_field_msg" value="false" />
     <rosparam command="load"
       file="$(find leo_navigation)/config/imu_filter_node.yaml" />
