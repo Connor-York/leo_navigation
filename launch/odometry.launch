@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <launch>
-  <arg name="three_d" default="true" />
+  <arg name="three_d" default="false" />
+
+  <include file="$(find dfrobot_imu_ros)/launch/imuPipe.launch" />
 
   <!--rosrun um7 um7_driver _port:=/dev/ttyUSB0 _frame_id:=imu2_frame imu:=imu2-->
   <!--node name="um7_driver" pkg="um7" type="um7_driver">
