@@ -11,6 +11,7 @@ from geometry_msgs.msg import Pose, Point, Quaternion
 from tf.transformations import quaternion_from_euler
 
 
+
 class Patroller():
 
     def __init__(self):
@@ -22,7 +23,8 @@ class Patroller():
         # gets csv file path
         rp = rospkg.RosPack()
         package_path = rp.get_path('leo_navigation')
-        CSV_path = (package_path + "/waypoints/Experiment.csv")
+        route = rospy.get_param('~route')
+        CSV_path = (package_path + "/waypoints/" + route)
 
         # converts waypoints text file into a list of points to follow
         df = pd.read_csv(CSV_path, sep=',', header=None)
@@ -69,7 +71,7 @@ class Patroller():
         self.status_subscriber = rospy.Subscriber(
             "/move_base/status", GoalStatusArray, self.status_cb
         )
-
+        self.patrol_count = 0
         self.movebase_client()
 
     def movebase_client(self):
@@ -98,11 +100,16 @@ class Patroller():
                 self.movebase_client()
             else:
                 rospy.loginfo("Final goal pose reached!")
-                #rospy.signal_shutdown("Final goal pose reached!")
-                #exit()
-                rospy.loginfo("Repeating patrol ...")
-                self.goal_cnt = 0
-                self.movebase_client()
+                self.patrol_count += 1
+
+                if self.patrol_count == rospy.get_param("~patrols"):
+                    #starting at 0, 2 will mean it has completed two patrols (0,1)
+                    rospy.signal_shutdown("Final goal pose reached!")
+                    exit()
+                else:
+                    rospy.loginfo("Repeating patrol ...")
+                    self.goal_cnt = 0
+                    self.movebase_client()
 
 if __name__ == '__main__':
     try:
