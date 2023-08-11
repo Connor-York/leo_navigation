@@ -9,7 +9,7 @@ from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from actionlib_msgs.msg import GoalStatus, GoalStatusArray
 from geometry_msgs.msg import Pose, Point, Quaternion
 from tf.transformations import quaternion_from_euler
-
+from geometry_msgs.msg import Twist
 
 
 class Patroller():
@@ -71,6 +71,11 @@ class Patroller():
         self.status_subscriber = rospy.Subscriber(
             "/move_base/status", GoalStatusArray, self.status_cb
         )
+
+        # Create a Twist publisher to send velocity commands to the robot
+        self.vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
+
+
         self.patrol_count = 0
         self.movebase_client()
 
@@ -95,6 +100,9 @@ class Patroller():
         if status == 3:
             self.goal_cnt +=1
             rospy.loginfo("Goal pose "+str(self.goal_cnt)+" reached")
+            if rospy.get_param("~speed") == "slow":
+                    rospy.loginfo("Spinning...")
+                    self.spin_robot()
             if self.goal_cnt< len(self.pose_seq):
                 rospy.loginfo("Moving onto next goal...")
                 self.movebase_client()
@@ -110,6 +118,20 @@ class Patroller():
                     rospy.loginfo("Repeating patrol ...")
                     self.goal_cnt = 0
                     self.movebase_client()
+
+    def spin_robot(self):
+        # Spin robot on the spot
+        t_end = rospy.Time.now() + rospy.Duration(7.5) #about 360deg
+        while rospy.Time.now() < t_end:
+            vel_msg = Twist()
+            vel_msg.angular.z = 7.0
+            self.vel_pub.publish(vel_msg)
+            #rospy.loginfo("midspin")
+
+        rospy.loginfo("Spin Done")
+        # Stop the robot
+        vel_msg = Twist()
+        self.vel_pub.publish(vel_msg)
 
 if __name__ == '__main__':
     try:

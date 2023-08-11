@@ -4,14 +4,14 @@
     <!--include file="$(find leo_navigation)/launch/slam.launch" /-->
 
     <node pkg="leo_navigation" type="patrolling.py" name="patroller" output="screen">   
-        <param name="patrols" value="3"/><!--Number of loops to do--> 
+        <param name="patrols" value="2"/><!--Number of loops to do--> 
         <param name="start_node" value="0"/><!--Which node to start at-->
-        <param name="route" value="straightpat.csv"/>
+        <param name="route" value="Experiment.csv"/>
+        <param name="speed" value="fast"/> <!--fast or slow-->
     </node>
 
-    <include file="$(find leo_navigation/launch/pogger.launch"/>
-    <include file="$(find ar_logger/launch/logger.launch"/>
+    <include file="$(find leo_navigation)/launch/pogger.launch"/>
+    <include file="$(find ar_logger)/launch/logger.launch"/>
 
-    <!-- make way to define waypoints here /-->
 
 </launch>

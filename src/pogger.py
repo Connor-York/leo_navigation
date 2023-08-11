@@ -27,8 +27,6 @@ pose_path = (package_path + "/logs/POSE_" + formatted_date + "_" + current_time_
 def vel_callback(msg):
     lin_x = msg.linear.x
     ang_z = msg.angular.z
-    rospy.loginfo(lin_x)
-    rospy.loginfo(ang_z)
     timestamp = time.time() - start_time
     data = [lin_x,ang_z,timestamp]
     save_to_csv(vel_path,data)
