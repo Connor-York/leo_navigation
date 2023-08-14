@@ -77,6 +77,7 @@ class Patroller():
 
 
         self.patrol_count = 0
+        self.tick = 0
         self.movebase_client()
 
     def movebase_client(self):
@@ -98,6 +99,10 @@ class Patroller():
         #rospy.loginfo(status)
 
         if status == 3:
+            if self.tick == 1: # tick is one, returned home, done.
+                rospy.loginfo("FIN")
+                rospy.signal_shutdown("FIN")
+                exit()
             self.goal_cnt +=1
             rospy.loginfo("Goal pose "+str(self.goal_cnt)+" reached")
             if rospy.get_param("~speed") == "slow":
@@ -110,10 +115,16 @@ class Patroller():
                 rospy.loginfo("Final goal pose reached!")
                 self.patrol_count += 1
 
-                if self.patrol_count == rospy.get_param("~patrols"):
-                    #starting at 0, 2 will mean it has completed two patrols (0,1)
-                    rospy.signal_shutdown("Final goal pose reached!")
-                    exit()
+                if self.patrol_count == rospy.get_param("~patrols"): # if done all the patrols return home, set tick to 1
+                    goal = MoveBaseGoal()
+                    goal.target_pose.header.frame_id = "map"
+                    goal.target_pose.header.stamp = rospy.Time.now()
+                    goal.target_pose.pose = self.pose_seq[0]
+                    #rospy.loginfo("Returning to first waypoint")
+                    #rospy.loginfo(str(self.pose_seq[self.goal_cnt]))
+                    self.client.send_goal(goal)
+                    self.tick = 1
+                    rospy.loginfo("==========* Returning Home *==========")
                 else:
                     rospy.loginfo("Repeating patrol ...")
                     self.goal_cnt = 0
@@ -121,7 +132,7 @@ class Patroller():
 
     def spin_robot(self):
         # Spin robot on the spot
-        t_end = rospy.Time.now() + rospy.Duration(7.5) #about 360deg
+        t_end = rospy.Time.now() + rospy.Duration(6) #about 360deg
         while rospy.Time.now() < t_end:
             vel_msg = Twist()
             vel_msg.angular.z = 7.0

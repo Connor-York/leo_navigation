@@ -4,4 +4,4 @@ linear vel (x axis) , angular vel (z axis) , timestamp (seconds since node start
 
 FOR THE POSE FILES IT IS FORMATTED:
 
-pose x , pose y, timestamp
+pose x , pose y, orientation quarternion x, qy, qz, qW, timestamp

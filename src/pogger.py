@@ -34,8 +34,12 @@ def vel_callback(msg):
 def pose_callback(msg):
     x = msg.pose.pose.position.x
     y = msg.pose.pose.position.y
+    ox = msg.pose.pose.orientation.x
+    oy = msg.pose.pose.orientation.y
+    oz = msg.pose.pose.orientation.z
+    ow = msg.pose.pose.orientation.w
     timestamp = time.time() - start_time
-    data = [x,y,timestamp]
+    data = [x,y,ox,oy,oz,ow,timestamp]
     save_to_csv(pose_path,data)
 
 def save_to_csv(csv_path,data):
