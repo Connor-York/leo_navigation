@@ -2,6 +2,7 @@
 
 import rospy
 from geometry_msgs.msg import PoseWithCovarianceStamped, Twist
+from std_msgs.msg import Float32
 import time 
 import datetime
 import rospkg 
@@ -22,6 +23,7 @@ package_path = rp.get_path('leo_navigation')
     
 vel_path = (package_path + "/logs/VEL_" + formatted_date + "_" + current_time_save + ".csv")
 pose_path = (package_path + "/logs/POSE_" + formatted_date + "_" + current_time_save + ".csv")
+battery_path = (package_path + "/logs/BATT_" + formatted_date + "_" + current_time_save + ".csv")
 
 
 def vel_callback(msg):
@@ -42,6 +44,12 @@ def pose_callback(msg):
     data = [x,y,ox,oy,oz,ow,timestamp]
     save_to_csv(pose_path,data)
 
+def battery_callback(msg):
+    timestamp = time.time() - start_time
+    print(msg.data)
+    data = [msg.data, timestamp]
+    save_to_csv(battery_path,data)
+
 def save_to_csv(csv_path,data):
     with open(csv_path, "a", newline="") as file:
         writer = csv.writer(file)
@@ -55,5 +63,7 @@ if __name__ == "__main__":
     vel_subscriber = rospy.Subscriber("nav_vel",Twist,vel_callback)
 
     pose_subscriber = rospy.Subscriber("amcl_pose",PoseWithCovarianceStamped,pose_callback)
+
+    battery_subscriber = rospy.Subscriber("firmware/battery_averaged",Float32,battery_callback)
 
     rospy.spin()
