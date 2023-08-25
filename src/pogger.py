@@ -46,7 +46,6 @@ def pose_callback(msg):
 
 def battery_callback(msg):
     timestamp = time.time() - start_time
-    print(msg.data)
     data = [msg.data, timestamp]
     save_to_csv(battery_path,data)
 

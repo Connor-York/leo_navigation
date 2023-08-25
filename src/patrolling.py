@@ -43,7 +43,7 @@ class Patroller():
         quat_seq = list()
         # List of goal poses:
         self.pose_seq = list()
-        self.goal_cnt = 0
+        self.goal_cnt = rospy.get_param('~start_node')
         for yawangle in yaweulerangles_seq:
             # Unpacking the quaternion list and passing it as arguments to Quaternion message constructor
             quat_seq.append(Quaternion(
@@ -108,26 +108,28 @@ class Patroller():
             if rospy.get_param("~speed") == "slow":
                     rospy.loginfo("Spinning...")
                     self.spin_robot()
-            if self.goal_cnt< len(self.pose_seq):
+            if self.goal_cnt != rospy.get_param("~start_node"):#
+                if self.goal_cnt == len(self.pose_seq):
+                    self.goal_cnt = 0
                 rospy.loginfo("Moving onto next goal...")
                 self.movebase_client()
             else:
                 rospy.loginfo("Final goal pose reached!")
                 self.patrol_count += 1
-
+                print(self.patrol_count)
                 if self.patrol_count == rospy.get_param("~patrols"): # if done all the patrols return home, set tick to 1
                     goal = MoveBaseGoal()
                     goal.target_pose.header.frame_id = "map"
                     goal.target_pose.header.stamp = rospy.Time.now()
-                    goal.target_pose.pose = self.pose_seq[0]
-                    #rospy.loginfo("Returning to first waypoint")
-                    #rospy.loginfo(str(self.pose_seq[self.goal_cnt]))
+                    goal.target_pose.pose = self.pose_seq[rospy.get_param("~start_node")]
+                    # rospy.loginfo("Returning to first waypoint")
+                    # rospy.loginfo(str(self.pose_seq[rospy.get_param("~start_node")]))
                     self.client.send_goal(goal)
                     self.tick = 1
                     rospy.loginfo("==========* Returning Home *==========")
                 else:
                     rospy.loginfo("Repeating patrol ...")
-                    self.goal_cnt = 0
+                    self.goal_cnt = rospy.get_param("~start_node")
                     self.movebase_client()
 
     def spin_robot(self):
