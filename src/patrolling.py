@@ -7,9 +7,35 @@ import rospkg
 import actionlib
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from actionlib_msgs.msg import GoalStatus, GoalStatusArray
-from geometry_msgs.msg import Pose, Point, Quaternion
+from geometry_msgs.msg import Pose, Point, Quaternion, Twist
 from tf.transformations import quaternion_from_euler
-from geometry_msgs.msg import Twist
+from std_msgs.msg import Int32
+
+
+
+plasticMSG = 0
+tagMSG = False
+pauseMSG = False
+
+
+
+def plasticCallback(msg):
+
+    global plasticMSG
+
+    plasticMSG = msg.data
+
+def tagCallback(msg):
+
+    global tagMSG
+    
+    tagMSG = msg.data
+
+def pauseCallback(msg):
+
+    global pauseMSG
+
+    pauseMSG = msg.data
 
 
 class Patroller():
@@ -81,6 +107,28 @@ class Patroller():
         self.movebase_client()
 
     def movebase_client(self):
+
+        global plasticMSG
+        global tagMSG
+        global pauseMSG
+
+        rospy.Subscriber('plasticTopic', Int32, plasticCallback)
+
+        rospy.loginfo('Plastic set to: %s', str(plasticMSG))
+
+        rospy.Subscriber('tagTopic', Int32, tagCallback)
+
+        
+        if plasticMSG and tagMSG:
+            rospy.loginfo("pausing")
+
+            pauseRobot()
+
+            # Publish 'tag' as a ROS topic
+            tagPub = rospy.Publisher('tagTopic', Int32, queue_size=10)
+            tagPub.publish(False)
+
+
         goal = MoveBaseGoal()
         goal.target_pose.header.frame_id = "map"
         goal.target_pose.header.stamp = rospy.Time.now()
@@ -132,16 +180,16 @@ class Patroller():
                     self.goal_cnt = rospy.get_param("~start_node")
                     self.movebase_client()
 
-    def spin_robot(self):
+    def pauseRobot(self):
         # Spin robot on the spot
         t_end = rospy.Time.now() + rospy.Duration(6) #about 360deg
         while rospy.Time.now() < t_end:
             vel_msg = Twist()
-            vel_msg.angular.z = 7.0
+            vel_msg.linear.x = 0.0
             self.vel_pub.publish(vel_msg)
             #rospy.loginfo("midspin")
 
-        rospy.loginfo("Spin Done")
+        rospy.loginfo("Pause Done")
         # Stop the robot
         vel_msg = Twist()
         self.vel_pub.publish(vel_msg)
