@@ -10,6 +10,15 @@ from actionlib_msgs.msg import GoalStatus, GoalStatusArray
 from geometry_msgs.msg import Pose, Point, Quaternion
 from tf.transformations import quaternion_from_euler
 
+pauseMSG = False
+
+def pauseCallback(msg):
+
+    global pauseMSG
+
+    pauseMSG = msg.data
+
+
 
 class Patroller():
 
@@ -103,6 +112,24 @@ class Patroller():
                 rospy.loginfo("Repeating patrol ...")
                 self.goal_cnt = 0
                 self.movebase_client()
+
+
+def pauseRobot(self):
+
+
+        # Spin robot on the spot for 10 seconds
+        t_end = rospy.Time.now() + rospy.Duration(7.5) #about 360deg
+        while rospy.Time.now() < t_end:
+            vel_msg = Twist()
+            vel_msg.angular.z = 7.0
+            self.vel_pub.publish(vel_msg)
+            rospy.loginfo("midspin")
+
+        rospy.loginfo("Spin Done")
+        # Stop the robot
+        vel_msg = Twist()
+        self.vel_pub.publish(vel_msg)
+
 
 if __name__ == '__main__':
     try:
