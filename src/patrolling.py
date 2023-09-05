@@ -180,19 +180,19 @@ class Patroller():
                     self.goal_cnt = rospy.get_param("~start_node")
                     self.movebase_client()
 
-    def pauseRobot(self):
-        # Spin robot on the spot
-        t_end = rospy.Time.now() + rospy.Duration(6) #about 360deg
-        while rospy.Time.now() < t_end:
-            vel_msg = Twist()
-            vel_msg.linear.x = 0.0
-            self.vel_pub.publish(vel_msg)
-            #rospy.loginfo("midspin")
-
-        rospy.loginfo("Pause Done")
-        # Stop the robot
+def pauseRobot(self):
+    # Pause robot on the spot
+    t_end = rospy.Time.now() + rospy.Duration(5) #Wait for 5
+    while rospy.Time.now() < t_end:
         vel_msg = Twist()
+        vel_msg.linear.x = 0.0
         self.vel_pub.publish(vel_msg)
+        #rospy.loginfo("midspin")
+
+    rospy.loginfo("Pause Done")
+    # Stop the robot
+    vel_msg = Twist()
+    self.vel_pub.publish(vel_msg)
 
 if __name__ == '__main__':
     try:
