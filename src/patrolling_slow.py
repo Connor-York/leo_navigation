@@ -77,6 +77,7 @@ class Patroller():
         self.movebase_client()
 
     def movebase_client(self):
+
         goal = MoveBaseGoal()
         goal.target_pose.header.frame_id = "map"
         goal.target_pose.header.stamp = rospy.Time.now()
