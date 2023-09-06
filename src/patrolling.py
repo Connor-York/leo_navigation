@@ -212,10 +212,12 @@ class Patroller():
 
                 tagMSG = False
 
-                rospy.loginfo("Pause Done")
+                
                 # Stop the robot
                 vel_msg = Twist()
                 self.vel_pub.publish(vel_msg)
+
+                rospy.loginfo("Pause Done")
 
                 # Publish 'tag' as a ROS topic
                 tagPub = rospy.Publisher('tagTopic', Int32, queue_size=10)
