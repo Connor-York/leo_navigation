@@ -196,11 +196,9 @@ class Patroller():
 
             rospy.Subscriber('plasticTopic', Int32, plasticCallback)
 
-            rospy.loginfo('Plastic set to: %s', str(plasticMSG))
-
             rospy.Subscriber('tagTopic', Int32, tagCallback)
 
-            if plasticMSG and tagMSG:
+            if plasticMSG == 1 and tagMSG == True:
                 rospy.loginfo("Pausing")
 
                 t_end = rospy.Time.now() + rospy.Duration(5)  # Wait for 10 seconds
