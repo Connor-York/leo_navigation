@@ -198,7 +198,7 @@ class Patroller():
 
             rospy.Subscriber('tagTopic', Int32, tagCallback)
 
-            if str(plasticMSG) == 1 and tagMSG == True:
+            if plasticMSG == 1 and tagMSG == True:
                 
                 rospy.loginfo('Plastic set to: %s', str(plasticMSG))
 
