@@ -120,9 +120,20 @@ class Patroller():
 
         
         if plasticMSG and tagMSG:
-            rospy.loginfo("pausing")
+            rospy.loginfo("Pausing")
 
-            pauseRobot()
+            t_end = rospy.Time.now() + rospy.Duration(10) #Wait for 10
+            while rospy.Time.now() < t_end:
+                vel_msg = Twist()
+                # vel_msg.linear.x = -0.4
+                vel_msg.angular.z = 0.2
+                self.vel_pub.publish(vel_msg)
+                #rospy.loginfo("midspin")
+
+            rospy.loginfo("Pause Done")
+            # Stop the robot
+            vel_msg = Twist()
+            self.vel_pub.publish(vel_msg)
 
             # Publish 'tag' as a ROS topic
             tagPub = rospy.Publisher('tagTopic', Int32, queue_size=10)
@@ -180,19 +191,19 @@ class Patroller():
                     self.goal_cnt = rospy.get_param("~start_node")
                     self.movebase_client()
 
-def pauseRobot(self):
-    # Pause robot on the spot
-    t_end = rospy.Time.now() + rospy.Duration(5) #Wait for 5
-    while rospy.Time.now() < t_end:
-        vel_msg = Twist()
-        vel_msg.linear.x = 0.0
-        self.vel_pub.publish(vel_msg)
-        #rospy.loginfo("midspin")
+    # def pauseRobot(self):
+    #     # Pause robot on the spot
+    #     t_end = rospy.Time.now() + rospy.Duration(5) #Wait for 5
+    #     while rospy.Time.now() < t_end:
+    #         vel_msg = Twist()
+    #         vel_msg.linear.x = 0.0
+    #         self.vel_pub.publish(vel_msg)
+    #         #rospy.loginfo("midspin")
 
-    rospy.loginfo("Pause Done")
-    # Stop the robot
-    vel_msg = Twist()
-    self.vel_pub.publish(vel_msg)
+    #     rospy.loginfo("Pause Done")
+    #     # Stop the robot
+    #     vel_msg = Twist()
+    #     self.vel_pub.publish(vel_msg)
 
 if __name__ == '__main__':
     try:
