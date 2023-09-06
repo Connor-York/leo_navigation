@@ -204,7 +204,7 @@ class Patroller():
 
                 rospy.loginfo("Pausing")
 
-                t_end = rospy.Time.now() + rospy.Duration(5)  # Wait for 10 seconds
+                t_end = rospy.Time.now() + rospy.Duration(20)  # Wait for 10 seconds
                 while rospy.Time.now() < t_end:
                     vel_msg = Twist()
                     vel_msg.angular.z = 0.2
