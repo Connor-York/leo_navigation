@@ -10,7 +10,7 @@ from actionlib_msgs.msg import GoalStatus, GoalStatusArray
 from geometry_msgs.msg import Pose, Point, Quaternion, Twist
 from tf.transformations import quaternion_from_euler
 from std_msgs.msg import Int32
-
+import threading
 
 
 plasticMSG = 0
@@ -108,36 +108,28 @@ class Patroller():
 
     def movebase_client(self):
 
-        global plasticMSG
-        global tagMSG
-        global pauseMSG
-
-        rospy.Subscriber('plasticTopic', Int32, plasticCallback)
-
-        rospy.loginfo('Plastic set to: %s', str(plasticMSG))
-
-        rospy.Subscriber('tagTopic', Int32, tagCallback)
+        
 
         
-        if plasticMSG and tagMSG:
-            rospy.loginfo("Pausing")
+        # if plasticMSG and tagMSG:
+        #     rospy.loginfo("Pausing")
 
-            t_end = rospy.Time.now() + rospy.Duration(10) #Wait for 10
-            while rospy.Time.now() < t_end:
-                vel_msg = Twist()
-                # vel_msg.linear.x = -0.4
-                vel_msg.angular.z = 0.2
-                self.vel_pub.publish(vel_msg)
-                #rospy.loginfo("midspin")
+        #     t_end = rospy.Time.now() + rospy.Duration(10) #Wait for 10
+        #     while rospy.Time.now() < t_end:
+        #         vel_msg = Twist()
+        #         # vel_msg.linear.x = -0.4
+        #         vel_msg.angular.z = 0.2
+        #         self.vel_pub.publish(vel_msg)
+        #         #rospy.loginfo("midspin")
 
-            rospy.loginfo("Pause Done")
-            # Stop the robot
-            vel_msg = Twist()
-            self.vel_pub.publish(vel_msg)
+        #     rospy.loginfo("Pause Done")
+        #     # Stop the robot
+        #     vel_msg = Twist()
+        #     self.vel_pub.publish(vel_msg)
 
-            # Publish 'tag' as a ROS topic
-            tagPub = rospy.Publisher('tagTopic', Int32, queue_size=10)
-            tagPub.publish(False)
+        #     # Publish 'tag' as a ROS topic
+        #     tagPub = rospy.Publisher('tagTopic', Int32, queue_size=10)
+        #     tagPub.publish(False)
 
 
         goal = MoveBaseGoal()
@@ -191,6 +183,54 @@ class Patroller():
                     self.goal_cnt = rospy.get_param("~start_node")
                     self.movebase_client()
 
+    def check_and_pause(self):
+
+        global plasticMSG
+        global tagMSG
+        global pauseMSG
+
+        
+
+
+        while not rospy.is_shutdown():  # Continuously check while the node is active
+
+            rospy.Subscriber('plasticTopic', Int32, plasticCallback)
+
+            rospy.loginfo('Plastic set to: %s', str(plasticMSG))
+
+            rospy.Subscriber('tagTopic', Int32, tagCallback)
+
+            if plasticMSG and tagMSG:
+                rospy.loginfo("Pausing")
+
+                t_end = rospy.Time.now() + rospy.Duration(5)  # Wait for 10 seconds
+                while rospy.Time.now() < t_end:
+                    vel_msg = Twist()
+                    vel_msg.angular.z = 0.2
+                    self.vel_pub.publish(vel_msg)
+
+                tagMSG = False
+
+                rospy.loginfo("Pause Done")
+                # Stop the robot
+                vel_msg = Twist()
+                self.vel_pub.publish(vel_msg)
+
+                # Publish 'tag' as a ROS topic
+                tagPub = rospy.Publisher('tagTopic', Int32, queue_size=10)
+                tagPub.publish(False)
+
+    def run(self):
+        # Start the check_and_pause method in a separate thread
+        check_and_pause_thread = threading.Thread(target=self.check_and_pause)
+        check_and_pause_thread.daemon = True  # Daemonize the thread so it stops when the main program exits
+        check_and_pause_thread.start()
+
+        # Continue with the rest of your logic (e.g., moving between waypoints)
+        self.patrol_count = 0
+        self.tick = 0
+        self.movebase_client()
+
     # def pauseRobot(self):
     #     # Pause robot on the spot
     #     t_end = rospy.Time.now() + rospy.Duration(5) #Wait for 5
@@ -208,7 +248,8 @@ class Patroller():
 if __name__ == '__main__':
     try:
 
-        Patroller()
+        patroller = Patroller()
+        patroller.run()
         rospy.spin()
 
         # theta.reverse()
