@@ -13,9 +13,9 @@ recovery_alpha_slow: 0.0
 recovery_alpha_fast: 0.0
 
 # Initial pose parameters
-initial_pose_x: 10.448565199931235 
-initial_pose_y: -4.774745281129744
-initial_pose_a: 3.1102951
+initial_pose_x: 0.0
+initial_pose_y: 0.0
+initial_pose_a: 0.0
 initial_cov_xx: 0.25
 initial_cov_yy: 0.25
 initial_cov_aa: 0.07

@@ -2,6 +2,12 @@
 <launch>
     
     <node pkg="leo_navigation" type="pogger.py" name="pogger" output="screen">   
+        <param name="robot_name" value="Connor"/> 
+        <param name="trial_no" value="1"/>
+        <param name="trial_scenario" value="AF"/> 
+        <!-- For the trial scenario, the four scenarios are: 
+        AF = all fast, AS = all slow, 1:3FS = 1 fast 3 slow, 2:2FS = 50/50 split
+        3:1FS = 3 fast 1 slow --> 
     </node>
 
 

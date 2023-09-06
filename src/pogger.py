@@ -9,8 +9,8 @@ import rospkg
 import csv
 
 #getting date for saving
-current_date = datetime.date.today()
-formatted_date = current_date.strftime("%Y-%m-%d")
+# current_date = datetime.date.today()
+# formatted_date = current_date.strftime("%Y-%m-%d")
 current_time_save = datetime.datetime.now()
 current_time_save = current_time_save.strftime("%H:%M:%S")
 
@@ -20,10 +20,17 @@ start_time = time.time()
 #getting csv paths for both the logs
 rp = rospkg.RosPack()
 package_path = rp.get_path('leo_navigation')
+
+name = rospy.get_param("/pogger/robot_name")
+trial_no = rospy.get_param("/pogger/trial_no")
+trial_no = str(trial_no)
+scenario = rospy.get_param("/pogger/trial_scenario")
+
+csv_name = (name + "_" + scenario + "_" + trial_no + ".csv")
     
-vel_path = (package_path + "/logs/VEL_" + formatted_date + "_" + current_time_save + ".csv")
-pose_path = (package_path + "/logs/POSE_" + formatted_date + "_" + current_time_save + ".csv")
-battery_path = (package_path + "/logs/BATT_" + formatted_date + "_" + current_time_save + ".csv")
+vel_path = (package_path + "/logs/" + current_time_save + "_VEL_" + csv_name)
+pose_path = (package_path + "/logs/" + current_time_save + "_POSE_" + csv_name)
+battery_path = (package_path + "/logs/" + current_time_save + "_BATT_" + csv_name)
 
 
 def vel_callback(msg):
