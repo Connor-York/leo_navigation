@@ -44,6 +44,8 @@ class Patroller():
 
         rospy.init_node('patroller')  # initialize node
 
+        self.pause_event = threading.Event()
+
         # preprocessing --------------------------------------------------
 
         # gets csv file path
@@ -204,6 +206,8 @@ class Patroller():
 
                 rospy.loginfo("Pausing")
 
+                self.pause_event.set()
+
                 t_end = rospy.Time.now() + rospy.Duration(20)  # Wait for 10 seconds
                 while rospy.Time.now() < t_end:
                     vel_msg = Twist()
@@ -233,6 +237,9 @@ class Patroller():
         self.patrol_count = 0
         self.tick = 0
         self.movebase_client()
+
+        while not rospy.is_shutdown():  # Add this loop to pause the main execution
+            self.pause_event.wait()
 
     # def pauseRobot(self):
     #     # Pause robot on the spot
