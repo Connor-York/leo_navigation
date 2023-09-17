@@ -46,6 +46,10 @@ class Patroller():
 
         self.pause_event = threading.Event()
 
+        check_and_pause_thread = threading.Thread(target=self.check_and_pause)
+        check_and_pause_thread.daemon = True
+        check_and_pause_thread.start()
+
         # preprocessing --------------------------------------------------
 
         # gets csv file path
@@ -237,10 +241,13 @@ class Patroller():
         # Continue with the rest of your logic (e.g., moving between waypoints)
         self.patrol_count = 0
         self.tick = 0
-        self.movebase_client()
+        # self.movebase_client()
 
         while not rospy.is_shutdown():  # Add this loop to pause the main execution
             self.pause_event.wait()
+            self.pause_event.clear()
+
+            self.patrol_count += 1
 
     # def pauseRobot(self):
     #     # Pause robot on the spot
