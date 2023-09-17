@@ -16,7 +16,6 @@ import threading
 plasticMSG = 0
 tagMSG = False
 pauseMSG = False
-paused = False
 
 
 
@@ -44,12 +43,6 @@ class Patroller():
     def __init__(self):
 
         rospy.init_node('patroller')  # initialize node
-
-        self.pause_event = threading.Event()
-
-        # check_and_pause_thread = threading.Thread(target=self.check_and_pause)
-        # check_and_pause_thread.daemon = True
-        # check_and_pause_thread.start()
 
         # preprocessing --------------------------------------------------
 
@@ -192,10 +185,10 @@ class Patroller():
 
     def check_and_pause(self):
 
-        global plasticMSG  
+        global plasticMSG
         global tagMSG
         global pauseMSG
-        global paused
+
         
 
 
@@ -211,33 +204,24 @@ class Patroller():
 
                 rospy.loginfo("Pausing")
 
-                paused = True
+                t_end = rospy.Time.now() + rospy.Duration(20)  # Wait for 10 seconds
+                while rospy.Time.now() < t_end:
+                    vel_msg = Twist()
+                    vel_msg.angular.z = 0.2
+                    self.vel_pub.publish(vel_msg)
 
-                # t_end = rospy.Time.now() + rospy.Duration(10)  # Wait for 10 seconds
-                # while rospy.Time.now() < t_end:
-                #     vel_msg = Twist()
-                #     vel_msg.linear.x = 0.0
-                #     vel_msg.angular.z = 0.0
-                #     self.vel_pub.publish(vel_msg)
-
-                while not rospy.is_shutdown() and self.client.get_state() != 3:
-                    rospy.sleep(0.1)
-                
-                
                 tagMSG = False
 
                 
-                # # Stop the robot
-                # vel_msg = Twist()
-                # self.vel_pub.publish(vel_msg)
+                # Stop the robot
+                vel_msg = Twist()
+                self.vel_pub.publish(vel_msg)
 
                 rospy.loginfo("Pause Done")
 
                 # Publish 'tag' as a ROS topic
                 tagPub = rospy.Publisher('tagTopic', Int32, queue_size=10)
                 tagPub.publish(False)
-
-                paused = False
 
     def run(self):
         # Start the check_and_pause method in a separate thread
@@ -248,13 +232,7 @@ class Patroller():
         # Continue with the rest of your logic (e.g., moving between waypoints)
         self.patrol_count = 0
         self.tick = 0
-        
-
-        while not rospy.is_shutdown():  # Add this loop to pause the main execution
-            self.movebase_client()
-            self.pause_event.clear()
-
-            # self.patrol_count += 1
+        self.movebase_client()
 
     # def pauseRobot(self):
     #     # Pause robot on the spot
