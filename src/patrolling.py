@@ -207,7 +207,8 @@ class Patroller():
                 t_end = rospy.Time.now() + rospy.Duration(20)  # Wait for 10 seconds
                 while rospy.Time.now() < t_end:
                     vel_msg = Twist()
-                    vel_msg.angular.z = 0.2
+                    vel_msg.linear.x = 0.0
+                    vel_msg.angular.z = 0.0
                     self.vel_pub.publish(vel_msg)
 
                 tagMSG = False
