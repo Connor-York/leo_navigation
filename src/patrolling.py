@@ -213,19 +213,23 @@ class Patroller():
 
                 paused = True
 
-                t_end = rospy.Time.now() + rospy.Duration(10)  # Wait for 10 seconds
-                while rospy.Time.now() < t_end:
-                    vel_msg = Twist()
-                    vel_msg.linear.x = 0.0
-                    vel_msg.angular.z = 0.0
-                    self.vel_pub.publish(vel_msg)
+                # t_end = rospy.Time.now() + rospy.Duration(10)  # Wait for 10 seconds
+                # while rospy.Time.now() < t_end:
+                #     vel_msg = Twist()
+                #     vel_msg.linear.x = 0.0
+                #     vel_msg.angular.z = 0.0
+                #     self.vel_pub.publish(vel_msg)
 
+                while not rospy.is_shutdown() and self.client.get_state() != 3:
+                    rospy.sleep(0.1)
+                
+                
                 tagMSG = False
 
                 
-                # Stop the robot
-                vel_msg = Twist()
-                self.vel_pub.publish(vel_msg)
+                # # Stop the robot
+                # vel_msg = Twist()
+                # self.vel_pub.publish(vel_msg)
 
                 rospy.loginfo("Pause Done")
 
@@ -244,13 +248,13 @@ class Patroller():
         # Continue with the rest of your logic (e.g., moving between waypoints)
         self.patrol_count = 0
         self.tick = 0
-        self.movebase_client()
+        
 
         while not rospy.is_shutdown():  # Add this loop to pause the main execution
-            # self.pause_event.wait()
-            # self.pause_event.clear()
+            self.movebase_client()
+            self.pause_event.clear()
 
-            self.patrol_count += 1
+            # self.patrol_count += 1
 
     # def pauseRobot(self):
     #     # Pause robot on the spot
