@@ -241,7 +241,7 @@ class Patroller():
         # Continue with the rest of your logic (e.g., moving between waypoints)
         self.patrol_count = 0
         self.tick = 0
-        # self.movebase_client()
+        self.movebase_client()
 
         while not rospy.is_shutdown():  # Add this loop to pause the main execution
             self.pause_event.wait()
