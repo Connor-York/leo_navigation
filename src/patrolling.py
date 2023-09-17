@@ -215,7 +215,7 @@ class Patroller():
                 t_end = rospy.Time.now() + rospy.Duration(20)  # Wait for 10 seconds
                 while rospy.Time.now() < t_end:
                     vel_msg = Twist()
-                    vel_msg.angular.x = 0.0
+                    vel_msg.linear.x = 0.0
                     vel_msg.angular.z = 0.0
                     self.vel_pub.publish(vel_msg)
 
@@ -247,7 +247,7 @@ class Patroller():
             self.pause_event.wait()
             self.pause_event.clear()
 
-            self.patrol_count += 1
+            # self.patrol_count += 1
 
     # def pauseRobot(self):
     #     # Pause robot on the spot
