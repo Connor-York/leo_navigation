@@ -209,7 +209,7 @@ class Patroller():
                 while rospy.Time.now() < t_end:
                     vel_msg = Twist()
 
-                    ranDomNo = random.randrange(1,2)
+                    ranDomNo = random.randrange(0,2)
 
                     if ranDomNo == 1:
                         vel_msg.linear.x = 0.0
