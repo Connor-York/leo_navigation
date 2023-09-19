@@ -205,11 +205,13 @@ class Patroller():
 
                 rospy.loginfo("Behaving")
 
+                ranDomNo = random.randrange(0,2)
+
                 t_end = rospy.Time.now() + rospy.Duration(5)  # Wait for 10 seconds
                 while rospy.Time.now() < t_end:
                     vel_msg = Twist()
 
-                    ranDomNo = random.randrange(0,2)
+                    
 
                     if ranDomNo == 1:
                         vel_msg.linear.x = 0.0
