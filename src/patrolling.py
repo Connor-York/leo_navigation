@@ -11,6 +11,7 @@ from geometry_msgs.msg import Pose, Point, Quaternion, Twist
 from tf.transformations import quaternion_from_euler
 from std_msgs.msg import Int32
 import threading
+import random
 
 
 plasticMSG = 0
@@ -202,13 +203,26 @@ class Patroller():
                 
                 rospy.loginfo('Plastic set to: %s', str(plasticMSG))
 
-                rospy.loginfo("Pausing")
+                rospy.loginfo("Behaving")
 
                 t_end = rospy.Time.now() + rospy.Duration(5)  # Wait for 10 seconds
                 while rospy.Time.now() < t_end:
                     vel_msg = Twist()
-                    vel_msg.linear.x = 0.0
-                    vel_msg.angular.z = 1.0
+
+                    ranDomNo = random.randrange(1,2)
+
+                    if ranDomNo == 1:
+                        vel_msg.linear.x = 0.0
+                        vel_msg.angular.z = 1.0
+
+                        rospy.loginfo("Spinning")
+
+                    else:
+                        vel_msg.linear.x = 0.0
+                        vel_msg.angular.z = 0.0
+
+                        rospy.loginfo("Pausing")
+                    
                     self.vel_pub.publish(vel_msg)
 
                 tagMSG = False
@@ -218,7 +232,7 @@ class Patroller():
                 vel_msg = Twist()
                 self.vel_pub.publish(vel_msg)
 
-                rospy.loginfo("Pause Done")
+                rospy.loginfo("Behaviour Done")
 
                 # Publish 'tag' as a ROS topic
                 tagPub = rospy.Publisher('tagTopic', Int32, queue_size=10)
