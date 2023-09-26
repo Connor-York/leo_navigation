@@ -190,55 +190,57 @@ class Patroller():
         global tagMSG
         global pauseMSG
 
-        
+        usePlasticity = rospy.get_param("usePlasticity")
 
+        if usePlasticity:
 
-        while not rospy.is_shutdown():  # Continuously check while the node is active
+            while not rospy.is_shutdown():  # Continuously check while the node is active
 
-            rospy.Subscriber('plasticTopic', Int32, plasticCallback)
+                rospy.Subscriber('plasticTopic', Int32, plasticCallback)
 
-            rospy.Subscriber('tagTopic', Int32, tagCallback)
+                rospy.Subscriber('tagTopic', Int32, tagCallback)
 
-            if plasticMSG == 1 and tagMSG == True:
-                
-                rospy.loginfo('Plastic set to: %s', str(plasticMSG))
+                if plasticMSG == 1 and tagMSG == True:
+                    
+                    rospy.loginfo('Plastic set to: %s', str(plasticMSG))
 
-                rospy.loginfo("Behaving")
+                    rospy.loginfo("Behaving")
 
-                ranDomNo = random.randrange(0,2)
+                    ranDomNo = random.randrange(0,2)
 
-                t_end = rospy.Time.now() + rospy.Duration(5)  # Wait for 10 seconds
-                while rospy.Time.now() < t_end:
+                    t_end = rospy.Time.now() + rospy.Duration(5)  # Wait for 10 seconds
+                    while rospy.Time.now() < t_end:
+                        vel_msg = Twist()
+
+                        
+
+                        if ranDomNo == 1:
+                            vel_msg.linear.x = 0.0
+                            vel_msg.angular.z = 1.0
+
+                            rospy.loginfo("Spinning")
+
+                        else:
+                            vel_msg.linear.x = 0.0
+                            vel_msg.angular.z = 0.0
+
+                            rospy.loginfo("Pausing")
+                        
+                        self.vel_pub.publish(vel_msg)
+
+                    tagMSG = False
+
+                    
+                    # Stop the robot
                     vel_msg = Twist()
-
-                    
-
-                    if ranDomNo == 1:
-                        vel_msg.linear.x = 0.0
-                        vel_msg.angular.z = 1.0
-
-                        rospy.loginfo("Spinning")
-
-                    else:
-                        vel_msg.linear.x = 0.0
-                        vel_msg.angular.z = 0.0
-
-                        rospy.loginfo("Pausing")
-                    
                     self.vel_pub.publish(vel_msg)
 
-                tagMSG = False
+                    rospy.loginfo("Behaviour Done")
 
-                
-                # Stop the robot
-                vel_msg = Twist()
-                self.vel_pub.publish(vel_msg)
-
-                rospy.loginfo("Behaviour Done")
-
-                # Publish 'tag' as a ROS topic
-                tagPub = rospy.Publisher('tagTopic', Int32, queue_size=10)
-                tagPub.publish(False)
+                    # Publish 'tag' as a ROS topic
+                    tagPub = rospy.Publisher('tagTopic', Int32, queue_size=10)
+                    tagPub.publish(False)
+        
 
     def run(self):
         # Start the check_and_pause method in a separate thread
