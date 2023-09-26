@@ -13,7 +13,7 @@ from std_msgs.msg import Int32
 import threading
 import random
 import os
-import datetime
+from datetime import datetime
 import csv
 
 plasticMSG = 0
