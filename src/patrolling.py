@@ -67,7 +67,7 @@ def getPath():
 
     path = os.path.join(packagePath, "logs")
 
-    fullpath = os.path.join(path, "patlog_" + timenow + ".csv")
+    fullpath = os.path.join(path, timenow + "_patlog.csv")
 
     print (fullpath)
 
