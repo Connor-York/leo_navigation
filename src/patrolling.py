@@ -218,15 +218,11 @@ class Patroller():
                             vel_msg.linear.x = 0.0
                             vel_msg.angular.z = 1.0
 
-                            rospy.loginfo("Spinning")
-
                             beHave = 'Spinning'
 
                         else:
                             vel_msg.linear.x = 0.0
                             vel_msg.angular.z = 0.0
-
-                            rospy.loginfo("Pausing")
 
                             beHave = 'Pausing'
                         
@@ -239,7 +235,7 @@ class Patroller():
                     vel_msg = Twist()
                     self.vel_pub.publish(vel_msg)
 
-                    rospy.loginfo(str(beHave) + "Behaviour Done")
+                    rospy.loginfo(str(beHave) + " Behaviour Done")
 
                     # Publish 'tag' as a ROS topic
                     tagPub = rospy.Publisher('tagTopic', Int32, queue_size=10)
