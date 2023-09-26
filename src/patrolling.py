@@ -12,11 +12,15 @@ from tf.transformations import quaternion_from_euler
 from std_msgs.msg import Int32
 import threading
 import random
-
+import os
+import datetime
+import csv
 
 plasticMSG = 0
 tagMSG = False
 pauseMSG = False
+timeList = []
+beHaveList =[]
 
 
 
@@ -38,6 +42,68 @@ def pauseCallback(msg):
 
     pauseMSG = msg.data
 
+def getTime():
+
+    #grabbing time and date to provide unique ID for logs
+    dateTime = datetime.now()
+    dtString = dateTime.strftime("%Y%m%d%H%M%S") #ISO 8601 Standard
+
+    rosTimeUnf = rospy.Time.now()
+
+    rosCorrentTime = datetime.fromtimestamp(rosTimeUnf.to_sec())
+
+    rosTime = rosCorrentTime.strftime("%H:%M: %S")
+
+    return dtString, rosTime
+
+
+
+def getPath():
+
+    timenow, _ = getTime()
+
+    rp = rospkg.RosPack()
+    packagePath = rp.get_path('arLogger')
+
+    path = os.path.join(packagePath, "logs")
+
+    fullpath = os.path.join(path, "patlog_" + timenow + ".csv")
+
+    print (fullpath)
+
+    return path, fullpath
+
+def makeFolder():
+
+    path, _ = getPath()
+
+    testFile = None
+
+    # test folder permisions
+    try:
+        testFile = open(os.path.join(path, 'test.txt'), 'w+')
+    except IOError:
+        try:
+            os.mkdir(path)
+        except OSError:
+            print("No log folder created")
+        else:
+            print("Log folder created")
+
+    testFile.close()
+    os.remove(testFile.name)
+
+
+def saveCSV():
+    
+    _, filename = getPath()
+
+    with open(filename, "w", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(['Time', 'Behaviour'])
+        
+        for i in range(len(beHaveList)):
+            writer.writerow([timeList[i], beHaveList[i]])
 
 class Patroller():
 
@@ -189,6 +255,9 @@ class Patroller():
         global plasticMSG
         global tagMSG
         global pauseMSG
+        global timeList
+        global beHaveList
+
 
         usePlasticity = rospy.get_param("usePlasticity")
 
@@ -230,6 +299,11 @@ class Patroller():
 
                     tagMSG = False
 
+                    _, timeNow = getTime()
+
+                    timeList.append(timeNow)
+                    beHaveList.append(beHave)
+                    
                     
                     # Stop the robot
                     vel_msg = Twist()
@@ -273,6 +347,8 @@ if __name__ == '__main__':
         patroller = Patroller()
         patroller.run()
         rospy.spin()
+
+        rospy.on_shutdown(saveCSV)
 
         # theta.reverse()
         # waypoints.reverse()
