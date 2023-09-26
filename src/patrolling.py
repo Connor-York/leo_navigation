@@ -277,6 +277,8 @@ class Patroller():
 
                     ranDomNo = random.randrange(0,2)
 
+                    _, timeNow = getTime()
+
                     t_end = rospy.Time.now() + rospy.Duration(5)  # Wait for 10 seconds
                     while rospy.Time.now() < t_end:
                         vel_msg = Twist()
@@ -298,6 +300,9 @@ class Patroller():
                         self.vel_pub.publish(vel_msg)
 
                     tagMSG = False
+
+                    timeList.append(timeNow)
+                    beHaveList.append(beHave)
 
                     _, timeNow = getTime()
 
