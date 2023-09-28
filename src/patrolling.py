@@ -109,7 +109,7 @@ def makeFolder():
         testFile = open(os.path.join(logFolder, 'test.txt'), 'w+')
     except IOError:
         try:
-            os.mkdir(path)
+            os.mkdir(logFolder)
 
             print ("Log folder created")
 
