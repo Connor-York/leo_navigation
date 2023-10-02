@@ -9,7 +9,7 @@ import rospkg
  # gets csv file path
 rp = rospkg.RosPack()
 package_path = rp.get_path('leo_navigation')
-CSV_path = (package_path + "/waypoints/jayexppat.csv")
+CSV_path = (package_path + "/waypoints/EXPERIMENT_NEW.csv")
 
 
 def callback(msg):

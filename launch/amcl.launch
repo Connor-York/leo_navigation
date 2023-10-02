@@ -11,7 +11,7 @@
     pkg="amcl"
     type="amcl"
     clear_params="true">
-    <rosparam command="load" file="$(find leo_navigation)/config/amcl.yaml" />
+    <rosparam command="load" file="$(find leo_navigation)/config/amcl_1.yaml" />
     <remap from="scan" to="scan_filtered"/>
   </node>
 </launch>

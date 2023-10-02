@@ -4,7 +4,7 @@
 
     <node pkg="leo_navigation" type="patrolling.py" name="patroller" output="screen">   
         <param name="patrols" value="1"/><!--Number of loops to do--> 
-        <param name="start_node" value="1"/><!--Which node to start at. It will go to N+1-->
+        <param name="start_node" value="1"/><!--Which node to start at. 0 index-->
         <param name="route" value="Experiment.csv"/>
         <param name="speed" value="fast"/> <!--fast or slow-->
     </node>
