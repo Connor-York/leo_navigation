@@ -105,12 +105,16 @@ class Patroller():
                 exit()
             self.goal_cnt +=1
             rospy.loginfo("Goal pose "+str(self.goal_cnt)+" reached")
+            if self.goal_cnt == len(self.pose_seq):
+                    rospy.loginfo("here2")
+                    self.goal_cnt = 0
             if rospy.get_param("~speed") == "slow":
                     rospy.loginfo("Spinning...")
                     self.spin_robot()
             if self.goal_cnt != rospy.get_param("~start_node"):#
-                if self.goal_cnt == len(self.pose_seq):
-                    self.goal_cnt = 0
+                rospy.loginfo("HERE")
+                rospy.loginfo(rospy.get_param("~start_node"))
+                rospy.loginfo(self.goal_cnt)
                 rospy.loginfo("Moving onto next goal...")
                 self.movebase_client()
             else:
@@ -134,7 +138,7 @@ class Patroller():
 
     def spin_robot(self):
         # Spin robot on the spot
-        t_end = rospy.Time.now() + rospy.Duration(6) #about 360deg
+        t_end = rospy.Time.now() + rospy.Duration(8) #about 360deg
         while rospy.Time.now() < t_end:
             vel_msg = Twist()
             vel_msg.angular.z = 7.0
