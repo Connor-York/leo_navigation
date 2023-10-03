@@ -129,7 +129,7 @@ def saveCSV():
 
     with open(filename, "w", newline="") as file:
         writer = csv.writer(file)
-        writer.writerow(['Time', 'Behaviour'])
+        writer.writerow(['Ros Time', 'Behaviour'])
         
         for i in range(len(beHaveList)):
             writer.writerow([timeList[i], beHaveList[i]])
