@@ -1,16 +1,13 @@
 <?xml version="1.0"?>
 <launch>
-    <!--include file="$(find leo_navigation)/launch/slam.launch" /-->
+    <include file="$(find leo_navigation)/launch/slam.launch" />
 
-    <node pkg="leo_navigation" type="patrolling.py" name="patroller" output="screen">   
-        <param name="patrols" value="1"/><!--Number of loops to do--> 
-        <param name="start_node" value="0"/><!--Which node to start at. 0 index-->
-        <param name="route" value="EXPERIMENT_NEW.csv"/>
-        <param name="speed" value="slow"/> <!--fast or slow-->
+    <node pkg="leo_navigation" type="patrolling.py" name="patroller" output="screen">  
+        <rosparam command="load" file="$(find leo_navigation)/config/Robot_config.yaml" /> 
     </node>
 
-    <!--include file="$(find leo_navigation)/launch/pogger.launch"/>
-    <include file="$(find ar_logger)/launch/logger.launch"/-->
+    <include file="$(find leo_navigation)/launch/pogger.launch"/>
+    <include file="$(find ar_logger)/launch/logger.launch"/>
 
 
 </launch>

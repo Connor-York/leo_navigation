@@ -1,0 +1,16 @@
+#Parameters for the robot
+#Logging
+robot_name: Connor
+trial_no: 1
+trial_scenario: TAGCHECK_slow
+#For the trial scenario, the four scenarios are: 
+# AF = all fast, AS = all slow, 1:3FS = 1 fast 3 slow, 2:2FS = 50/50 split
+# 3:1FS = 3 fast 1 slow 
+
+#Patrolling
+patrols: 1
+start_node: 0
+route: EXPERIMENT_NEW.csv
+speed: slow
+
+
