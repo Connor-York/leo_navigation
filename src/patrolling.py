@@ -62,27 +62,20 @@ def getPath():
 
     timenow, _ = getTime()
 
-    dateFormat = "%m%d"
-    dateStr = timenow.strftime(dateFormat)
-
     rp = rospkg.RosPack()
     packagePath = rp.get_path('arLogger')
 
-    logFolder = os.path.join(packagePath, "logs")
-    folderName = dateStr
-
-
-    path = os.path.join(logFolder, folderName)
+    path = os.path.join(packagePath, "logs")
 
     fullpath = os.path.join(path, timenow + "_patlog.csv")
 
     print (fullpath)
 
-    return path, fullpath, logFolder
+    return path, fullpath
 
 def makeFolder():
 
-    path, _ , logFolder= getPath()
+    path, _ = getPath()
 
     testFile = None
 
@@ -92,44 +85,22 @@ def makeFolder():
     except IOError:
         try:
             os.mkdir(path)
-
-            print ("Log folder created")
-
         except OSError:
             print("No log folder created")
-
+        else:
+            print("Log folder created")
 
     testFile.close()
     os.remove(testFile.name)
 
-    testFile = None
-
-    # test folder permisions
-    try:
-        testFile = open(os.path.join(logFolder, 'test.txt'), 'w+')
-    except IOError:
-        try:
-            os.mkdir(logFolder)
-
-            print ("Log folder created")
-
-            testFile.close()
-            os.remove(testFile.name)
-
-        except OSError:
-            print("No log sub-folder created")
-    
-    testFile.close()
-    os.remove(testFile.name)
-    
 
 def saveCSV():
     
-    _, filename, _ = getPath()
+    _, filename = getPath()
 
     with open(filename, "w", newline="") as file:
         writer = csv.writer(file)
-        writer.writerow(['Ros Time', 'Behaviour'])
+        writer.writerow(['ROS Time', 'Behaviour'])
         
         for i in range(len(beHaveList)):
             writer.writerow([timeList[i], beHaveList[i]])
