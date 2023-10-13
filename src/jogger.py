@@ -12,10 +12,16 @@ import time
 
 startTime = time.perf_counter()
 
-# def rosInit():
+def rosInit():
+
+    rospy.init_node("jogger")
+
+    vel_subscriber = rospy.Subscriber("nav_vel", Twist, velCallback)
+    pose_subscriber = rospy.Subscriber("amcl_pose", PoseWithCovarianceStamped, poseCallback)
+    battery_subscriber = rospy.Subscriber("firmware/battery_averaged", Float32, batCallback)
     
 
-    # rospy.on_shutdown(saveCSV)
+    rospy.on_shutdown(saveCSV)
 
 def getTime():
 
@@ -158,11 +164,7 @@ def saveCSV(filename, data, headers):
 
 if __name__ == "__main__":
     
-    rospy.init_node("jogger")
-
-    vel_subscriber = rospy.Subscriber("nav_vel", Twist, velCallback)
-    pose_subscriber = rospy.Subscriber("amcl_pose", PoseWithCovarianceStamped, poseCallback)
-    battery_subscriber = rospy.Subscriber("firmware/battery_averaged", Float32, batCallback)
+    rosInit()
 
 
     # makeFolder()
