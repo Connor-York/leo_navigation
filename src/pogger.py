@@ -7,6 +7,8 @@ import time
 import datetime
 import rospkg 
 import csv
+import os
+
 
 #getting date for saving
 current_date = datetime.date.today()
@@ -19,11 +21,16 @@ start_time = time.time()
 
 #getting csv paths for both the logs
 rp = rospkg.RosPack()
-package_path = rp.get_path('leo_navigation')
+packagePath = rp.get_path('arLogger')
+logFolder = os.path.join(packagePath, "logs")
+
+#grabbing time and date to provide unique ID for logs
+dateTime = datetime.now()
+timenow = dateTime.strftime("%Y%m%d%H%M%S") #ISO 8601 Standard
     
-vel_path = (package_path + "/logs/VEL_" + formatted_date + "_" + current_time_save + ".csv")
-pose_path = (package_path + "/logs/POSE_" + formatted_date + "_" + current_time_save + ".csv")
-battery_path = (package_path + "/logs/BATT_" + formatted_date + "_" + current_time_save + ".csv")
+velFullpath = os.path.join(logFolder, timenow + "_vellog.csv")
+poseFullpath = os.path.join(logFolder, timenow + "_poselog.csv")
+batFullpath = os.path.join(logFolder, timenow + "_batlog.csv")
 
 
 def vel_callback(msg):
@@ -31,7 +38,7 @@ def vel_callback(msg):
     ang_z = msg.angular.z
     timestamp = time.time() - start_time
     data = [lin_x,ang_z,timestamp]
-    save_to_csv(vel_path,data)
+    save_to_csv(velFullpath,data)
 
 def pose_callback(msg):
     x = msg.pose.pose.position.x
@@ -42,12 +49,12 @@ def pose_callback(msg):
     ow = msg.pose.pose.orientation.w
     timestamp = time.time() - start_time
     data = [x,y,ox,oy,oz,ow,timestamp]
-    save_to_csv(pose_path,data)
+    save_to_csv(poseFullpath,data)
 
 def battery_callback(msg):
     timestamp = time.time() - start_time
     data = [msg.data, timestamp]
-    save_to_csv(battery_path,data)
+    save_to_csv(batFullpath,data)
 
 def save_to_csv(csv_path,data):
     with open(csv_path, "a", newline="") as file:

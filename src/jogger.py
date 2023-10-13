@@ -10,7 +10,7 @@ import os
 import time
 
 
-startTime = time.perf_counter()
+startTime = time.time()
 
 def rosInit():
 
@@ -90,7 +90,7 @@ def velCallback(msg):
 
     global startTime
 
-    finishTime = time.perf_counter()
+    finishTime = time.time()
 
     timeStamp = round(finishTime-startTime, 2)
 
@@ -106,7 +106,7 @@ def velCallback(msg):
 
     velHeaders =" 'Ros Time', 'Time Stamp', 'Linear Velocity', 'Angular Velocity' "
 
-    rospy.on_shutdown(saveCSV(velPath, velData, velHeaders))
+    saveCSV(velPath, velData, velHeaders)
     
 
 def poseCallback(msg):
@@ -133,7 +133,7 @@ def poseCallback(msg):
 
     poseHeaders = " 'Ros Time', 'Time Stamp', 'x', 'y', 'ox', 'oy', 'oz', 'ow' "
 
-    rospy.on_shutdown(saveCSV(posePath, poseData, poseHeaders))
+    saveCSV(posePath, poseData, poseHeaders)
 
 
 def batCallback(msg):
@@ -152,7 +152,7 @@ def batCallback(msg):
 
     batHeaders = " 'Ros Time', 'Time Stamp', 'Battery Level' "
 
-    rospy.on_shutdown(saveCSV(batPath, batData, batHeaders))
+    saveCSV(batPath, batData, batHeaders)
 
 
 def saveCSV(filename, data, headers):

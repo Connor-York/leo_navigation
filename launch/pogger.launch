@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
     
-    <node pkg="leo_navigation" type="jogger.py" name="pogger" output="screen">   
+    <node pkg="leo_navigation" type="pogger.py" name="pogger" output="screen">   
     </node>
 
 
