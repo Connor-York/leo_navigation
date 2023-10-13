@@ -3,7 +3,7 @@
 import rospy
 from geometry_msgs.msg import PoseWithCovarianceStamped, Twist
 from std_msgs.msg import Float32
-import datetime
+from datetime import datetime
 import rospkg 
 import csv
 import os
