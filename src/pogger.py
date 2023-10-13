@@ -19,7 +19,7 @@ start_time = time.time()
 
 #getting csv paths for both the logs
 rp = rospkg.RosPack()
-package_path = rp.get_path('arLogger`')
+package_path = rp.get_path('arLogger')
     
 vel_path = (package_path + "/logs/" + timenow + "_vellog.csv")
 pose_path = (package_path + "/logs/" + timenow + "_poselog.csv")
