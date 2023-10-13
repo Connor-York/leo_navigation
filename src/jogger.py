@@ -21,7 +21,7 @@ def rosInit():
     battery_subscriber = rospy.Subscriber("firmware/battery_averaged", Float32, batCallback)
     
 
-    rospy.on_shutdown(saveCSV)
+    # rospy.on_shutdown(saveCSV)
 
 def getTime():
 
@@ -106,7 +106,7 @@ def velCallback(msg):
 
     velHeaders =" 'Ros Time', 'Time Stamp', 'Linear Velocity', 'Angular Velocity' "
 
-    saveCSV(velPath, velData, velHeaders)
+    rospy.on_shutdown(saveCSV(velPath, velData, velHeaders))
     
 
 def poseCallback(msg):
@@ -133,7 +133,7 @@ def poseCallback(msg):
 
     poseHeaders = " 'Ros Time', 'Time Stamp', 'x', 'y', 'ox', 'oy', 'oz', 'ow' "
 
-    saveCSV(posePath, poseData, poseHeaders)
+    rospy.on_shutdown(saveCSV(posePath, poseData, poseHeaders))
 
 
 def batCallback(msg):
@@ -152,7 +152,7 @@ def batCallback(msg):
 
     batHeaders = " 'Ros Time', 'Time Stamp', 'Battery Level' "
 
-    saveCSV(batPath, batData, batHeaders)
+    rospy.on_shutdown(saveCSV(batPath, batData, batHeaders))
 
 
 def saveCSV(filename, data, headers):
