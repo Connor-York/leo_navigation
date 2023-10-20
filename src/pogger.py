@@ -17,12 +17,18 @@ timenow = current_time_save.strftime("%Y%m%d%H%M%S")
 #start time for comparison
 start_time = time.time()
 
+rospy.init_node("pogger") # init node (pose logger)
+
 #getting csv paths for both the logs
 rp = rospkg.RosPack()
 package_path = rp.get_path('arLogger')
+
+timeThresholdLow = rospy.get_param("~timeThresholdLow")
+timeThresholdHigh = rospy.get_param("~timeThresholdHigh")
+
     
-vel_path = (package_path + "/logs/" + timenow + "_vellog.csv")
-pose_path = (package_path + "/logs/" + timenow + "_poselog.csv")
+vel_path = (package_path + "/logs/" + timenow + "_TTH_" + str(timeThresholdLow) + "_" + str(timeThresholdHigh) + "_vellog.csv")
+pose_path = (package_path + "/logs/" + timenow + "_TTH_" + str(timeThresholdLow) + "_" + str(timeThresholdHigh) + "_poselog.csv")
 battery_path = (package_path + "/logs/" + timenow + "_batlog.csv")
 
 
@@ -55,8 +61,9 @@ def save_to_csv(csv_path,data):
         writer.writerow(data)
 
 if __name__ == "__main__":
-    rospy.init_node("pogger") # init node (pose logger)
+    
 
+    
 
     #start subscribers for both velocity and position
     vel_subscriber = rospy.Subscriber("nav_vel",Twist,vel_callback)
