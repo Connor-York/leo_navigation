@@ -17,8 +17,8 @@ timenow = current_time_save.strftime("%Y%m%d%H%M%S")
 #start time for comparison
 start_time = time.time()
 
-timeThresholdLow = '6' #rospy.get_param("~timeThresholdLow")
-timeThresholdHigh = '10' #rospy.get_param("~timeThresholdHigh")
+timeThresholdLow = '100' #rospy.get_param("~timeThresholdLow")
+timeThresholdHigh = '200' #rospy.get_param("~timeThresholdHigh")
 
 #getting csv paths for both the logs
 rp = rospkg.RosPack()
