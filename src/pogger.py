@@ -26,7 +26,7 @@ package_path = rp.get_path('arLogger')
     
 vel_path = (package_path + "/logs/" + timenow + "_TTH_" + str(timeThresholdLow) + "_" + str(timeThresholdHigh) + "_vellog.csv")
 pose_path = (package_path + "/logs/" + timenow + "_TTH_" + str(timeThresholdLow) + "_" + str(timeThresholdHigh) + "_poselog.csv")
-battery_path = (package_path + "/logs/" + timenow + "_batlog.csv")
+battery_path = (package_path + "/logs/" + timenow + "_TTH_" + str(timeThresholdLow) + "_" + str(timeThresholdHigh) + "_batlog.csv") 
 
 
 def vel_callback(msg):
