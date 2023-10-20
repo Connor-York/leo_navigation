@@ -1,4 +1,4 @@
-patrols: 4
+patrols: 2
 start_node: 1
 route: Experiment.csv
 speed: fast
