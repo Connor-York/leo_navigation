@@ -103,7 +103,7 @@ class Patroller():
 
     def state_at_waypoint(self):
         #do something? 
-        Tag_scan() #calls tag scan, class, cause uh, idk really.
+        Tag_scan() #calls tag scan, does the thing, continues
 
         self.continue_patrol()
 
@@ -174,33 +174,39 @@ class Tag_scan(): #=============================================================
         self.num_tags = 4
 
         self.ar_subscriber = rospy.Subscriber("ar_pose_marker", AlvarMarkers, self.check_ID_callback)
+        self.tag_tick = 0
 
         self.tag_scan()
 
     def tag_scan(self):
-        while(len(self.ID_list)!=self.num_tags): # ERRROR. GETS STUCK HERE. BLOCKING            
-            print("Waiting :)")
-            #print(self.ID_list)# wait 
-        self.ar_subscriber.unregister() # stop scanning tags after 4 unique scanned
+        print("TAG SCAN")
+        if(len(self.ID_list)==self.num_tags):
+            print("FOUR TAGS")
+            self.tag_tick = 1
+            self.ar_subscriber.unregister() # stop scanning tags after 4 unique scanned
+        else:
+            if self.tag_tick == 0:
+                self.tag_scan()
+            elif self.tag_tick == 1:
+                scanned_prev = reward_ID_seen + no_reward_ID_seen
 
-        scanned_prev = reward_ID_seen + no_reward_ID_seen
-
-        for ID in self.ID_list: 
-            # this logic is definitely flawed, test and fix to not
-            #put tags in both? Or to handle the switching case.
-            if ID not in scanned_prev: # if new, scan for the first time
-                print("Scanning new ID - " + ID)
-                self.scan(ID)
-            elif ID in reward_ID_seen: # if known reward, scan
-                print("Scanning known reward ID - " + ID)
-                self.scan(ID)
-                continue #hm
-            elif ID in no_reward_ID_seen: # only re-scan known no reward if chance 
-                chance = 1 - self.LI # High LI is low chance, LOW LI is high chance :) 
-                r = random.random() #float in range 0-1
-                if r <= chance: 
-                    print("Rescanning known no reward ID - " + ID)
-                    self.scan(ID) #rescan :) 
+                for ID in self.ID_list: 
+                    # this logic is definitely flawed, test and fix to not
+                    #put tags in both? Or to handle the switching case.
+                    if ID not in scanned_prev: # if new, scan for the first time
+                        print("Scanning new ID - " + ID)
+                        self.scan(ID)
+                    elif ID in reward_ID_seen: # if known reward, scan
+                        print("Scanning known reward ID - " + ID)
+                        self.scan(ID)
+                        continue #hm
+                    elif ID in no_reward_ID_seen: # only re-scan known no reward if chance 
+                        chance = 1 - self.LI # High LI is low chance, LOW LI is high chance :) 
+                        r = random.random() #float in range 0-1
+                        if r <= chance: 
+                            print("Rescanning known no reward ID - " + ID)
+                            self.scan(ID) #rescan :) 
+                self.tag_tick == 0 
 
 
 
@@ -243,9 +249,10 @@ class Tag_scan(): #=============================================================
             # These two just print the ID and Pose to the cmd line
             #rospy.loginfo(marker.id)
             #rospy.loginfo(marker.pose.pose)
+            print("ID - BUFFER - LIST")
             print(marker.id)
-            print(buffer)
-            print(ID_list)
+            print(self.buffer)
+            print(self.ID_list)
         
             #filter out fake IDs (>17), any IDs already in the list, and only accept those that have been seen thrice
             if self.buffer_check(marker.id):
@@ -256,6 +263,8 @@ class Tag_scan(): #=============================================================
                         #elapsed_time = current_time - start_time
                         #Time_list.append(elapsed_time)
                         self.ID_list.append(marker.id)
+                        if len(ID_list) == self.num_tags:
+                            self.tag_scan()
 
     
 
