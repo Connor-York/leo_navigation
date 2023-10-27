@@ -12,6 +12,7 @@ from tf.transformations import quaternion_from_euler
 from geometry_msgs.msg import Twist
 import time
 import random
+from ar_track_alvar_msgs.msg import AlvarMarkers
 
 class Patroller():
 
@@ -24,7 +25,7 @@ class Patroller():
         # gets csv file path
         rp = rospkg.RosPack()
         package_path = rp.get_path('leo_navigation')
-        route = rospy.get_ptimearam('~route')
+        route = rospy.get_param('~route')
         CSV_path = (package_path + "/waypoints/" + route)
 
         # converts waypoints text file into a list of points to follow
@@ -86,7 +87,7 @@ class Patroller():
         status = self.client.get_state()
         #rospy.loginfo(status)
         if status == 3:
-            self.state_at_waypoint():
+            self.state_at_waypoint()
 
     def state_patrolling(self):
         goal = MoveBaseGoal()
@@ -106,11 +107,15 @@ class Patroller():
 
         self.continue_patrol()
 
-    def continue_patrol(self):
+    
     #checks robot patrol state, determines whether to continue looping or whether to return home
     # and stop. Can definitely be cleaned up but im not gonna do that now.
+    def continue_patrol(self):
         if self.tick == 1: # tick is one, returned home, done.
             rospy.loginfo("FIN")
+            print(reward_count)
+            print(reward_ID_seen)
+            print(no_reward_ID_seen)
             rospy.signal_shutdown("FIN")
             exit()
 
@@ -163,17 +168,19 @@ class Tag_scan(): #=============================================================
     def __init__(self):
         self.ID_list = []
         self.buffer = []
-        rewards = [1,2,3,4]
+        self.rewards = [0,2,3,6]
+        self.LI = 0.8
 
         self.num_tags = 4
 
-        self.ar_subscriber = rospy.Subscriber("ar_pose_marker", AlvarMarkers, check_ID_callback)
+        self.ar_subscriber = rospy.Subscriber("ar_pose_marker", AlvarMarkers, self.check_ID_callback)
 
-        self.tag_scan():
+        self.tag_scan()
 
     def tag_scan(self):
-        while(len(self.ID_list)!=self.num_tags){ # wait 
-        }
+        while(len(self.ID_list)!=self.num_tags): # ERRROR. GETS STUCK HERE. BLOCKING            
+            print("Waiting :)")
+            #print(self.ID_list)# wait 
         self.ar_subscriber.unregister() # stop scanning tags after 4 unique scanned
 
         scanned_prev = reward_ID_seen + no_reward_ID_seen
@@ -182,14 +189,17 @@ class Tag_scan(): #=============================================================
             # this logic is definitely flawed, test and fix to not
             #put tags in both? Or to handle the switching case.
             if ID not in scanned_prev: # if new, scan for the first time
+                print("Scanning new ID - " + ID)
                 self.scan(ID)
             elif ID in reward_ID_seen: # if known reward, scan
+                print("Scanning known reward ID - " + ID)
                 self.scan(ID)
                 continue #hm
             elif ID in no_reward_ID_seen: # only re-scan known no reward if chance 
                 chance = 1 - self.LI # High LI is low chance, LOW LI is high chance :) 
                 r = random.random() #float in range 0-1
                 if r <= chance: 
+                    print("Rescanning known no reward ID - " + ID)
                     self.scan(ID) #rescan :) 
 
 
@@ -197,9 +207,11 @@ class Tag_scan(): #=============================================================
     def scan(self,ID,tick):
         if ID in rewards:
             reward_ID_seen.append(ID)
+            print("Reward got!")
             reward_count += 1
         else:
             no_reward_ID_seen.append(ID)
+            print("No Reward :(")
         self.scan_delay()
 
     def scan_delay(self):
@@ -211,15 +223,15 @@ class Tag_scan(): #=============================================================
 
     def dupe_check(self, iterable,check):
         for x in iterable:
-        if x == check:
-            return True
+            if x == check:
+                return True
 
     def buffer_check(self, check): 
         self.buffer.append(check)
         if len(self.buffer) == 11:
             self.buffer.pop(0)
         bick = 0 #buffer tick
-        for x in buffer: 
+        for x in self.buffer: 
             if x == check:
                 bick += 1
                 if bick == 3: # if 3 of the same tag in buffer
@@ -231,14 +243,14 @@ class Tag_scan(): #=============================================================
             # These two just print the ID and Pose to the cmd line
             #rospy.loginfo(marker.id)
             #rospy.loginfo(marker.pose.pose)
-            #print(marker.id)
-            #print(buffer)
-            #print(ID_list)
+            print(marker.id)
+            print(buffer)
+            print(ID_list)
         
             #filter out fake IDs (>17), any IDs already in the list, and only accept those that have been seen thrice
-            if buffer_check(marker.id):
+            if self.buffer_check(marker.id):
                 if marker.id < 18:
-                    if dupe_check(ID_list, marker.id) == None:
+                    if self.dupe_check(self.ID_list, marker.id) == None:
                         #print("ACCEPTED")
                         #current_time = time.time()
                         #elapsed_time = current_time - start_time
@@ -249,11 +261,14 @@ class Tag_scan(): #=============================================================
 
 if __name__ == '__main__':
     try:
-        global reward_ID_seen = []
-        global no_reward_ID_seen = []
-        global reward_count = 0
+        global reward_ID_seen
+        reward_ID_seen = []
+        global no_reward_ID_seen
+        no_reward_ID_seen = []
+        global reward_count
+        reward_count = 0
 
-        Patroller():
+        Patroller()
         rospy.spin()
 
     except rospy.ROSInterruptException:

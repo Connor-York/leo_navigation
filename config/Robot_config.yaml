@@ -8,9 +8,9 @@ trial_scenario: TAGCHECK_slow
 # 3:1FS = 3 fast 1 slow 
 
 #Patrolling
-patrols: 1
+patrols: 3
 start_node: 0
-route: EXPERIMENT_NEW.csv
+route: LI_test.csv
 speed: slow
 
 
