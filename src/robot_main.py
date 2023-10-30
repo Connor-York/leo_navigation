@@ -87,6 +87,7 @@ class Patroller():
         status = self.client.get_state()
         #rospy.loginfo(status)
         if status == 3:
+            self.client.stop_tracking_goal()
             self.state_at_waypoint()
 
     def state_patrolling(self):
@@ -103,9 +104,14 @@ class Patroller():
 
     def state_at_waypoint(self):
         #do something? 
-        Tag_scan() #calls tag scan, does the thing, continues
-
-        self.continue_patrol()
+        print("At waypoint")
+        ts = Tag_scan() #calls tag scan, does the thing, continues
+        ts.tag_scan()
+        print("after tag scan") #THIS IS POPPING UP TOO EARLY, CHECK WITH CALLBACKS OR SMTH
+        # THIS IS RUNNING IN A WEIRD FUCKY ORDER AND I WISH I COULD JUST STEP THROUGH THE CODE LINE BY LINE
+        if(ts.complete_scan == 1):
+            print("continuing patrol")
+            self.continue_patrol()
 
     
     #checks robot patrol state, determines whether to continue looping or whether to return home
@@ -171,61 +177,62 @@ class Tag_scan(): #=============================================================
         self.rewards = [0,2,3,6]
         self.LI = 0.8
 
+        self.reward_ID_seen = []
+        self.no_reward_ID_seen = []
+        self.reward_count = 0
+
         self.num_tags = 4
 
-        self.ar_subscriber = rospy.Subscriber("ar_pose_marker", AlvarMarkers, self.check_ID_callback)
-        self.tag_tick = 0
 
-        self.tag_scan()
+
+        self.ar_subscriber = rospy.Subscriber("ar_pose_marker", AlvarMarkers, self.check_ID_callback)
+        
+        self.complete_scan = 0
+        self.callback_tick = 1
+        print('finished init func')
 
     def tag_scan(self):
-        print("TAG SCAN")
-        if(len(self.ID_list)==self.num_tags):
-            print("FOUR TAGS")
-            self.tag_tick = 1
-            self.ar_subscriber.unregister() # stop scanning tags after 4 unique scanned
-        else:
-            if self.tag_tick == 0:
-                self.tag_scan()
-            elif self.tag_tick == 1:
-                scanned_prev = reward_ID_seen + no_reward_ID_seen
+        #ITS GETTING STUCK HERE AND IDK WHY, IT JUST REPEATS AND REPEATS
+        print("TAG SCAN") 
+        if self.callback_tick == 0:
+            scanned_prev = self.reward_ID_seen + self.no_reward_ID_seen
+            print(self.ID_list)
+            for ID in self.ID_list: 
+                # this logic is definitely flawed, test and fix to not
+                #put tags in both? Or to handle the switching case.
+                if ID not in scanned_prev: # if new, scan for the first time
+                    print("Scanning new ID - " + str(ID))
+                    self.scan(ID)
+                elif ID in self.reward_ID_seen: # if known reward, scan
+                    print("Scanning known reward ID - " + str(ID))
+                    self.scan(ID)
+                elif ID in self.no_reward_ID_seen: # only re-scan known no reward if chance 
+                    chance = 1 - self.LI # High LI is low chance, LOW LI is high chance :) 
+                    r = random.random() #float in range 0-1
+                    if r <= chance: 
+                        print("Rescanning known no reward ID - " + str(ID))
+                        self.scan(ID) #rescan :) 
+            self.complete_scan = 1
+            print("Reward Count: " + str(self.reward_count))
+        print("Done for loop")
+        
+        time.sleep(1)
 
-                for ID in self.ID_list: 
-                    # this logic is definitely flawed, test and fix to not
-                    #put tags in both? Or to handle the switching case.
-                    if ID not in scanned_prev: # if new, scan for the first time
-                        print("Scanning new ID - " + ID)
-                        self.scan(ID)
-                    elif ID in reward_ID_seen: # if known reward, scan
-                        print("Scanning known reward ID - " + ID)
-                        self.scan(ID)
-                        continue #hm
-                    elif ID in no_reward_ID_seen: # only re-scan known no reward if chance 
-                        chance = 1 - self.LI # High LI is low chance, LOW LI is high chance :) 
-                        r = random.random() #float in range 0-1
-                        if r <= chance: 
-                            print("Rescanning known no reward ID - " + ID)
-                            self.scan(ID) #rescan :) 
-                self.tag_tick == 0 
-
-
-
-    def scan(self,ID,tick):
-        if ID in rewards:
-            reward_ID_seen.append(ID)
+    def scan(self,ID):
+        if ID in self.rewards:
+            self.reward_ID_seen.append(ID)
             print("Reward got!")
-            reward_count += 1
+            self.reward_count += 1
         else:
-            no_reward_ID_seen.append(ID)
+            self.no_reward_ID_seen.append(ID)
             print("No Reward :(")
         self.scan_delay()
 
     def scan_delay(self):
-        for i in range(10):
+        for i in range(2):
             print("Scanning... ", i+1)
             time.sleep(1)
         print("Scan complete")
-
 
     def dupe_check(self, iterable,check):
         for x in iterable:
@@ -244,38 +251,28 @@ class Tag_scan(): #=============================================================
                     return True
 
     def check_ID_callback(self, msg): #main callback, does everything
-        for marker in msg.markers:
+        if self.callback_tick == 1:
+            for marker in msg.markers:
 
-            # These two just print the ID and Pose to the cmd line
-            #rospy.loginfo(marker.id)
-            #rospy.loginfo(marker.pose.pose)
-            print("ID - BUFFER - LIST")
-            print(marker.id)
-            print(self.buffer)
-            print(self.ID_list)
-        
-            #filter out fake IDs (>17), any IDs already in the list, and only accept those that have been seen thrice
-            if self.buffer_check(marker.id):
-                if marker.id < 18:
-                    if self.dupe_check(self.ID_list, marker.id) == None:
-                        #print("ACCEPTED")
-                        #current_time = time.time()
-                        #elapsed_time = current_time - start_time
-                        #Time_list.append(elapsed_time)
-                        self.ID_list.append(marker.id)
-                        if len(ID_list) == self.num_tags:
-                            self.tag_scan()
+            
+                #filter out fake IDs (>17), any IDs already in the list, and only accept those that have been seen thrice
+                if self.buffer_check(marker.id):
+                    if marker.id < 18:
+                        if self.dupe_check(self.ID_list, marker.id) == None:
+                            #print("ACCEPTED")
+                            #current_time = time.time()
+                            #elapsed_time = current_time - start_time
+                            #Time_list.append(elapsed_time)
+                            self.ID_list.append(marker.id)
+                            if len(self.ID_list) == self.num_tags:
+                                self.callback_tick = 0
+                                self.tag_scan()
 
     
 
 if __name__ == '__main__':
     try:
-        global reward_ID_seen
-        reward_ID_seen = []
-        global no_reward_ID_seen
-        no_reward_ID_seen = []
-        global reward_count
-        reward_count = 0
+
 
         Patroller()
         rospy.spin()
