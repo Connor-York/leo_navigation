@@ -87,7 +87,9 @@ class Patroller():
         status = self.client.get_state()
         #rospy.loginfo(status)
         if status == 3:
+            rospy.loginfo(" status tree ")
             self.client.stop_tracking_goal()
+            rospy.loginfo("GOING TO WAYPOINT STATE")
             self.state_at_waypoint()
 
     def state_patrolling(self):
@@ -104,14 +106,17 @@ class Patroller():
 
     def state_at_waypoint(self):
         #do something? 
-        print("At waypoint")
+        rospy.loginfo("At waypoint")
         ts = Tag_scan() #calls tag scan, does the thing, continues
         ts.tag_scan()
-        print("after tag scan") #THIS IS POPPING UP TOO EARLY, CHECK WITH CALLBACKS OR SMTH
+        rospy.loginfo("after tag scan") #THIS IS POPPING UP TOO EARLY, CHECK WITH CALLBACKS OR SMTH
         # THIS IS RUNNING IN A WEIRD FUCKY ORDER AND I WISH I COULD JUST STEP THROUGH THE CODE LINE BY LINE
         if(ts.complete_scan == 1):
-            print("continuing patrol")
+            rospy.loginfo("continuing patrol")
             self.continue_patrol()
+        #else:
+            #rospy.loginfo("In the else statement")
+            #ts.tag_scan()
 
     
     #checks robot patrol state, determines whether to continue looping or whether to return home
@@ -119,9 +124,9 @@ class Patroller():
     def continue_patrol(self):
         if self.tick == 1: # tick is one, returned home, done.
             rospy.loginfo("FIN")
-            print(reward_count)
-            print(reward_ID_seen)
-            print(no_reward_ID_seen)
+            rospy.loginfo(reward_count)
+            rospy.loginfo(reward_ID_seen)l
+            rospy.loginfo(no_reward_ID_seen)
             rospy.signal_shutdown("FIN")
             exit()
 
@@ -189,50 +194,54 @@ class Tag_scan(): #=============================================================
         
         self.complete_scan = 0
         self.callback_tick = 1
-        print('finished init func')
+        rospy.loginfo('finished init func')
 
     def tag_scan(self):
-        #ITS GETTING STUCK HERE AND IDK WHY, IT JUST REPEATS AND REPEATS
-        print("TAG SCAN") 
+        #ITS GETTING STUCK HERE AND IDK WHY, IT JUST REPEATS AND REPEATS.
+        # Fixed, it was the time.sleep in the foor loop in scan_delay(). Idfk why?
+        rospy.loginfo("TAG SCAN") 
         if self.callback_tick == 0:
             scanned_prev = self.reward_ID_seen + self.no_reward_ID_seen
-            print(self.ID_list)
+            rospy.loginfo(self.ID_list)
             for ID in self.ID_list: 
                 # this logic is definitely flawed, test and fix to not
                 #put tags in both? Or to handle the switching case.
                 if ID not in scanned_prev: # if new, scan for the first time
-                    print("Scanning new ID - " + str(ID))
+                    rospy.loginfo("Scanning new ID - " + str(ID))
                     self.scan(ID)
                 elif ID in self.reward_ID_seen: # if known reward, scan
-                    print("Scanning known reward ID - " + str(ID))
+                    rospy.loginfo("Scanning known reward ID - " + str(ID))
                     self.scan(ID)
                 elif ID in self.no_reward_ID_seen: # only re-scan known no reward if chance 
                     chance = 1 - self.LI # High LI is low chance, LOW LI is high chance :) 
                     r = random.random() #float in range 0-1
                     if r <= chance: 
-                        print("Rescanning known no reward ID - " + str(ID))
+                        rospy.loginfo("Rescanning known no reward ID - " + str(ID))
                         self.scan(ID) #rescan :) 
             self.complete_scan = 1
-            print("Reward Count: " + str(self.reward_count))
-        print("Done for loop")
+            rospy.loginfo("Reward Count: " + str(self.reward_count))
+        rospy.loginfo("After for loop")
         
-        time.sleep(1)
+        rospy.sleep(1) #If i remove this it leaves tag scan too early I think.
 
     def scan(self,ID):
         if ID in self.rewards:
             self.reward_ID_seen.append(ID)
-            print("Reward got!")
+            rospy.loginfo("Reward got!")
             self.reward_count += 1
         else:
             self.no_reward_ID_seen.append(ID)
-            print("No Reward :(")
+            rospy.loginfo("No Reward :(")
         self.scan_delay()
 
     def scan_delay(self):
-        for i in range(2):
-            print("Scanning... ", i+1)
-            time.sleep(1)
-        print("Scan complete")
+        t = 2.0
+        rospy.loginfo("Scanning " + str(t) + "s...")
+        while True:
+            pass
+        #rospy.sleep(t) #???!??!?!??!?! STILL SKIPS IT WTF time.sleep & rospy.sleep ?!
+        # ^^ THIS IS THE CAUSE OF THE
+        rospy.loginfo("Scan complete")
 
     def dupe_check(self, iterable,check):
         for x in iterable:
@@ -259,7 +268,7 @@ class Tag_scan(): #=============================================================
                 if self.buffer_check(marker.id):
                     if marker.id < 18:
                         if self.dupe_check(self.ID_list, marker.id) == None:
-                            #print("ACCEPTED")
+                            rospy.loginfo("CALLBACK ID")
                             #current_time = time.time()
                             #elapsed_time = current_time - start_time
                             #Time_list.append(elapsed_time)
