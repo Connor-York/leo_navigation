@@ -114,8 +114,9 @@ class Patroller():
         if(ts.complete_scan == 1):
             rospy.loginfo("continuing patrol")
             self.continue_patrol()
-        #else:
-            #rospy.loginfo("In the else statement")
+        else:
+            rospy.loginfo("In the else statement")
+            rospy.sleep(2)
             #ts.tag_scan()
 
     
@@ -125,7 +126,7 @@ class Patroller():
         if self.tick == 1: # tick is one, returned home, done.
             rospy.loginfo("FIN")
             rospy.loginfo(reward_count)
-            rospy.loginfo(reward_ID_seen)l
+            rospy.loginfo(reward_ID_seen)
             rospy.loginfo(no_reward_ID_seen)
             rospy.signal_shutdown("FIN")
             exit()
@@ -218,11 +219,13 @@ class Tag_scan(): #=============================================================
                     if r <= chance: 
                         rospy.loginfo("Rescanning known no reward ID - " + str(ID))
                         self.scan(ID) #rescan :) 
+            rospy.loginfo("scan forloop complete, complete_scan = 1")
             self.complete_scan = 1
             rospy.loginfo("Reward Count: " + str(self.reward_count))
         rospy.loginfo("After for loop")
         
         rospy.sleep(1) #If i remove this it leaves tag scan too early I think.
+        rospy.loginfo("After sleep")
 
     def scan(self,ID):
         if ID in self.rewards:
@@ -237,9 +240,7 @@ class Tag_scan(): #=============================================================
     def scan_delay(self):
         t = 2.0
         rospy.loginfo("Scanning " + str(t) + "s...")
-        while True:
-            pass
-        #rospy.sleep(t) #???!??!?!??!?! STILL SKIPS IT WTF time.sleep & rospy.sleep ?!
+        rospy.sleep(t) #???!??!?!??!?! STILL SKIPS IT WTF time.sleep & rospy.sleep ?!
         # ^^ THIS IS THE CAUSE OF THE
         rospy.loginfo("Scan complete")
 
@@ -275,6 +276,7 @@ class Tag_scan(): #=============================================================
                             self.ID_list.append(marker.id)
                             if len(self.ID_list) == self.num_tags:
                                 self.callback_tick = 0
+                                rospy.loginfo("Going back to tag scan")
                                 self.tag_scan()
 
     
