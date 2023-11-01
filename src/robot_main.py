@@ -114,10 +114,6 @@ class Patroller():
         if(ts.complete_scan == 1):
             rospy.loginfo("continuing patrol")
             self.continue_patrol()
-        else:
-            rospy.loginfo("In the else statement")
-            rospy.sleep(2)
-            #ts.tag_scan()
 
     
     #checks robot patrol state, determines whether to continue looping or whether to return home
@@ -224,7 +220,9 @@ class Tag_scan(): #=============================================================
             rospy.loginfo("Reward Count: " + str(self.reward_count))
         rospy.loginfo("After for loop")
         
-        rospy.sleep(1) #If i remove this it leaves tag scan too early I think.
+        #rospy.sleep(1) #If i remove this it leaves tag scan too early I think.
+        if self.complete_scan == 0:
+            self.tag_scan()
         rospy.loginfo("After sleep")
 
     def scan(self,ID):
@@ -238,7 +236,7 @@ class Tag_scan(): #=============================================================
         self.scan_delay()
 
     def scan_delay(self):
-        t = 2.0
+        t = 10.0
         rospy.loginfo("Scanning " + str(t) + "s...")
         rospy.sleep(t) #???!??!?!??!?! STILL SKIPS IT WTF time.sleep & rospy.sleep ?!
         # ^^ THIS IS THE CAUSE OF THE
@@ -276,8 +274,8 @@ class Tag_scan(): #=============================================================
                             self.ID_list.append(marker.id)
                             if len(self.ID_list) == self.num_tags:
                                 self.callback_tick = 0
-                                rospy.loginfo("Going back to tag scan")
-                                self.tag_scan()
+                                # rospy.loginfo("Going back to tag scan")
+                                # self.tag_scan()
 
     
 
