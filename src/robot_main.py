@@ -20,7 +20,10 @@ class Patroller():
 
         rospy.init_node('patroller')  # initialize node
 
-        # preprocessing --------------------------------------------------
+        # Getting timing and information for logging ------------------------------
+        self.start_time = time.time()
+        current_time_save = datetime.datetime.now()
+        current_time_save = current_time_save.strftime("%H:%M:%S")
 
         # gets csv file path
         rp = rospkg.RosPack()
@@ -28,6 +31,15 @@ class Patroller():
         route = rospy.get_param('~route')
         CSV_path = (package_path + "/waypoints/" + route)
 
+        name = rospy.get_param("~robot_name")
+        trial_no = rospy.get_param("~trial_no")
+        trial_no = str(trial_no)
+        scenario = rospy.get_param("~trial_scenario")
+        time_csv_name = (name + "_" + scenario + "_" + trial_no + ".csv")
+       
+        self.time_csv_path = (package_path + "/logs/TIMES_" + current_time_save + "_" + time_csv_name)
+
+        # preprocessing --------------------------------------------------
         # converts waypoints text file into a list of points to follow
         df = pd.read_csv(CSV_path, sep=',', header=None)
         self.theta = list(df.loc[:, 3].values)
@@ -105,12 +117,16 @@ class Patroller():
         
 
     def state_at_waypoint(self):
-        #do something? 
         rospy.loginfo("At waypoint")
+
+        #Save time at waypoint
+        time_at_waypoint = time.time() - self.start_time 
+        data = ["waypoint_" + str(self.goal_cnt+1),time_at_waypoint]
+        self.save_to_csv(self.time_csv_path,data)
+
         ts = Tag_scan() #calls tag scan, does the thing, continues
         ts.tag_scan()
-        rospy.loginfo("after tag scan") #THIS IS POPPING UP TOO EARLY, CHECK WITH CALLBACKS OR SMTH
-        # THIS IS RUNNING IN A WEIRD FUCKY ORDER AND I WISH I COULD JUST STEP THROUGH THE CODE LINE BY LINE
+        rospy.loginfo("after tag scan") 
         if(ts.complete_scan == 1):
             rospy.loginfo("continuing patrol")
             self.continue_patrol()
@@ -119,7 +135,8 @@ class Patroller():
     #checks robot patrol state, determines whether to continue looping or whether to return home
     # and stop. Can definitely be cleaned up but im not gonna do that now.
     def continue_patrol(self):
-        if self.tick == 1: # tick is one, returned home, done.
+        current_time = time.time() - self.start_time
+        if current_time >= self.time_to_end: # tick is one, returned home, done.
             rospy.loginfo("FIN")
             rospy.loginfo(reward_count)
             rospy.loginfo(reward_ID_seen)
@@ -140,20 +157,20 @@ class Patroller():
         else:   #if completed a full loop
             rospy.loginfo("Final goal pose reached!")
             self.patrol_count += 1
-            if self.patrol_count == rospy.get_param("~patrols"): # if done all the patrols return home, set tick to 1
-                # goal = MoveBaseGoal()
-                # goal.target_pose.header.frame_id = "map"
-                # goal.target_pose.header.stamp = rospy.Time.now()
-                # goal.target_pose.pose = self.pose_seq[rospy.get_param("~start_node")]
-                # self.client.send_goal(goal)
-                self.goal_cnt = rospy.get_param("~start_node")
-                self.tick = 1
-                rospy.loginfo("==========* Returning Home *==========")
-                self.state_patrolling()
-            else:
-                rospy.loginfo("Repeating patrol ...")
-                self.goal_cnt = rospy.get_param("~start_node")
-                self.state_patrolling()
+            # if self.patrol_count == rospy.get_param("~patrols"): # if done all the patrols return home, set tick to 1
+            #     # goal = MoveBaseGoal()
+            #     # goal.target_pose.header.frame_id = "map"
+            #     # goal.target_pose.header.stamp = rospy.Time.now()
+            #     # goal.target_pose.pose = self.pose_seq[rospy.get_param("~start_node")]
+            #     # self.client.send_goal(goal)
+            #     self.goal_cnt = rospy.get_param("~start_node")
+            #     self.tick = 1
+            #     rospy.loginfo("==========* Returning Home *==========")
+            #     self.state_patrolling()
+            #else:
+            rospy.loginfo("Repeating patrol ...")
+            self.goal_cnt = rospy.get_param("~start_node")
+            self.state_patrolling()
 
 
     def spin_robot(self):
@@ -171,6 +188,11 @@ class Patroller():
         vel_msg = Twist()
         self.vel_pub.publish(vel_msg)
 
+    def save_to_csv(self,csv_path,data):
+        with open(csv_path, "a", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow(data)
+
 class Tag_scan(): #==============================================================================
 
     def __init__(self):
@@ -178,10 +200,6 @@ class Tag_scan(): #=============================================================
         self.buffer = []
         self.rewards = [0,2,3,6]
         self.LI = 0.8
-
-        self.reward_ID_seen = []
-        self.no_reward_ID_seen = []
-        self.reward_count = 0
 
         self.num_tags = 4
 
@@ -198,7 +216,7 @@ class Tag_scan(): #=============================================================
         # Fixed, it was the time.sleep in the foor loop in scan_delay(). Idfk why?
         rospy.loginfo("TAG SCAN") 
         if self.callback_tick == 0:
-            scanned_prev = self.reward_ID_seen + self.no_reward_ID_seen
+            scanned_prev = reward_ID_seen + no_reward_ID_seen
             rospy.loginfo(self.ID_list)
             for ID in self.ID_list: 
                 # this logic is definitely flawed, test and fix to not
@@ -206,10 +224,10 @@ class Tag_scan(): #=============================================================
                 if ID not in scanned_prev: # if new, scan for the first time
                     rospy.loginfo("Scanning new ID - " + str(ID))
                     self.scan(ID)
-                elif ID in self.reward_ID_seen: # if known reward, scan
+                elif ID in reward_ID_seen: # if known reward, scan
                     rospy.loginfo("Scanning known reward ID - " + str(ID))
                     self.scan(ID)
-                elif ID in self.no_reward_ID_seen: # only re-scan known no reward if chance 
+                elif ID in no_reward_ID_seen: # only re-scan known no reward if chance 
                     chance = 1 - self.LI # High LI is low chance, LOW LI is high chance :) 
                     r = random.random() #float in range 0-1
                     if r <= chance: 
@@ -219,19 +237,20 @@ class Tag_scan(): #=============================================================
             self.complete_scan = 1
             rospy.loginfo("Reward Count: " + str(self.reward_count))
         rospy.loginfo("After for loop")
+        self.ar_subscriber.unregister() 
         
         #rospy.sleep(1) #If i remove this it leaves tag scan too early I think.
         if self.complete_scan == 0:
             self.tag_scan()
         rospy.loginfo("After sleep")
 
-    def scan(self,ID):
+    def scan(self,ID): # GLOBALS EDITED HERE
         if ID in self.rewards:
-            self.reward_ID_seen.append(ID)
+            reward_ID_seen.append(ID)
             rospy.loginfo("Reward got!")
-            self.reward_count += 1
+            reward_count += 1
         else:
-            self.no_reward_ID_seen.append(ID)
+            no_reward_ID_seen.append(ID)
             rospy.loginfo("No Reward :(")
         self.scan_delay()
 
@@ -261,8 +280,6 @@ class Tag_scan(): #=============================================================
     def check_ID_callback(self, msg): #main callback, does everything
         if self.callback_tick == 1:
             for marker in msg.markers:
-
-            
                 #filter out fake IDs (>17), any IDs already in the list, and only accept those that have been seen thrice
                 if self.buffer_check(marker.id):
                     if marker.id < 18:
@@ -274,13 +291,18 @@ class Tag_scan(): #=============================================================
                             self.ID_list.append(marker.id)
                             if len(self.ID_list) == self.num_tags:
                                 self.callback_tick = 0
-                                # rospy.loginfo("Going back to tag scan")
-                                # self.tag_scan()
 
     
 
 if __name__ == '__main__':
-    try:
+    try: 
+        global reward_ID_seen
+        global no_reward_ID_seen
+        global reward_count
+
+        reward_ID_seen = []
+        no_reward_ID_seen = []
+        reward_count = 0
 
 
         Patroller()
