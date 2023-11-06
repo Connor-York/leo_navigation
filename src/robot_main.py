@@ -13,6 +13,8 @@ from geometry_msgs.msg import Twist
 import time
 import random
 from ar_track_alvar_msgs.msg import AlvarMarkers
+import datetime
+import csv
 
 class Patroller():
 
@@ -39,6 +41,9 @@ class Patroller():
        
         self.time_csv_path = (package_path + "/logs/TIMES_" + current_time_save + "_" + time_csv_name)
 
+
+        self.time_to_end = 5.0 # time in minutes after which to end patrolling.
+        self.time_to_end = self.time_to_end * 60.0 #time.time is seconds (float), so this needs to be too.
         # preprocessing --------------------------------------------------
         # converts waypoints text file into a list of points to follow
         df = pd.read_csv(CSV_path, sep=',', header=None)
@@ -124,7 +129,7 @@ class Patroller():
         data = ["waypoint_" + str(self.goal_cnt+1),time_at_waypoint]
         self.save_to_csv(self.time_csv_path,data)
 
-        ts = Tag_scan() #calls tag scan, does the thing, continues
+        ts = Tag_scan(self.start_time) #calls tag scan, does the thing, continues
         ts.tag_scan()
         rospy.loginfo("after tag scan") 
         if(ts.complete_scan == 1):
@@ -136,7 +141,7 @@ class Patroller():
     # and stop. Can definitely be cleaned up but im not gonna do that now.
     def continue_patrol(self):
         current_time = time.time() - self.start_time
-        if current_time >= self.time_to_end: # tick is one, returned home, done.
+        if current_time >= self.time_to_end: # timed run completed. 
             rospy.loginfo("FIN")
             rospy.loginfo(reward_count)
             rospy.loginfo(reward_ID_seen)
@@ -195,15 +200,31 @@ class Patroller():
 
 class Tag_scan(): #==============================================================================
 
-    def __init__(self):
+    def __init__(self,start_time):
         self.ID_list = []
         self.buffer = []
         self.rewards = [0,2,3,6]
-        self.LI = 0.8
+        rewards_2 = [1,4,5,7]
+        self.LI = 0 #0 = always rescan 1 = never rescan (floating val)
 
         self.num_tags = 4
 
+        self.start_time = start_time
 
+        current_time = time.time() - self.start_time
+
+        time_diff = 2.5
+        time_diff = time_diff * 60 # minutes > seconds
+        
+        dynamic_env = True
+
+        if current_time >= time_diff and dynamic_env == True:
+            print("Environment switching")
+            print("Old rewards: ")
+            print(self.rewards)
+            self.rewards = rewards_2
+            print("New rewards: ")
+            print(self.rewards) 
 
         self.ar_subscriber = rospy.Subscriber("ar_pose_marker", AlvarMarkers, self.check_ID_callback)
         
@@ -212,15 +233,18 @@ class Tag_scan(): #=============================================================
         rospy.loginfo('finished init func')
 
     def tag_scan(self):
-        #ITS GETTING STUCK HERE AND IDK WHY, IT JUST REPEATS AND REPEATS.
-        # Fixed, it was the time.sleep in the foor loop in scan_delay(). Idfk why?
-        rospy.loginfo("TAG SCAN") 
+
+        #rospy.loginfo("TAG SCAN") 
+
         if self.callback_tick == 0:
             scanned_prev = reward_ID_seen + no_reward_ID_seen
+            print(scanned_prev)
+            print(reward_ID_seen)
+            print(no_reward_ID_seen)
             rospy.loginfo(self.ID_list)
             for ID in self.ID_list: 
                 # this logic is definitely flawed, test and fix to not
-                #put tags in both? Or to handle the switching case.
+                # put tags in both? Or to handle the switching case.
                 if ID not in scanned_prev: # if new, scan for the first time
                     rospy.loginfo("Scanning new ID - " + str(ID))
                     self.scan(ID)
@@ -233,32 +257,46 @@ class Tag_scan(): #=============================================================
                     if r <= chance: 
                         rospy.loginfo("Rescanning known no reward ID - " + str(ID))
                         self.scan(ID) #rescan :) 
+                    else:
+                        rospy.loginfo("Ignoring known no reward ID - " + str(ID))
             rospy.loginfo("scan forloop complete, complete_scan = 1")
             self.complete_scan = 1
-            rospy.loginfo("Reward Count: " + str(self.reward_count))
-        rospy.loginfo("After for loop")
-        self.ar_subscriber.unregister() 
+            rospy.loginfo("Reward Count: " + str(reward_count))
+        #rospy.loginfo("After for loop")
         
-        #rospy.sleep(1) #If i remove this it leaves tag scan too early I think.
+        
+        rospy.sleep(1) #If i remove this it leaves tag scan too early I think.
         if self.complete_scan == 0:
             self.tag_scan()
-        rospy.loginfo("After sleep")
+        self.ar_subscriber.unregister() 
+        rospy.loginfo("unsubscribed")
 
     def scan(self,ID): # GLOBALS EDITED HERE
+        global reward_ID_seen
+        global no_reward_ID_seen
+        global reward_count
         if ID in self.rewards:
-            reward_ID_seen.append(ID)
+            if ID not in reward_ID_seen:
+                reward_ID_seen.append(ID)
+            if ID in no_reward_ID_seen:
+                no_reward_ID_seen.remove(ID)
             rospy.loginfo("Reward got!")
             reward_count += 1
+            current_time = time.time() - self.start_time
+            data = []
         else:
-            no_reward_ID_seen.append(ID)
+            if ID not in no_reward_ID_seen:
+                no_reward_ID_seen.append(ID)
+            if ID in reward_ID_seen:
+                reward_ID_seen.remove(ID)
             rospy.loginfo("No Reward :(")
         self.scan_delay()
 
     def scan_delay(self):
-        t = 10.0
-        rospy.loginfo("Scanning " + str(t) + "s...")
-        rospy.sleep(t) #???!??!?!??!?! STILL SKIPS IT WTF time.sleep & rospy.sleep ?!
-        # ^^ THIS IS THE CAUSE OF THE
+        t = 2
+        for i in range(t):
+            print("Scanning " + str(i) + "/" + str(t) + "...")
+            rospy.sleep(1)
         rospy.loginfo("Scan complete")
 
     def dupe_check(self, iterable,check):
@@ -284,7 +322,7 @@ class Tag_scan(): #=============================================================
                 if self.buffer_check(marker.id):
                     if marker.id < 18:
                         if self.dupe_check(self.ID_list, marker.id) == None:
-                            rospy.loginfo("CALLBACK ID")
+                            #rospy.loginfo("CALLBACK ID")
                             #current_time = time.time()
                             #elapsed_time = current_time - start_time
                             #Time_list.append(elapsed_time)
@@ -296,14 +334,11 @@ class Tag_scan(): #=============================================================
 
 if __name__ == '__main__':
     try: 
-        global reward_ID_seen
-        global no_reward_ID_seen
-        global reward_count
+
 
         reward_ID_seen = []
         no_reward_ID_seen = []
         reward_count = 0
-
 
         Patroller()
         rospy.spin()
