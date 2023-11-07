@@ -26,6 +26,8 @@ class Patroller():
         self.start_time = time.time()
         current_time_save = datetime.datetime.now()
         current_time_save = current_time_save.strftime("%H:%M:%S")
+        self.time_to_end = rospy.get_param("~time_to_end") * 60.0
+        # ^ Time after which to end patrolling (if decided) received in minutes, then into seconds
 
         # gets csv file path
         rp = rospkg.RosPack()
@@ -41,9 +43,7 @@ class Patroller():
        
         self.time_csv_path = (package_path + "/logs/TIMES_" + current_time_save + "_" + time_csv_name)
 
-
-        self.time_to_end = 5.0 # time in minutes after which to end patrolling.
-        self.time_to_end = self.time_to_end * 60.0 #time.time is seconds (float), so this needs to be too.
+ 
         # preprocessing --------------------------------------------------
         # converts waypoints text file into a list of points to follow
         df = pd.read_csv(CSV_path, sep=',', header=None)
@@ -203,28 +203,27 @@ class Tag_scan(): #=============================================================
     def __init__(self,start_time):
         self.ID_list = []
         self.buffer = []
-        self.rewards = [0,2,3,6]
-        rewards_2 = [1,4,5,7]
-        self.LI = 0 #0 = always rescan 1 = never rescan (floating val)
+        self.rewards = rospy.get_param("~rewards") #list of tags which give reward
+        rewards_2 = rospy.get_param("~rewards_2") #second list to switch to after X time
+        self.LI = rospy.get_param("~start_node") #0 = always rescan 1 = never rescan (floating val)
 
-        self.num_tags = 4
+        self.num_tags = rospy.get_param("~num_tags") #number of tags to read at each waypoint
 
         self.start_time = start_time
 
         current_time = time.time() - self.start_time
 
-        time_diff = 2.5
-        time_diff = time_diff * 60 # minutes > seconds
+        time_switch = rospy.get_param("~time_switch") * 60 #Time after which to switch rewarding tags
         
-        dynamic_env = True
+        dynamic_env = rospy.get_param("~dynamic_env") #whether to switch tag rewards
 
-        if current_time >= time_diff and dynamic_env == True:
+        if current_time >= time_switch and dynamic_env == True:
             print("Environment switching")
-            print("Old rewards: ")
-            print(self.rewards)
+            # print("Old rewards: ")
+            # print(self.rewards)
             self.rewards = rewards_2
-            print("New rewards: ")
-            print(self.rewards) 
+            # print("New rewards: ")
+            # print(self.rewards) 
 
         self.ar_subscriber = rospy.Subscriber("ar_pose_marker", AlvarMarkers, self.check_ID_callback)
         
@@ -275,6 +274,7 @@ class Tag_scan(): #=============================================================
         global reward_ID_seen
         global no_reward_ID_seen
         global reward_count
+        self.scan_delay() # delay to simulate doing something lmao
         if ID in self.rewards:
             if ID not in reward_ID_seen:
                 reward_ID_seen.append(ID)
@@ -290,12 +290,12 @@ class Tag_scan(): #=============================================================
             if ID in reward_ID_seen:
                 reward_ID_seen.remove(ID)
             rospy.loginfo("No Reward :(")
-        self.scan_delay()
+
 
     def scan_delay(self):
-        t = 2
+        t = rospy.get_param("~scan_delay")
         for i in range(t):
-            print("Scanning " + str(i) + "/" + str(t) + "...")
+            print("Scanning " + str(i+1) + "/" + str(t) + "...")
             rospy.sleep(1)
         rospy.loginfo("Scan complete")
 

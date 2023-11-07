@@ -3,14 +3,25 @@
 robot_name: Connor
 trial_no: 1
 trial_scenario: TAGCHECK_slow
+
 #For the trial scenario, the four scenarios are: 
 # AF = all fast, AS = all slow, 1:3FS = 1 fast 3 slow, 2:2FS = 50/50 split
 # 3:1FS = 3 fast 1 slow 
 
+#Latent Inhibition
+latent_inhibition: 0.5 #in range of 0 - 1, floating point
+time_to_end: 10 #Time in minutes after which to end the patrolling / experiment
+time_switch: 5 #Time in minutes after which to switch rewarding tags
+dynamic_env: True #Boolean, whether to switch after time_switch or not
+rewards: [0,2,3,6] #list of tags which give reward
+rewards_2: [1,4,5,7] #second list to switch to after time_switch
+num_tags: 4 #number of tags to read at each waypoint
+scan_delay: 10 #time (s) to delay when reading tags
+
 #Patrolling
-patrols: 3
+patrols: 3 #Either patrols or time_to_end
 start_node: 0
-route: LI_test.csv
+route: LI.csv
 speed: slow
 
 
