@@ -7,7 +7,7 @@
     </node>
 
     <include file="$(find leo_navigation)/launch/ar_tags.launch"/>
-    <!--include file="$(find ar_logger)/launch/logger.launch"/-->
+    <include file="$(find leo_navigation)/launch/pogger.launch"/>
 
 
 </launch>

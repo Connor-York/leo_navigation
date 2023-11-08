@@ -1,20 +1,20 @@
 #Parameters for the robot
 #Logging
 robot_name: Connor
-trial_no: 1
-trial_scenario: TAGCHECK_slow
+trial_no: 3
+trial_scenario: LI0.8_dynamic
 
 #For the trial scenario, the four scenarios are: 
 # AF = all fast, AS = all slow, 1:3FS = 1 fast 3 slow, 2:2FS = 50/50 split
 # 3:1FS = 3 fast 1 slow 
 
 #Latent Inhibition
-latent_inhibition: 0.5 #in range of 0 - 1, floating point
-time_to_end: 10 #Time in minutes after which to end the patrolling / experiment
-time_switch: 5 #Time in minutes after which to switch rewarding tags
+latent_inhibition: 0.8 #in range of 0 - 1, floating point
+time_to_end: 20 #Time in minutes after which to end the patrolling / experiment
+time_switch: 10 #Time in minutes after which to switch rewarding tags
 dynamic_env: True #Boolean, whether to switch after time_switch or not
-rewards: [0,2,3,6] #list of tags which give reward
-rewards_2: [1,4,5,7] #second list to switch to after time_switch
+rewards: [1,2,3,10,12,5,6,7] #list of tags which give reward
+rewards_2: [0,2,9,10,1,13,4,6] #second list to switch to after time_switch
 num_tags: 4 #number of tags to read at each waypoint
 scan_delay: 10 #time (s) to delay when reading tags
 
