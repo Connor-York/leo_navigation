@@ -15,6 +15,7 @@ import random
 import os
 from datetime import datetime
 import csv
+import socket
 
 plasticMSG = 0
 tagMSG = False
@@ -65,9 +66,16 @@ def getPath():
     rp = rospkg.RosPack()
     packagePath = rp.get_path('arLogger')
 
+    #getting hostName to determine different
+    hostName = str(socket.gethostname())
+
+    #Getting TTH Values
+    timeThresholdLow = rospy.get_param("/timeThresholdLow")
+    timeThresholdHigh = rospy.get_param("/timeThresholdHigh")
+
     path = os.path.join(packagePath, "logs")
 
-    fullpath = os.path.join(path, timenow + "_TTH_100_200_patlog.csv")
+    fullpath = os.path.join(path, timenow + hostName + "_TTH_" + str(timeThresholdLow) + "_" + str(timeThresholdHigh) + "_patlog.csv")
 
     print (fullpath)
 

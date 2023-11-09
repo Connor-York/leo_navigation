@@ -16,16 +16,17 @@ formatted_date = current_date.strftime("%Y-%m-%d")
 current_time_save = datetime.datetime.now()
 timenow = current_time_save.strftime("%Y%m%d%H%M%S")
 
-#getting hostName to determine different
-hostName = str(socket.gethostname())
-
 #start time for comparison
 start_time = time.time()
 
+
+#getting hostName to determine different
+hostName = str(socket.gethostname())
+
+#Getting TTH Values
 timeThresholdLow = rospy.get_param("/timeThresholdLow")
 timeThresholdHigh = rospy.get_param("/timeThresholdHigh")
 
-print (timeThresholdLow)
 
 #getting csv paths for both the logs
 rp = rospkg.RosPack()
