@@ -2,17 +2,21 @@
 
 import rospy
 from geometry_msgs.msg import PoseWithCovarianceStamped, Twist
-from std_msgs.msg import Float32
+from std_msgs.msg import Float32, String
 import time 
 import datetime
 import rospkg 
 import csv
+import socket
 
 #getting date for saving
 current_date = datetime.date.today()
 formatted_date = current_date.strftime("%Y-%m-%d")
 current_time_save = datetime.datetime.now()
 timenow = current_time_save.strftime("%Y%m%d%H%M%S")
+
+#getting hostName to determine different
+hostName = str(socket.gethostname())
 
 #start time for comparison
 start_time = time.time()
@@ -24,10 +28,10 @@ timeThresholdHigh = '200' #rospy.get_param("~timeThresholdHigh")
 rp = rospkg.RosPack()
 package_path = rp.get_path('arLogger')
     
-vel_path = (package_path + "/logs/" + timenow + "_TTH_" + str(timeThresholdLow) + "_" + str(timeThresholdHigh) + "_vellog.csv")
-pose_path = (package_path + "/logs/" + timenow + "_TTH_" + str(timeThresholdLow) + "_" + str(timeThresholdHigh) + "_poselog.csv")
-battery_path = (package_path + "/logs/" + timenow + "_TTH_" + str(timeThresholdLow) + "_" + str(timeThresholdHigh) + "_batlog.csv") 
-
+vel_path = (package_path + "/logs/" + timenow + hostName + "_TTH_" + str(timeThresholdLow) + "_" + str(timeThresholdHigh) + "_vellog.csv")
+pose_path = (package_path + "/logs/" + timenow + hostName + "_TTH_" + str(timeThresholdLow) + "_" + str(timeThresholdHigh) + "_poselog.csv")
+battery_path = (package_path + "/logs/" + timenow + hostName + "_TTH_" + str(timeThresholdLow) + "_" + str(timeThresholdHigh) + "_batlog.csv") 
+metrics_path = (package_path + "/logs/" + timenow + hostName + "_TTH_" + str(timeThresholdLow) + "_" + str(timeThresholdHigh) + "_metricspog.csv") 
 
 def vel_callback(msg):
     lin_x = msg.linear.x
@@ -52,6 +56,10 @@ def battery_callback(msg):
     data = [msg.data, timestamp]
     save_to_csv(battery_path,data)
 
+def metrics_callback(msg):
+    data = [msg.data]
+    save_to_csv(metrics_path, data)
+
 def save_to_csv(csv_path,data):
     with open(csv_path, "a", newline="") as file:
         writer = csv.writer(file)
@@ -69,5 +77,7 @@ if __name__ == "__main__":
     pose_subscriber = rospy.Subscriber("amcl_pose",PoseWithCovarianceStamped,pose_callback)
 
     battery_subscriber = rospy.Subscriber("firmware/battery_averaged",Float32,battery_callback)
+
+    metrics_subscriber = rospy.Subscriber("metricsTopic", String, metrics_callback)
 
     rospy.spin()
