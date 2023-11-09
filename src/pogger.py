@@ -57,9 +57,9 @@ def battery_callback(msg):
     save_to_csv(battery_path,data)
 
 def metrics_callback(msg):
-    data = [msg.data]
-    data = data.replace('"', '')
-    save_to_csv(metrics_path, data)
+    data = msg.data.strip('\"')
+    # data = data.replace('"', '')
+    save_to_csv(metrics_path, [data])
 
 def save_to_csv(csv_path,data):
     with open(csv_path, "a", newline="") as file:
