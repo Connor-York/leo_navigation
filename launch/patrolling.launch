@@ -1,5 +1,8 @@
 <?xml version="1.0"?>
 <launch>
+
+    <include file="$(find patpkg)/launch/plasticpatsh.launch"/>
+
     <include file="$(find leo_navigation)/launch/slam.launch" />
 
     <node pkg="leo_navigation" type="patrolling.py" name="patroller" output="screen">   
@@ -9,7 +12,7 @@
     <!-- <include file="$(find patpkg)/launch/plasticpat.launch" /> -->
 
     <include file="$(find leo_navigation)/launch/pogger.launch"/>
-    <include file="$(find patpkg)/launch/plasticpatsh.launch"/>
+    
     <!-- <include file="$(find ar_logger)/launch/logger.launch"/> -->
 
 
