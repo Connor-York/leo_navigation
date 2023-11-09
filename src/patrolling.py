@@ -75,6 +75,12 @@ def getPath():
 
     path = os.path.join(packagePath, "logs")
 
+    path = (packagePath + "/logs/" + hostName + "/TTH_" + str(timeThresholdLow) + "_" + str(timeThresholdHigh) + "/extras/")
+
+
+    if not os.path.exists(path):
+        os.makedirs(path)
+
     fullpath = os.path.join(path, timenow + hostName + "_TTH_" + str(timeThresholdLow) + "_" + str(timeThresholdHigh) + "_patlog.csv")
 
     print (fullpath)
