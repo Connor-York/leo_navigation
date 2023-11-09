@@ -29,7 +29,7 @@ timeThresholdHigh = '200' #rospy.get_param("~timeThresholdHigh")
 rp = rospkg.RosPack()
 package_path = rp.get_path('arLogger')
 
-folder_path = (package_path + "/logs/" + hostName + + "/TTH_" + str(timeThresholdLow) + "_" + str(timeThresholdHigh))
+folder_path = (package_path + "/logs/" + hostName + "/TTH_" + str(timeThresholdLow) + "_" + str(timeThresholdHigh))
 
 
 if not os.path.exists(folder_path):
