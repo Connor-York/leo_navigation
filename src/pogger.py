@@ -62,7 +62,7 @@ def metrics_callback(msg):
 
 def save_to_csv(csv_path,data):
     with open(csv_path, "a", newline="") as file:
-        writer = csv.writer(file)
+        writer = csv.writer(file, quoting=csv.QUOTE_NONE)
         writer.writerow(data)
 
 if __name__ == "__main__":
