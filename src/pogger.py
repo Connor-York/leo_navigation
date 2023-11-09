@@ -8,6 +8,7 @@ import datetime
 import rospkg 
 import csv
 import socket
+import os
 
 #getting date for saving
 current_date = datetime.date.today()
@@ -27,11 +28,17 @@ timeThresholdHigh = '200' #rospy.get_param("~timeThresholdHigh")
 #getting csv paths for both the logs
 rp = rospkg.RosPack()
 package_path = rp.get_path('arLogger')
+
+folder_path = (package_path + "/logs/" + hostName + + "/TTH_" + str(timeThresholdLow) + "_" + str(timeThresholdHigh))
+
+
+if not os.path.exists(folder_path):
+    os.makedirs(folder_path)
     
-vel_path = (package_path + "/logs/" + timenow + hostName + "_TTH_" + str(timeThresholdLow) + "_" + str(timeThresholdHigh) + "_vellog.csv")
-pose_path = (package_path + "/logs/" + timenow + hostName + "_TTH_" + str(timeThresholdLow) + "_" + str(timeThresholdHigh) + "_poselog.csv")
-battery_path = (package_path + "/logs/" + timenow + hostName + "_TTH_" + str(timeThresholdLow) + "_" + str(timeThresholdHigh) + "_batlog.csv") 
-metrics_path = (package_path + "/logs/" + timenow + hostName + "_TTH_" + str(timeThresholdLow) + "_" + str(timeThresholdHigh) + "_metricspog.csv") 
+vel_path = (folder_path + "/" + timenow + hostName + "_TTH_" + str(timeThresholdLow) + "_" + str(timeThresholdHigh) + "_vellog.csv")
+pose_path = (folder_path + "/" + timenow + hostName + "_TTH_" + str(timeThresholdLow) + "_" + str(timeThresholdHigh) + "_poselog.csv")
+battery_path = (folder_path + "/" + timenow + hostName + "_TTH_" + str(timeThresholdLow) + "_" + str(timeThresholdHigh) + "_batlog.csv") 
+metrics_path = (folder_path + "/" + timenow + hostName + "_TTH_" + str(timeThresholdLow) + "_" + str(timeThresholdHigh) + "_metricspog.csv") 
 
 def vel_callback(msg):
     lin_x = msg.linear.x
