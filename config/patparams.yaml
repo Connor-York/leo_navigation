@@ -1,4 +1,4 @@
 patrols: 4
-start_node: 1
-route: multi-exp_1.csv
+start_node: 3
+route: multi-exp_2.csv
 speed: fast
