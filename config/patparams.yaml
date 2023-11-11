@@ -1,4 +1,4 @@
-patrols: 2
+patrols: 4
 start_node: 1
-route: Experiment.csv
+route: multi-exp_1.csv
 speed: fast
