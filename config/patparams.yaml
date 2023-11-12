@@ -1,4 +1,4 @@
 patrols: 8
-start_node: 3
-route: straightpat.csv
+start_node: 2
+route: straightpat_2.csv
 speed: fast
