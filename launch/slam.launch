@@ -13,4 +13,9 @@
       <rosparam command="load" file="$(find leo_navigation)/config/laser_config.yaml"/>
    </node>
 
+
+   <include file="$(find patpkg)/launch/plasticpatsh.launch"/>
+
+   <include file="$(find patpkg)/launch/patrolling.launch"/>
+
 </launch>

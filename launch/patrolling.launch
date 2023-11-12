@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <launch>
 
-    <include file="$(find patpkg)/launch/plasticpatsh.launch"/>
+    <!-- <include file="$(find patpkg)/launch/plasticpatsh.launch"/> -->
 
-    <include file="$(find leo_navigation)/launch/slam.launch" />
+    <!-- <include file="$(find leo_navigation)/launch/slam.launch" /> -->
 
     <node pkg="leo_navigation" type="patrolling.py" name="patroller" output="screen">   
         <rosparam command="load" file="$(find leo_navigation)/config/patparams.yaml" />
