@@ -26,5 +26,5 @@ speed: slow
 
 #Identifying other robots
 other_robot_id: 20 #Tag ID to recognise as simbolising another robot
-avoid_dist: 1.5 #Distance (m) within which to skip to next waypoint (or do other avoiding behaviour go wild ig)
+avoid_dist: 1.2 #Distance (m) within which to skip to next waypoint (or do other avoiding behaviour go wild ig)
 avoid_timeout: 10 #Time (s) after which if another robot is seen skip to next waypoint
