@@ -8,7 +8,7 @@ shutdown_costmaps: false
 oscillation_timeout: 0.0
 oscillation_distance: 0.5
 planner_frequency: 0.0
-max_planning_retries: 5
+max_planning_retries: -1
 
 # Planner plugins
 base_global_planner: global_planner/GlobalPlanner

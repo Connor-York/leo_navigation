@@ -1,8 +1,8 @@
 #Parameters for the robot
 #Logging
 robot_name: Connor
-trial_no: 3
-trial_scenario: LI0.8_dynamic
+trial_no: 1
+trial_scenario: 0.8_0.8_dynamic
 
 #For the trial scenario, the four scenarios are: 
 # AF = all fast, AS = all slow, 1:3FS = 1 fast 3 slow, 2:2FS = 50/50 split
@@ -24,4 +24,7 @@ start_node: 0
 route: LI.csv
 speed: slow
 
-
+#Identifying other robots
+other_robot_id: 20 #Tag ID to recognise as simbolising another robot
+avoid_dist: 1.5 #Distance (m) within which to skip to next waypoint (or do other avoiding behaviour go wild ig)
+avoid_timeout: 10 #Time (s) after which if another robot is seen skip to next waypoint

@@ -20,7 +20,14 @@ class Patroller():
 
     def __init__(self):
 
-        rospy.init_node('patroller')  # initialize node
+        rospy.init_node('Robot_Main')  # initialize node
+
+        #subscriber to listen to the ar_track_alvar node purely for checking position of tags
+        #which are declared as other robots
+        robot_locator = rospy.Subscriber("ar_pose_marker", AlvarMarkers, self.robot_locator_cb)
+        self.robot_check_tick = 0 #If robot sees another robot, and skips to the next waypoint,
+        #this check_tick makes sure it reaches that waypoint first before skipping another? 
+        #may be flawed and may want to replace it with a time check ? 
 
         # Getting timing and information for logging ------------------------------
         self.start_time = time.time()
@@ -43,7 +50,8 @@ class Patroller():
        
         self.time_csv_path = (package_path + "/logs/TIMES_" + time_csv_name + "_" + current_time_save + ".csv")
         self.reward_csv_path = (package_path + "/logs/REWARDS_" + time_csv_name + "_" + current_time_save + ".csv")
- 
+        self.skip_csv_path = (package_path + "/logs/SKIPPED_" + time_csv_name + "_" + current_time_save + ".csv")
+
         # preprocessing --------------------------------------------------
         # converts waypoints text file into a list of points to follow
         df = pd.read_csv(CSV_path, sep=',', header=None)
@@ -100,14 +108,32 @@ class Patroller():
 
         self.state_patrolling()
 
-    def status_cb(self, msg):
+    def status_cb(self, msg): #
         status = self.client.get_state()
         #rospy.loginfo(status)
         if status == 3:
+            self.robot_check_tick = 0
             rospy.loginfo(" status tree ")
             self.client.stop_tracking_goal()
             rospy.loginfo("GOING TO WAYPOINT STATE")
             self.state_at_waypoint()
+
+    def robot_locator_cb(self,msg): #callback triggered by ar_tags purely for checking other rob pos.
+        other_robot_id = rospy.get_param("~other_robot_id")
+        avoid_dist = rospy.get_param("~avoid_dist")
+        for marker in msg.markers:
+            if marker.id == other_robot_id:
+                x = marker.pose.pose.position.x
+                y = marker.pose.pose.position.y
+                dist = math.sqrt(x**2 + y**2)
+                print("Robot Spotted dist: " + str(dist))
+                if dist <= avoid_dist and self.robot_check_tick == 0:
+                    print("Robot spotted within avoid distance, moving to next waypoint")
+                    time_skip_waypoint = time.time() - self.start_time
+                    data = ["waypoint_skipped: "  + str(self.goal_cnt+1), time_skip_waypoint]
+                    self.save_to_csv(self.skip_csv_path,data)
+                    self.robot_check_tick = 1
+                    self.continue_patrol()
 
     def state_patrolling(self):
         goal = MoveBaseGoal()
@@ -175,6 +201,7 @@ class Patroller():
             #else:
             rospy.loginfo("Repeating patrol ...")
             self.goal_cnt = rospy.get_param("~start_node")
+            self.client.cancel_goal()
             self.state_patrolling()
 
 
@@ -329,7 +356,7 @@ class Tag_scan(): #=============================================================
                 if bick >= 3: # if 3 of the same tag in buffer
                     return True
 
-    def check_ID_callback(self, msg): #main callback, does everything
+    def check_ID_callback(self, msg): #callback triggered by ar_tag subscriber
         if self.callback_tick == 1:
             for marker in msg.markers:
                 #filter out fake IDs (>17), any IDs already in the list, and only accept those that have been seen thrice
@@ -344,12 +371,10 @@ class Tag_scan(): #=============================================================
                             if len(self.ID_list) == self.num_tags:
                                 self.callback_tick = 0
 
-    
+
 
 if __name__ == '__main__':
     try: 
-
-
         reward_ID_seen = []
         no_reward_ID_seen = []
         reward_count = 0

@@ -7,10 +7,13 @@
     pkg="ar_track_alvar"
     type="individualMarkersNoKinect"
     output="screen">
-    <rosparam command="load" file="$(find leo_example_follow_ar_tag)/config/alvar.yaml" />
+    <rosparam command="load" file="$(find leo_navigation)/config/alvar.yaml" />
 
     <remap from="camera_image" to="$(arg cam_image_topic)" />
     <remap from="camera_info" to="$(arg cam_info_topic)" />
   </node>
+
+  <!--node pkg="leo_navigation" type="robot_locator_test.py" name="robot_locator_test" output="screen">  
+  </node-->
 
 </launch>
