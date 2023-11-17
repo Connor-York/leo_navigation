@@ -1,0 +1,7 @@
+# Marker size in cm WIDTH
+marker_size: 7.5
+
+max_new_marker_error: 0.08
+max_track_error: 0.2
+max_frequency: 8.0
+output_frame: camera_frame

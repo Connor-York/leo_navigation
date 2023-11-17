@@ -15,6 +15,7 @@ import random
 from ar_track_alvar_msgs.msg import AlvarMarkers
 import datetime
 import csv
+from geometry_msgs.msg import PoseWithCovarianceStamped
 
 class Patroller():
 
@@ -25,9 +26,8 @@ class Patroller():
         #subscriber to listen to the ar_track_alvar node purely for checking position of tags
         #which are declared as other robots
         robot_locator = rospy.Subscriber("ar_pose_marker", AlvarMarkers, self.robot_locator_cb)
-        self.robot_check_tick = 0 #If robot sees another robot, and skips to the next waypoint,
-        #this check_tick makes sure it reaches that waypoint first before skipping another? 
-        #may be flawed and may want to replace it with a time check ? 
+        pose_subscriber = rospy.Subscriber("amcl_pose",PoseWithCovarianceStamped,self.pose_callback)
+        self.robot_check_tick = 0 #Not checked another robot location before, after first time switches to a time based check
 
         # Getting timing and information for logging ------------------------------
         self.start_time = time.time()
@@ -112,28 +112,63 @@ class Patroller():
         status = self.client.get_state()
         #rospy.loginfo(status)
         if status == 3:
-            self.robot_check_tick = 0
-            rospy.loginfo(" status tree ")
+            print("Action_Server_Status: " + str(status))
+            # rospy.loginfo(" status tree ")
             self.client.stop_tracking_goal()
             rospy.loginfo("GOING TO WAYPOINT STATE")
             self.state_at_waypoint()
+        elif status == 4:
+            print("Action_Server_Status: " + str(status))
+            self.client.stop_tracking_goal()
+            rospy.loginfo("Aborting navigation, moving to next waypoint")
+            time_skip_waypoint = time.time() - self.start_time
+            data = ["waypoint_skipped_abort: "  + str(self.goal_cnt+1), time_skip_waypoint]
+            self.save_to_csv(self.skip_csv_path,data)
+            self.continue_patrol()
 
     def robot_locator_cb(self,msg): #callback triggered by ar_tags purely for checking other rob pos.
         other_robot_id = rospy.get_param("~other_robot_id")
         avoid_dist = rospy.get_param("~avoid_dist")
+        avoid_timeout = rospy.get_param("~avoid_timeout")
+        waypoint_distance = rospy.get_param("~waypoint_distance")
         for marker in msg.markers:
+            #print("Marker_ID_Spotted: " +str(marker.id))
             if marker.id == other_robot_id:
                 x = marker.pose.pose.position.x
                 y = marker.pose.pose.position.y
                 dist = math.sqrt(x**2 + y**2)
                 print("Robot Spotted dist: " + str(dist))
-                if dist <= avoid_dist and self.robot_check_tick == 0:
-                    print("Robot spotted within avoid distance, moving to next waypoint")
-                    time_skip_waypoint = time.time() - self.start_time
-                    data = ["waypoint_skipped: "  + str(self.goal_cnt+1), time_skip_waypoint]
-                    self.save_to_csv(self.skip_csv_path,data)
-                    self.robot_check_tick = 1
-                    self.continue_patrol()
+                if robot_check_tick = 0:
+                    if dist <= avoid_dist and self.dist_wayp() <= waypoint_distance:
+                        print("Robot spotted within avoid distance, moving to next waypoint")
+                        time_skip_waypoint = time.time() - self.start_time
+                        data = ["waypoint_skipped: "  + str(self.goal_cnt+1), time_skip_waypoint]
+                        self.save_to_csv(self.skip_csv_path,data)
+                        self.robot_check_tick = 1
+                        self.time_last_checked = time_skip_waypoint
+                        self.continue_patrol()
+                elif time.time() - self.time_last_checked >= avoid_timeout:
+                    if dist <= avoid_dist and self.dist_wayp() <= waypoint_distance:
+                        print("Robot spotted within avoid distance, moving to next waypoint")
+                        time_skip_waypoint = time.time() - self.start_time
+                        data = ["waypoint_skipped: "  + str(self.goal_cnt+1), time_skip_waypoint]
+                        self.save_to_csv(self.skip_csv_path,data)
+                        self.robot_check_tick = 1
+                        self.time_last_checked = time_skip_waypoint
+                        self.continue_patrol()
+
+    def pose_callback(self,msg):
+        pose_x = msg.pose.pose.position.x
+        pose_y = msg.pose.pose.position.y
+        self.current_pose = [pose_x,pose_y]
+
+    def dist_wayp(self):
+        target_x = self.pose_seq[self.goal_count].position.x
+        target_y = self.pose_seq[self.goal_count].position.y
+        target_pose = [target_x,target_y]
+        dist = math.dist(self.current_pose,self.target_pose)
+        print("Dist to wayp = " + str(dist))
+        return dist
 
     def state_patrolling(self):
         goal = MoveBaseGoal()
