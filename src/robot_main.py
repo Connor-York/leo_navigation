@@ -137,10 +137,12 @@ class Patroller():
                 x = marker.pose.pose.position.x
                 y = marker.pose.pose.position.y
                 dist = math.sqrt(x**2 + y**2)
+                distwayp = self.dist_wayp()
                 print("Robot Spotted dist: " + str(dist))
-                if robot_check_tick = 0:
-                    if dist <= avoid_dist and self.dist_wayp() <= waypoint_distance:
-                        print("Robot spotted within avoid distance, moving to next waypoint")
+                print("Distance to wayp: " + str(distwayp))
+                if self.robot_check_tick == 0:
+                    if dist <= avoid_dist and distwayp <= waypoint_distance:
+                        print("Robot spotted within avoid distance, moving to next waypoint (first)")
                         time_skip_waypoint = time.time() - self.start_time
                         data = ["waypoint_skipped: "  + str(self.goal_cnt+1), time_skip_waypoint]
                         self.save_to_csv(self.skip_csv_path,data)
@@ -149,7 +151,7 @@ class Patroller():
                         self.continue_patrol()
                 elif time.time() - self.time_last_checked >= avoid_timeout:
                     if dist <= avoid_dist and self.dist_wayp() <= waypoint_distance:
-                        print("Robot spotted within avoid distance, moving to next waypoint")
+                        print("Robot spotted within avoid distance, moving to next waypoint (time)")
                         time_skip_waypoint = time.time() - self.start_time
                         data = ["waypoint_skipped: "  + str(self.goal_cnt+1), time_skip_waypoint]
                         self.save_to_csv(self.skip_csv_path,data)
@@ -163,11 +165,11 @@ class Patroller():
         self.current_pose = [pose_x,pose_y]
 
     def dist_wayp(self):
-        target_x = self.pose_seq[self.goal_count].position.x
-        target_y = self.pose_seq[self.goal_count].position.y
+        target_x = self.pose_seq[self.goal_cnt].position.x
+        target_y = self.pose_seq[self.goal_cnt].position.y
         target_pose = [target_x,target_y]
-        dist = math.dist(self.current_pose,self.target_pose)
-        print("Dist to wayp = " + str(dist))
+        dist = math.dist(self.current_pose,target_pose)
+        #print("Dist to wayp = " + str(dist))
         return dist
 
     def state_patrolling(self):
