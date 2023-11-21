@@ -140,6 +140,9 @@ class Patroller():
                 distwayp = self.dist_wayp()
                 print("Robot Spotted dist: " + str(dist))
                 print("Distance to wayp: " + str(distwayp))
+                print("ROBOTCHECK: " + str(self.robot_check_tick))
+                if self.robot_check_tick == 1:
+                        print(time.time() - self.time_last_checked - self.start_time)
                 if self.robot_check_tick == 0:
                     if dist <= avoid_dist and distwayp <= waypoint_distance:
                         print("Robot spotted within avoid distance, moving to next waypoint (first)")
@@ -149,7 +152,7 @@ class Patroller():
                         self.robot_check_tick = 1
                         self.time_last_checked = time_skip_waypoint
                         self.continue_patrol()
-                elif time.time() - self.time_last_checked >= avoid_timeout:
+                elif time.time() - self.time_last_checked - self.start_time >= avoid_timeout:
                     if dist <= avoid_dist and self.dist_wayp() <= waypoint_distance:
                         print("Robot spotted within avoid distance, moving to next waypoint (time)")
                         time_skip_waypoint = time.time() - self.start_time

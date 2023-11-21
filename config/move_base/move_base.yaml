@@ -7,7 +7,7 @@ controller_patience: 15.0
 shutdown_costmaps: false
 oscillation_timeout: 0.0
 oscillation_distance: 0.5
-planner_frequency: 0.0
+planner_frequency: 0.5
 max_planning_retries: -1
 
 # Planner plugins
@@ -17,4 +17,4 @@ base_local_planner: base_local_planner/TrajectoryPlannerROS
 # Recovery behavior parameters
 recovery_behavior_enabled: true
 clearing_rotation_allowed: true
-conservative_reset_dist: 2.0
+conservative_reset_dist: 0.5
