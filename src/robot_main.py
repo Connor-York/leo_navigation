@@ -28,7 +28,6 @@ class Patroller():
         robot_locator = rospy.Subscriber("ar_pose_marker", AlvarMarkers, self.robot_locator_cb)
         pose_subscriber = rospy.Subscriber("amcl_pose",PoseWithCovarianceStamped,self.pose_callback)
         self.robot_check_tick = 0 #Not checked another robot location before, after first time switches to a time based check
-
         # Getting timing and information for logging ------------------------------
         self.start_time = time.time()
         current_time_save = datetime.datetime.now()

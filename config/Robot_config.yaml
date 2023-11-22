@@ -1,7 +1,7 @@
 #Parameters for the robot
 #Logging
 robot_name: Connor
-trial_no: 1
+trial_no: TEST
 trial_scenario: 0.2_0.8_Dynamic_Skip
 
 #For the trial scenario, the four scenarios are: 
