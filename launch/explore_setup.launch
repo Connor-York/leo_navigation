@@ -4,7 +4,7 @@
    <include file="$(find leo_navigation)/launch/odometry.launch" />
    <!--include file="$(find leo_navigation)/launch/gmapping.launch" /-->
    <!--include file="$(find leo_navigation)/launch/hectormapping.launch"/-->
-   <include file="$(find leo_navigation)/launch/amcl.launch"/>
+   <!-- <include file="$(find leo_navigation)/launch/amcl.launch"/> -->
 
    <include file="$(find leo_navigation)/launch/navigation.launch" />
    <!--include file="$(find ublox_gps)/launch/ublox_device.launch" /-->
@@ -14,8 +14,8 @@
    </node>
 
 
-   <include file="$(find patpkg)/launch/plasticpatsh.launch"/>
+   <!-- <include file="$(find patpkg)/launch/plasticpatsh.launch"/> -->
 
-   <include file="$(find leo_navigation)/launch/patrolling.launch"/>
+   <!-- <include file="$(find leo_navigation)/launch/patrolling.launch"/> -->
 
 </launch>
