@@ -1,15 +1,15 @@
 #Parameters for the robot
 #Logging
 robot_name: Connor
-trial_no: TEST
-trial_scenario: 0.2_0.8_Dynamic_Skip
+trial_no: 4
+trial_scenario: 0.8_0.8_Dynamic
 
 #For the trial scenario, the four scenarios are: 
 # AF = all fast, AS = all slow, 1:3FS = 1 fast 3 slow, 2:2FS = 50/50 split
 # 3:1FS = 3 fast 1 slow 
 
 #Latent Inhibition
-latent_inhibition: 0.2 #in range of 0 - 1, floating point
+latent_inhibition: 0.8 #in range of 0 - 1, floating point
 time_to_end: 30 #Time in minutes after which to end the patrolling / experiment
 time_switch: 10 #Time in minutes after which to switch rewarding tags
 dynamic_env: True #Boolean, whether to switch after time_switch or not
