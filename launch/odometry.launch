@@ -2,12 +2,18 @@
 <launch>
   <arg name="three_d" default="false" />
 
+  <node pkg="laser_filters" type="scan_to_scan_filter_chain" name="laser_filter">
+      <rosparam command="load" file="$(find leo_navigation)/config/laser_config.yaml"/>
+  </node>
+
+
   <!--rosrun um7 um7_driver _port:=/dev/ttyUSB0 _frame_id:=imu2_frame imu:=imu2-->
-  <node name="um7_driver" pkg="um7" type="um7_driver">
+  <!--node name="um7_driver" pkg="um7" type="um7_driver">
     <param name="port" value="/dev/ttyUSB0"/>
+    < If it doesnt connect try changing the above port between USB0 and 1 >
     <param name="frame_id" value="imu2_frame"/>
     <remap from="imu" to="imu2"/>
-  </node>
+  </node-->
 
   <node if="$(arg three_d)"
     name="imu_filter_node"

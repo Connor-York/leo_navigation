@@ -9,8 +9,8 @@
    <include file="$(find leo_navigation)/launch/navigation.launch" />
    <!--include file="$(find ublox_gps)/launch/ublox_device.launch" /-->
 
-   <node pkg="laser_filters" type="scan_to_scan_filter_chain" name="laser_filter">
+   <!--node pkg="laser_filters" type="scan_to_scan_filter_chain" name="laser_filter">
       <rosparam command="load" file="$(find leo_navigation)/config/laser_config.yaml"/>
-   </node>
+   </node!-->
 
 </launch>

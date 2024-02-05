@@ -9,6 +9,7 @@ from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from actionlib_msgs.msg import GoalStatus, GoalStatusArray
 from geometry_msgs.msg import Pose, Point, Quaternion
 from tf.transformations import quaternion_from_euler
+from geometry_msgs.msg import Twist
 
 
 class Patroller():
@@ -22,7 +23,8 @@ class Patroller():
         # gets csv file path
         rp = rospkg.RosPack()
         package_path = rp.get_path('leo_navigation')
-        CSV_path = (package_path + "/waypoints/Experiment.csv")
+        route = rospy.get_param('~route')
+        CSV_path = (package_path + "/waypoints/" + route)
 
         # converts waypoints text file into a list of points to follow
         df = pd.read_csv(CSV_path, sep=',', header=None)
@@ -41,7 +43,7 @@ class Patroller():
         quat_seq = list()
         # List of goal poses:
         self.pose_seq = list()
-        self.goal_cnt = 0
+        self.goal_cnt = rospy.get_param('~start_node')
         for yawangle in yaweulerangles_seq:
             # Unpacking the quaternion list and passing it as arguments to Quaternion message constructor
             quat_seq.append(Quaternion(
@@ -70,6 +72,12 @@ class Patroller():
             "/move_base/status", GoalStatusArray, self.status_cb
         )
 
+        # Create a Twist publisher to send velocity commands to the robot
+        self.vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
+
+
+        self.patrol_count = 0
+        self.tick = 0
         self.movebase_client()
 
     def movebase_client(self):
@@ -91,18 +99,56 @@ class Patroller():
         #rospy.loginfo(status)
 
         if status == 3:
+            if self.tick == 1: # tick is one, returned home, done.
+                rospy.loginfo("FIN")
+                rospy.signal_shutdown("FIN")
+                exit()
             self.goal_cnt +=1
             rospy.loginfo("Goal pose "+str(self.goal_cnt)+" reached")
-            if self.goal_cnt< len(self.pose_seq):
+            if self.goal_cnt == len(self.pose_seq):
+                    rospy.loginfo("here2")
+                    self.goal_cnt = 0
+            if rospy.get_param("~speed") == "slow":
+                    rospy.loginfo("Spinning...")
+                    self.spin_robot()
+            if self.goal_cnt != rospy.get_param("~start_node"):#
+                rospy.loginfo("HERE")
+                rospy.loginfo(rospy.get_param("~start_node"))
+                rospy.loginfo(self.goal_cnt)
                 rospy.loginfo("Moving onto next goal...")
                 self.movebase_client()
             else:
                 rospy.loginfo("Final goal pose reached!")
-                #rospy.signal_shutdown("Final goal pose reached!")
-                #exit()
-                rospy.loginfo("Repeating patrol ...")
-                self.goal_cnt = 0
-                self.movebase_client()
+                self.patrol_count += 1
+                print(self.patrol_count)
+                if self.patrol_count == rospy.get_param("~patrols"): # if done all the patrols return home, set tick to 1
+                    goal = MoveBaseGoal()
+                    goal.target_pose.header.frame_id = "map"
+                    goal.target_pose.header.stamp = rospy.Time.now()
+                    goal.target_pose.pose = self.pose_seq[rospy.get_param("~start_node")]
+                    # rospy.loginfo("Returning to first waypoint")
+                    # rospy.loginfo(str(self.pose_seq[rospy.get_param("~start_node")]))
+                    self.client.send_goal(goal)
+                    self.tick = 1
+                    rospy.loginfo("==========* Returning Home *==========")
+                else:
+                    rospy.loginfo("Repeating patrol ...")
+                    self.goal_cnt = rospy.get_param("~start_node")
+                    self.movebase_client()
+
+    def spin_robot(self):
+        # Spin robot on the spot
+        t_end = rospy.Time.now() + rospy.Duration(8) #about 360deg
+        while rospy.Time.now() < t_end:
+            vel_msg = Twist()
+            vel_msg.angular.z = 7.0
+            self.vel_pub.publish(vel_msg)
+            #rospy.loginfo("midspin")
+
+        rospy.loginfo("Spin Done")
+        # Stop the robot
+        vel_msg = Twist()
+        self.vel_pub.publish(vel_msg)
 
 if __name__ == '__main__':
     try:

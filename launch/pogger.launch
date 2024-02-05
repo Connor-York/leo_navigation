@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<launch>
+    
+    <node pkg="leo_navigation" type="pogger.py" name="pogger" output="screen">   
+        <rosparam command="load" file="$(find leo_navigation)/config/Robot_config.yaml" /> 
+    </node>
+
+
+</launch>

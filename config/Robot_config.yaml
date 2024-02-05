@@ -1,0 +1,31 @@
+#Parameters for the robot
+#Logging
+robot_name: Connor
+trial_no: 4
+trial_scenario: 0.8_0.8_Dynamic
+
+#For the trial scenario, the four scenarios are: 
+# AF = all fast, AS = all slow, 1:3FS = 1 fast 3 slow, 2:2FS = 50/50 split
+# 3:1FS = 3 fast 1 slow 
+
+#Latent Inhibition
+latent_inhibition: 0.8 #in range of 0 - 1, floating point
+time_to_end: 30 #Time in minutes after which to end the patrolling / experiment
+time_switch: 10 #Time in minutes after which to switch rewarding tags
+dynamic_env: True #Boolean, whether to switch after time_switch or not
+rewards: [1,2,3,10,12,5,6,7] #list of tags which give reward
+rewards_2: [0,2,9,10,1,13,4,6] #second list to switch to after time_switch
+num_tags: 4 #number of tags to read at each waypoint
+scan_delay: 10 #time (s) to delay when reading tags
+
+#Patrolling
+patrols: 3 #Either patrols or time_to_end
+start_node: 0
+route: LI.csv
+speed: slow
+
+#Identifying other robots
+other_robot_id: 24 #Tag ID to recognise as symbolizing another robot
+avoid_dist: 1.2 #Distance (m) within which to skip to next waypoint (or do other avoiding behaviour go wild ig)
+avoid_timeout: 10 #Time (s) after which if another robot is seen skip to next waypoint
+waypoint_distance: 2.2 #Distance (m) to the goal waypoint at which you can skip if see another robot

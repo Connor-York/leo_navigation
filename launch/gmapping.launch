@@ -6,5 +6,6 @@
     clear_params="true">
     <rosparam command="load"
       file="$(find leo_navigation)/config/slam_gmapping.yaml" />
+    <remap from="scan" to="scan_filtered"/>
   </node>
 </launch>
