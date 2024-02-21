@@ -2,7 +2,7 @@
 <launch>
     <include file="$(find leo_navigation)/launch/slam.launch" />
 
-    <node pkg="leo_navigation" type="robot_main.py" name="patroller" output="screen">  
+    <node pkg="leo_navigation" type="robot_main_comms.py" name="patroller" output="screen">  
         <rosparam command="load" file="$(find leo_navigation)/config/Robot_config.yaml" /> 
     </node>
 
