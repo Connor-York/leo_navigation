@@ -337,19 +337,29 @@ class Tag_scan(): #=============================================================
 
         if self.callback_tick == 0:
             scanned_prev = reward_ID_seen + no_reward_ID_seen
-            print(scanned_prev)
-            print(reward_ID_seen)
-            print(no_reward_ID_seen)
+            # print(scanned_prev)
+            # print(reward_ID_seen)
+            # print(no_reward_ID_seen)
+            scanned_rewards = []
+            scanned_no_rewards = []
             rospy.loginfo(self.ID_list)
             for ID in self.ID_list: 
                 # this logic is definitely flawed, test and fix to not
                 # put tags in both? Or to handle the switching case.
                 if ID not in scanned_prev: # if new, scan for the first time
                     rospy.loginfo("Scanning new ID - " + str(ID))
-                    self.scan(ID)
+                    value = self.scan(ID)
+                    if value == 1:
+                        scanned_rewards.append(reward)
+                    elif value == 0:
+                        scanned_no_rewards.append(no_reward)
                 elif ID in reward_ID_seen: # if known reward, scan
                     rospy.loginfo("Scanning known reward ID - " + str(ID))
-                    self.scan(ID)
+                    value = self.scan(ID) 
+                    if value == 1:
+                        scanned_rewards.append(reward)
+                    elif value == 0:
+                        scanned_no_rewards.append(no_reward)
                 elif ID in no_reward_ID_seen: # only re-scan known no reward if chance 
                     chance = 1 - self.LI # High LI is low chance, LOW LI is high chance :) 
                     r = random.random() #float in range 0-1
@@ -358,14 +368,18 @@ class Tag_scan(): #=============================================================
                     print(r)
                     if r <= chance: 
                         rospy.loginfo("Rescanning known no reward ID - " + str(ID))
-                        self.scan(ID) #rescan :) 
+                        value = self.scan(ID) #rescan :) 
+                        if value == 1:
+                            scanned_rewards.append(reward)
+                        elif value == 0:
+                            scanned_no_rewards.append(no_reward)
                     else:
                         rospy.loginfo("Ignoring known no reward ID - " + str(ID))
             rospy.loginfo("scan forloop complete, complete_scan = 1")
             self.complete_scan = 1
             rospy.loginfo("Reward Count: " + str(reward_count))
 
-            self.update_server() #update the server
+            self.update_server(scanned_rewards,scanned_no_rewards) #update the server
         #rospy.loginfo("After for loop")
         
         
@@ -390,14 +404,14 @@ class Tag_scan(): #=============================================================
             current_time = time.time() - self.start_time
             data = [reward_count,current_time]
             self.save_to_csv(self.reward_csv_path,data)
-            
+            return 1
         else:
             if ID not in no_reward_ID_seen:
                 no_reward_ID_seen.append(ID)
             if ID in reward_ID_seen:
                 reward_ID_seen.remove(ID)
             rospy.loginfo("No Reward :(")
-
+            return 0
 
     def scan_delay(self):
         t = rospy.get_param("~scan_delay")
@@ -456,14 +470,12 @@ class Tag_scan(): #=============================================================
         rospy.loginfo("Beliefs updated from server")
         self.server_callback_wait = False
 
-    def update_server(self):
-        global reward_ID_seen
-        global no_reward_ID_seen
+    def update_server(self,reward,no_reward):
         update_message = {
             'name':self.name,
             'request':False,
-            'rewards':reward_ID_seen,
-            'no_rewards':no_reward_ID_seen
+            'rewards':reward,
+            'no_rewards':no_reward
         }
         self.server_pub.publish(json.dumps(update_message))
         rospy.loginfo("Update sent to server")
