@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-  <arg name="map_file" default="$(find leo_navigation)/maps/Experiment_map.yaml"/>
+  <arg name="map_file" default="$(find leo_navigation)/maps/Full_office_map_Tidied.yaml"/>
 
   <node name="map_server"
     pkg="map_server"
@@ -11,7 +11,7 @@
     pkg="amcl"
     type="amcl"
     clear_params="true">
-    <rosparam command="load" file="$(find leo_navigation)/config/amcl_3.yaml" />
+    <rosparam command="load" file="$(find leo_navigation)/config/amcl_1.yaml" />
     <remap from="scan" to="scan_filtered"/>
   </node>
 </launch>

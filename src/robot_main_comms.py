@@ -88,7 +88,7 @@ class Patroller():
         # Create action client -------------------------------------------
         self.client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
         rospy.loginfo("Waiting for move_base action server...")
-        wait = self.client.wait_for_server(rospy.Duration(5.0))
+        wait = self.client.wait_for_server(rospy.Duration(30.0))
         if not wait:
             rospy.logerr("Action server not available!")
             rospy.signal_shutdown("Action server not available!")

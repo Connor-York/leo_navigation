@@ -85,7 +85,7 @@ class Patroller():
         # Create action client -------------------------------------------
         self.client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
         rospy.loginfo("Waiting for move_base action server...")
-        wait = self.client.wait_for_server(rospy.Duration(5.0))
+        wait = self.client.wait_for_server(rospy.Duration(0.0))
         if not wait:
             rospy.logerr("Action server not available!")
             rospy.signal_shutdown("Action server not available!")
@@ -194,12 +194,12 @@ class Patroller():
         data = ["waypoint_" + str(self.goal_cnt+1),time_at_waypoint]
         self.save_to_csv(self.time_csv_path,data)
 
-        ts = Tag_scan(self.start_time,self.reward_csv_path) #calls tag scan, does the thing, continues
-        ts.tag_scan()
+        #ts = Tag_scan(self.start_time,self.reward_csv_path) #calls tag scan, does the thing, continues
+        #ts.tag_scan()
         rospy.loginfo("after tag scan") 
-        if(ts.complete_scan == 1):
-            rospy.loginfo("continuing patrol")
-            self.continue_patrol()
+        # if(ts.complete_scan == 1):
+        #    rospy.loginfo("continuing patrol")
+        self.continue_patrol()
 
     
     #checks robot patrol state, determines whether to continue looping or whether to return home
