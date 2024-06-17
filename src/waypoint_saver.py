@@ -12,7 +12,7 @@ import rospkg
  # gets csv file path
 rp = rospkg.RosPack()
 package_path = rp.get_path('leo_navigation')
-CSV_path = (package_path + "/waypoints/full_office_intermediary.csv")
+CSV_path = (package_path + "/waypoints/signal_mapping_test.csv")
 
 
 def callback(msg):

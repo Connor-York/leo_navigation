@@ -28,7 +28,7 @@ trial_no = str(trial_no)
 scenario = rospy.get_param("/pogger/trial_scenario")
 
 
-csv_name = (name + "_" + scenario + "_" + trial_no)
+csv_name = (str(name) + "_" + scenario + "_" + trial_no)
     
 vel_path = (package_path + "/logs/VEL_"  + csv_name + "_" + current_time_save + ".csv")
 pose_path = (package_path + "/logs/POSE_"  + csv_name + "_" + current_time_save + ".csv")
