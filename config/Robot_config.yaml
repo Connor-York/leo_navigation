@@ -1,8 +1,8 @@
 #Parameters for the robot
 #Logging
 robot_name: Connor
-trial_no: 4
-trial_scenario: 0.8_0.8_Dynamic
+trial_no: 1
+trial_scenario: Full_office_test
 
 #For the trial scenario, the four scenarios are: 
 # AF = all fast, AS = all slow, 1:3FS = 1 fast 3 slow, 2:2FS = 50/50 split
@@ -21,7 +21,7 @@ scan_delay: 10 #time (s) to delay when reading tags
 #Patrolling
 patrols: 3 #Either patrols or time_to_end
 start_node: 0
-route: full_office_test.csv
+route: full_office_patrol_1.csv
 speed: slow
 
 #Identifying other robots

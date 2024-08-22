@@ -199,6 +199,10 @@ class Patroller():
         rospy.loginfo("after tag scan") 
         # if(ts.complete_scan == 1):
         #    rospy.loginfo("continuing patrol")
+        t = 3
+        for i in range(t):
+            print("Scanning " + str(i+1) + "/" + str(t) + "...")
+            rospy.sleep(1)
         self.continue_patrol()
 
     
