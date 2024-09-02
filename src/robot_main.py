@@ -62,8 +62,8 @@ class Patroller():
             for item in sublist:
                 self.waypoints.append(item)
 
-        points_seq = self.waypoints  # heading angle for each waypoint
-        yaweulerangles_seq = self.theta  # coordinates for each waypoint
+        points_seq = self.waypoints  # coordinates for each waypoint
+        yaweulerangles_seq = self.theta  # heading angle for each waypoint
 
         # Convert waypoint & heading values into a list of robot poses (quaternions?) -----------
         quat_seq = list()
@@ -190,19 +190,19 @@ class Patroller():
         rospy.loginfo("At waypoint")
 
         #Save time at waypoint
-        time_at_waypoint = time.time() - self.start_time 
-        data = ["waypoint_" + str(self.goal_cnt+1),time_at_waypoint]
-        self.save_to_csv(self.time_csv_path,data)
+        # time_at_waypoint = time.time() - self.start_time 
+        # data = ["waypoint_" + str(self.goal_cnt+1),time_at_waypoint]
+        # self.save_to_csv(self.time_csv_path,data)
 
-        #ts = Tag_scan(self.start_time,self.reward_csv_path) #calls tag scan, does the thing, continues
-        #ts.tag_scan()
-        rospy.loginfo("after tag scan") 
-        # if(ts.complete_scan == 1):
-        #    rospy.loginfo("continuing patrol")
-        t = 3
-        for i in range(t):
-            print("Scanning " + str(i+1) + "/" + str(t) + "...")
-            rospy.sleep(1)
+        # #ts = Tag_scan(self.start_time,self.reward_csv_path) #calls tag scan, does the thing, continues
+        # #ts.tag_scan()
+        # rospy.loginfo("after tag scan") 
+        # # if(ts.complete_scan == 1):
+        # #    rospy.loginfo("continuing patrol")
+        # t = 3
+        # for i in range(t):
+        #     print("Scanning " + str(i+1) + "/" + str(t) + "...")
+        #     rospy.sleep(1)
         self.continue_patrol()
 
     

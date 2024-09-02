@@ -28,7 +28,15 @@ scenario = rospy.get_param("/pogger/trial_scenario")
 
 csv_name = (name + "_" + scenario + "_" + trial_no)
     
-vel_path = (package_path + "/logs/VEL_"  + csv_name + "_" + current_time_save + ".csv")
+vel_path = (package_path + "/logs/VEL_"  + csv_name + "_" + cur        # #ts = Tag_scan(self.start_time,self.reward_csv_path) #calls tag scan, does the thing, continues
+        # #ts.tag_scan()
+        # rospy.loginfo("after tag scan") 
+        # # if(ts.complete_scan == 1):
+        # #    rospy.loginfo("continuing patrol")
+        # t = 3
+        # for i in range(t):
+        #     print("Scanning " + str(i+1) + "/" + str(t) + "...")
+        #     rospy.sleep(1)rent_time_save + ".csv")
 pose_path = (package_path + "/logs/POSE_"  + csv_name + "_" + current_time_save + ".csv")
 battery_path = (package_path + "/logs/BATT_"  + csv_name + "_" + current_time_save + ".csv")
 

@@ -21,7 +21,7 @@ scan_delay: 10 #time (s) to delay when reading tags
 #Patrolling
 patrols: 3 #Either patrols or time_to_end
 start_node: 0
-route: full_office_patrol_1.csv
+route: Full_Office.csv
 speed: slow
 
 #Identifying other robots
