@@ -1,7 +1,0 @@
-image: Full_office_map_Tidied.pgm
-resolution: 0.020000
-origin: [-6.2, -24.05, 0.000000]
-negate: 0
-occupied_thresh: 0.65
-free_thresh: 0.196
-

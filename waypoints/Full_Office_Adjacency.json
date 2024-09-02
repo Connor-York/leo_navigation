@@ -1,0 +1,302 @@
+{
+    "24": {
+        "label": "",
+        "neighbours": [
+            22,
+            25
+        ],
+        "values": [false,false,true,false],
+        "position": {
+            "x": 38.409854888916,
+            "y": 9.76546096801758
+        }
+    },
+    "4": {
+        "label": "",
+        "neighbours": [
+            2,
+            5,
+            6
+        ],
+        "values": [true,true,false,false],
+        "position": {
+            "x": 4.90204572677612,
+            "y": -8.49644374847412
+        }
+    },
+    "1": {
+        "label": "",
+        "neighbours": [
+            2
+        ],
+        "values": [false,true,true,true],
+        "position": {
+            "x": 5.24773120880127,
+            "y": -1.50310730934143
+        }
+    },
+    "12": {
+        "label": "",
+        "neighbours": [
+            11
+        ],
+        "values": [false,false,false,true],
+        "position": {
+            "x": 17.123607635498,
+            "y": -13.6504516601563
+        }
+    },
+    "20": {
+        "label": "",
+        "neighbours": [
+            19,
+            21,
+            22
+        ],
+        "values": [false,false,true,true],
+        "position": {
+            "x": 38.8988304138184,
+            "y": 1.6240953207016
+        }
+    },
+    "2": {
+        "label": "",
+        "neighbours": [
+            1,
+            3,
+            4
+        ],
+        "values": [false,false,false,true],
+        "position": {
+            "x": 4.31698751449585,
+            "y": -3.74898838996887
+        }
+    },
+    "6": {
+        "label": "",
+        "neighbours": [
+            4,
+            7,
+            8
+        ],
+        "values": [true,false,false,false],
+        "position": {
+            "x": 5.3640775680542,
+            "y": -11.901704788208
+        }
+    },
+    "25": {
+        "label": "",
+        "neighbours": [
+            24
+        ],
+        "values": [false,false,false,true],
+        "position": {
+            "x": 34.6768341064453,
+            "y": 10.8164014816284
+        }
+    },
+    "23": {
+        "label": "",
+        "neighbours": [
+            22
+        ],
+        "values": [false,true,false,false],
+        "position": {
+            "x": 34.1803779602051,
+            "y": 6.83427286148071
+        }
+    },
+    "22": {
+        "label": "",
+        "neighbours": [
+            20,
+            23,
+            24
+        ],
+        "values": [true,true,false,true],
+        "position": {
+            "x": 38.4898300170898,
+            "y": 6.9240779876709
+        }
+    },
+    "11": {
+        "label": "",
+        "neighbours": [
+            9,
+            12,
+            13
+        ],
+        "values": [true,false,false,false],
+        "position": {
+            "x": 15.9933443069458,
+            "y": -11.8850708007813
+        }
+    },
+    "13": {
+        "label": "",
+        "neighbours": [
+            11,
+            14
+        ],
+        "values": [true,true,true,true],
+        "position": {
+            "x": 18.4061260223389,
+            "y": -10.9218187332153
+        }
+    },
+    "5": {
+        "label": "",
+        "neighbours": [
+            4
+        ],
+        "values": [true,false,false,true],
+        "position": {
+            "x": 2.77837824821472,
+            "y": -8.52617835998535
+        }
+    },
+    "15": {
+        "label": "",
+        "neighbours": [
+            14
+        ],
+        "values": [true,true,true,true],
+        "position": {
+            "x": 21.7322845458984,
+            "y": -12.5603847503662
+        }
+    },
+    "16": {
+        "label": "",
+        "neighbours": [
+            14,
+            17
+        ],
+        "values": [true,true,true,false],
+        "position": {
+            "x": 24.8764896392822,
+            "y": -7.77083301544189
+        }
+    },
+    "14": {
+        "label": "",
+        "neighbours": [
+            13,
+            15,
+            16
+        ],
+        "values": [false,true,true,true],
+        "position": {
+            "x": 20.9894828796387,
+            "y": -9.80316162109375
+        }
+    },
+    "21": {
+        "label": "",
+        "neighbours": [
+            20
+        ],
+        "values": [false,true,true,true],
+        "position": {
+            "x": 42.0515480041504,
+            "y": 1.87269866466522
+        }
+    },
+    "7": {
+        "label": "",
+        "neighbours": [
+            6,
+            8
+        ],
+        "values": [false,false,false,true],
+        "position": {
+            "x": -0.69292938709259,
+            "y": -13.2456674575806
+        }
+    },
+    "8": {
+        "label": "",
+        "neighbours": [
+            6,
+            7,
+            9
+        ],
+        "values": [true,true,false,false],
+        "position": {
+            "x": 7.07883214950562,
+            "y": -13.2115869522095
+        }
+    },
+    "17": {
+        "label": "",
+        "neighbours": [
+            16,
+            18,
+            19
+        ],
+        "values": [true,true,true,false],
+        "position": {
+            "x": 29.0684719085693,
+            "y": -5.16673994064331
+        }
+    },
+    "10": {
+        "label": "",
+        "neighbours": [
+            9
+        ],
+        "values": [false,true,false,false],
+        "position": {
+            "x": 13.7349166870117,
+            "y": -19.2029647827148
+        }
+    },
+    "19": {
+        "label": "",
+        "neighbours": [
+            17,
+            20
+        ],
+        "values": [true,true,false,false],
+        "position": {
+            "x": 32.9219017028809,
+            "y": -2.91856026649475
+        }
+    },
+    "9": {
+        "label": "",
+        "neighbours": [
+            8,
+            10,
+            11
+        ],
+        "values": [false,false,false,false],
+        "position": {
+            "x": 12.2172088623047,
+            "y": -13.0199174880981
+        }
+    },
+    "18": {
+        "label": "",
+        "neighbours": [
+            17
+        ],
+        "values": [false,true,false,true],
+        "position": {
+            "x": 32.0733032226562,
+            "y": -10.4343090057373
+        }
+    },
+    "3": {
+        "label": "",
+        "neighbours": [
+            2
+        ],
+        "values": [true,true,true,false],
+        "position": {
+            "x": 1.65064263343811,
+            "y": -3.82470178604126
+        }
+    }
+}
