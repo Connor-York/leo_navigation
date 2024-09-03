@@ -7,6 +7,7 @@ import time
 import datetime
 import rospkg 
 import csv
+import tf.transformations 
 
 #getting date for saving
 # current_date = datetime.date.today()
@@ -26,19 +27,18 @@ trial_no = rospy.get_param("/pogger/trial_no")
 trial_no = str(trial_no)
 scenario = rospy.get_param("/pogger/trial_scenario")
 
+
 csv_name = (name + "_" + scenario + "_" + trial_no)
     
-vel_path = (package_path + "/logs/VEL_"  + csv_name + "_" + cur        # #ts = Tag_scan(self.start_time,self.reward_csv_path) #calls tag scan, does the thing, continues
-        # #ts.tag_scan()
-        # rospy.loginfo("after tag scan") 
-        # # if(ts.complete_scan == 1):
-        # #    rospy.loginfo("continuing patrol")
-        # t = 3
-        # for i in range(t):
-        #     print("Scanning " + str(i+1) + "/" + str(t) + "...")
-        #     rospy.sleep(1)rent_time_save + ".csv")
+vel_path = (package_path + "/logs/VEL_"  + csv_name + "_" + current_time_save + ".csv"
 pose_path = (package_path + "/logs/POSE_"  + csv_name + "_" + current_time_save + ".csv")
 battery_path = (package_path + "/logs/BATT_"  + csv_name + "_" + current_time_save + ".csv")
+
+initial_x = rospy.get_param("/amcl/initial_pose_x")
+initial_y = rospy.get_param("/amcl/initial_pose_y")
+initial_a = rospy.get_param("/amcl/initial_pose_a")
+
+current_pose = [initial_x,initial_y,0.0,0.0,0.0]
 
 
 def vel_callback(msg):
@@ -56,8 +56,8 @@ def pose_callback(msg):
     oz = msg.pose.pose.orientation.z
     ow = msg.pose.pose.orientation.w
     timestamp = time.time() - start_time
-    data = [x,y,ox,oy,oz,ow,timestamp]
-    save_to_csv(pose_path,data)
+    current_pose = [x,y,ox,oy,oz,ow,timestamp]
+
 
 def battery_callback(msg):
     timestamp = time.time() - start_time
@@ -70,9 +70,7 @@ def save_to_csv(csv_path,data):
         writer.writerow(data)
 
 if __name__ == "__main__":
-    rospy.init_node("pogger") # init node (pose logger)
-
-
+    rospy.init_node("pogger") # init node (pose logger) 
     #start subscribers for both velocity and position
     vel_subscriber = rospy.Subscriber("nav_vel",Twist,vel_callback)
 
@@ -80,4 +78,9 @@ if __name__ == "__main__":
 
     battery_subscriber = rospy.Subscriber("firmware/battery_averaged",Float32,battery_callback)
 
-    rospy.spin()
+    rate = rospy.Rate(1) # 1 hz 
+    while not rospy.is_shutdown():
+        save_to_csv(pose_path,current_pose)
+        rate.sleep()
+
+    #rospy.spin()

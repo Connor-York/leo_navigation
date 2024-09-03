@@ -16,6 +16,7 @@ from ar_track_alvar_msgs.msg import AlvarMarkers
 import datetime
 import csv
 from geometry_msgs.msg import PoseWithCovarianceStamped
+import json
 
 class Patroller():
 
@@ -35,6 +36,9 @@ class Patroller():
         self.time_to_end = rospy.get_param("~time_to_end") * 60.0
         # ^ Time after which to end patrolling (if decided) received in minutes, then into seconds
 
+        with open('leo_navigation/waypoints/Full_Office_Adjacency.json','r') as file:
+            self.adjacency_dict = json.load(file)
+
         # gets csv file path
         rp = rospkg.RosPack()
         package_path = rp.get_path('leo_navigation')
@@ -47,7 +51,7 @@ class Patroller():
         scenario = rospy.get_param("~trial_scenario")
         time_csv_name = (name + "_" + scenario + "_" + trial_no)
        
-        self.time_csv_path = (package_path + "/logs/TIMES_" + time_csv_name + "_" + current_time_save + ".csv")
+        self.time_csv_path = (package_path + "/logs/ARRIVED_AT_WAYPOINT_" + time_csv_name + "_" + current_time_save + ".csv")
         self.reward_csv_path = (package_path + "/logs/REWARDS_" + time_csv_name + "_" + current_time_save + ".csv")
         self.skip_csv_path = (package_path + "/logs/SKIPPED_" + time_csv_name + "_" + current_time_save + ".csv")
 
@@ -101,6 +105,11 @@ class Patroller():
         # Create a Twist publisher to send velocity commands to the robot
         self.vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
 
+        #initiate publisher and subscriber for messaging service
+        self.server_pub = rospy.Publisher('/server_pub', String, queue_size=10) 
+        rospy.Subscriber('/server_sub', String, self.server_callback)
+
+        self.intention_log = [99,99,99,99] # lazy implementation tie this to number of agents maybe :) 99 as 0 is a node already
 
         self.patrol_count = 0
         self.tick = 0
@@ -166,6 +175,14 @@ class Patroller():
         pose_y = msg.pose.pose.position.y
         self.current_pose = [pose_x,pose_y]
 
+    def server_callback(self, msg):
+        data = json.loads(msg.data)
+        if data["type"] = "ArrivedAtNode":
+            self.intention_log[data["source"]] = data["message"][1]
+            rospy.loginfo(f"Updating intention log with agent {data["source"]} and node {data["message"][1]}")
+            #update idleness log for full sebs implementation here :) 
+
+
     def dist_wayp(self):
         target_x = self.pose_seq[self.goal_cnt].position.x
         target_y = self.pose_seq[self.goal_cnt].position.y
@@ -188,11 +205,12 @@ class Patroller():
 
     def state_at_waypoint(self):
         rospy.loginfo("At waypoint")
+        rospy.loginfo("Goal pose "+str(self.goal_cnt)+" reached")
 
         #Save time at waypoint
-        # time_at_waypoint = time.time() - self.start_time 
-        # data = ["waypoint_" + str(self.goal_cnt+1),time_at_waypoint]
-        # self.save_to_csv(self.time_csv_path,data)
+        time_at_waypoint = time.time() - self.start_time 
+        data = ["waypoint_" + str(self.goal_cnt),time_at_waypoint]
+        self.save_to_csv(self.time_csv_path,data)
 
         # #ts = Tag_scan(self.start_time,self.reward_csv_path) #calls tag scan, does the thing, continues
         # #ts.tag_scan()
@@ -218,50 +236,72 @@ class Patroller():
             rospy.signal_shutdown("FIN")
             exit()
 
-        self.goal_cnt +=1 #Increment goal count
-        rospy.loginfo("Goal pose "+str(self.goal_cnt)+" reached")
 
-        if self.goal_cnt == len(self.pose_seq): #Loop waypoint list
-                self.goal_cnt = 0
+        patrol_method = 'random/sebs' #cgg
 
-        if self.goal_cnt != rospy.get_param("~start_node"): #Check if returned home
-            rospy.loginfo("Moving onto next goal...")
-            self.state_patrolling()
+        if patrol_method == 'cgg':
+            self.goal_cnt +=1 #Increment goal count
 
-        else:   #if completed a full loop
-            rospy.loginfo("Final goal pose reached!")
-            self.patrol_count += 1
-            # if self.patrol_count == rospy.get_param("~patrols"): # if done all the patrols return home, set tick to 1
-            #     # goal = MoveBaseGoal()
-            #     # goal.target_pose.header.frame_id = "map"
-            #     # goal.target_pose.header.stamp = rospy.Time.now()
-            #     # goal.target_pose.pose = self.pose_seq[rospy.get_param("~start_node")]
-            #     # self.client.send_goal(goal)
-            #     self.goal_cnt = rospy.get_param("~start_node")
-            #     self.tick = 1
-            #     rospy.loginfo("==========* Returning Home *==========")
-            #     self.state_patrolling()
-            #else:
-            rospy.loginfo("Repeating patrol ...")
-            self.goal_cnt = rospy.get_param("~start_node")
-            self.client.cancel_goal()
-            self.state_patrolling()
+            if self.goal_cnt == len(self.pose_seq): #Loop waypoint list
+                    self.goal_cnt = 0
 
+            if self.goal_cnt != rospy.get_param("~start_node"): #Check if returned home
+                rospy.loginfo("Moving onto next goal...")
+                self.state_patrolling()
 
-    def spin_robot(self):
-        # Spin robot on the spot
-        t_end = rospy.Time.now() + rospy.Duration(8) #about 360deg
-        rospy.loginfo("Spinning...")
-        while rospy.Time.now() < t_end:
-            vel_msg = Twist()
-            vel_msg.angular.z = 7.0
-            self.vel_pub.publish(vel_msg)
-            #rospy.loginfo("midspin")
+            else:   #if completed a full loop
+                rospy.loginfo("Final goal pose reached!")
+                self.patrol_count += 1
+                # if self.patrol_count == rospy.get_param("~patrols"): # if done all the patrols return home, set tick to 1
+                #     # goal = MoveBaseGoal()
+                #     # goal.target_pose.header.frame_id = "map"
+                #     # goal.target_pose.header.stamp = rospy.Time.now()
+                #     # goal.target_pose.pose = self.pose_seq[rospy.get_param("~start_node")]
+                #     # self.client.send_goal(goal)
+                #     self.goal_cnt = rospy.get_param("~start_node")
+                #     self.tick = 1
+                #     rospy.loginfo("==========* Returning Home *==========")
+                #     self.state_patrolling()
+                #else:
+                rospy.loginfo("Repeating patrol ...")
+                self.goal_cnt = rospy.get_param("~start_node")
+                self.client.cancel_goal()
+                self.state_patrolling()
 
-        rospy.loginfo("Spin Done")
-        # Stop the robot
-        vel_msg = Twist()
-        self.vel_pub.publish(vel_msg)
+        elif patrol_method == 'random/sebs':
+
+            position = self.goal_cnt
+            neighbours = self.adjacency_dict[str(position)]["neighbours"]
+            if len(neighbours) = 1:
+                self.goal_cnt = neighbours[0]
+                arrivedAtNodeMessage(None,position)
+                self.state_patrolling()
+
+            else
+                for i in self.intention_log:
+                    if i in neighbours:
+                        neighbours.remove(i)
+            
+                if len(neighbours) != 0:
+                    self.goal_cnt = random.choice(neighbours)
+                    arrivedAtNodeMessage(None,position)
+                    self.state_patrolling()
+
+                elif len(neighbours) == 0: #all neighbours have intentions, should be rare
+                    neighbours = self.adjacency_dict[str(position)]["neighbours"]
+                    self.goal_cnt = random.choice(neighbours)
+                    arrivedAtNodeMessage(None,position)
+                    self.state_patrolling()   
+
+    def arrivedAtNodeMessage(self,targets,position):
+        Message = { 
+                'source':0,
+                'type':"ArrivedAtNode",
+                'targets':targets,
+                'message':(position,self.goal_cnt)
+            }
+        self.server_pub.publish(json.dumps(Message))
+        rospy.loginfo("ArrivedAtNodeMessage Sent!")
 
     def save_to_csv(self,csv_path,data):
         with open(csv_path, "a", newline="") as file:
