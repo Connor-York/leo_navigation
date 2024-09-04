@@ -37,10 +37,8 @@ battery_path = (package_path + "/logs/BATT_"  + csv_name + "_" + current_time_sa
 initial_x = rospy.get_param("/amcl/initial_pose_x")
 initial_y = rospy.get_param("/amcl/initial_pose_y")
 initial_a = rospy.get_param("/amcl/initial_pose_a")
-flag = 0
-if flag == 0
-    current_pose = []
-    flag = 1
+
+current_pose = []
 
 
 def vel_callback(msg):
@@ -58,6 +56,7 @@ def pose_callback(msg):
     oz = msg.pose.pose.orientation.z
     ow = msg.pose.pose.orientation.w
     timestamp = time.time() - start_time
+    global current_pose 
     current_pose = [x,y,ox,oy,oz,ow,timestamp]
 
 
@@ -82,7 +81,8 @@ if __name__ == "__main__":
 
     rate = rospy.Rate(1) # 1 hz 
     while not rospy.is_shutdown():
-        save_to_csv(pose_path,current_pose)
+        if len(current_pose) > 1:
+            save_to_csv(pose_path,current_pose)
         rate.sleep()
 
     #rospy.spin()
