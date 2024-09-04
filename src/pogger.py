@@ -30,15 +30,17 @@ scenario = rospy.get_param("/pogger/trial_scenario")
 
 csv_name = (name + "_" + scenario + "_" + trial_no)
     
-vel_path = (package_path + "/logs/VEL_"  + csv_name + "_" + current_time_save + ".csv"
+vel_path = (package_path + "/logs/VEL_"  + csv_name + "_" + current_time_save + ".csv")
 pose_path = (package_path + "/logs/POSE_"  + csv_name + "_" + current_time_save + ".csv")
 battery_path = (package_path + "/logs/BATT_"  + csv_name + "_" + current_time_save + ".csv")
 
 initial_x = rospy.get_param("/amcl/initial_pose_x")
 initial_y = rospy.get_param("/amcl/initial_pose_y")
 initial_a = rospy.get_param("/amcl/initial_pose_a")
-
-current_pose = [initial_x,initial_y,0.0,0.0,0.0]
+flag = 0
+if flag == 0
+    current_pose = []
+    flag = 1
 
 
 def vel_callback(msg):
@@ -72,11 +74,11 @@ def save_to_csv(csv_path,data):
 if __name__ == "__main__":
     rospy.init_node("pogger") # init node (pose logger) 
     #start subscribers for both velocity and position
-    vel_subscriber = rospy.Subscriber("nav_vel",Twist,vel_callback)
+    #vel_subscriber = rospy.Subscriber("nav_vel",Twist,vel_callback)
 
     pose_subscriber = rospy.Subscriber("amcl_pose",PoseWithCovarianceStamped,pose_callback)
 
-    battery_subscriber = rospy.Subscriber("firmware/battery_averaged",Float32,battery_callback)
+    #battery_subscriber = rospy.Subscriber("firmware/battery_averaged",Float32,battery_callback)
 
     rate = rospy.Rate(1) # 1 hz 
     while not rospy.is_shutdown():

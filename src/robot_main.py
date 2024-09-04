@@ -10,6 +10,7 @@ from actionlib_msgs.msg import GoalStatus, GoalStatusArray
 from geometry_msgs.msg import Pose, Point, Quaternion
 from tf.transformations import quaternion_from_euler
 from geometry_msgs.msg import Twist
+from std_msgs.msg import String
 import time
 import random
 from ar_track_alvar_msgs.msg import AlvarMarkers
@@ -36,7 +37,7 @@ class Patroller():
         self.time_to_end = rospy.get_param("~time_to_end") * 60.0
         # ^ Time after which to end patrolling (if decided) received in minutes, then into seconds
 
-        with open('leo_navigation/waypoints/Full_Office_Adjacency.json','r') as file:
+        with open('/home/latte/ros_ws/src/leo_navigation/waypoints/Full_Office_Adjacency.json','r') as file:
             self.adjacency_dict = json.load(file)
 
         # gets csv file path
@@ -50,6 +51,8 @@ class Patroller():
         trial_no = str(trial_no)
         scenario = rospy.get_param("~trial_scenario")
         time_csv_name = (name + "_" + scenario + "_" + trial_no)
+
+        self.id = name
        
         self.time_csv_path = (package_path + "/logs/ARRIVED_AT_WAYPOINT_" + time_csv_name + "_" + current_time_save + ".csv")
         self.reward_csv_path = (package_path + "/logs/REWARDS_" + time_csv_name + "_" + current_time_save + ".csv")
@@ -177,10 +180,14 @@ class Patroller():
 
     def server_callback(self, msg):
         data = json.loads(msg.data)
-        if data["type"] = "ArrivedAtNode":
-            self.intention_log[data["source"]] = data["message"][1]
-            rospy.loginfo(f"Updating intention log with agent {data["source"]} and node {data["message"][1]}")
-            #update idleness log for full sebs implementation here :) 
+        rospy.loginfo("Received message from server")
+        if data["type"] == "ArrivedAtNode": 
+            if data["source"] != self.id:
+                self.intention_log[data["source"]] = data["message"][1]
+                msgsource = data["source"]
+                msgintent = data["message"][1]
+                rospy.loginfo(f"Updating intention log with agent {msgsource} and node {msgintent}")
+                #update idleness log for full sebs implementation here :) 
 
 
     def dist_wayp(self):
@@ -191,13 +198,29 @@ class Patroller():
         #print("Dist to wayp = " + str(dist))
         return dist
 
+    def arrivedAtNodeMessage(self,targets,position):
+        Message = { 
+                'source':0,
+                'type':"ArrivedAtNode",
+                'targets':targets,
+                'message':(position,self.goal_cnt)
+            }
+        self.server_pub.publish(json.dumps(Message))
+        rospy.loginfo("ArrivedAtNodeMessage Sent!")
+
+    def save_to_csv(self,csv_path,data):
+        with open(csv_path, "a", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow(data)
+
     def state_patrolling(self):
         goal = MoveBaseGoal()
         goal.target_pose.header.frame_id = "map"
         goal.target_pose.header.stamp = rospy.Time.now()
         goal.target_pose.pose = self.pose_seq[self.goal_cnt]
+        rospy.loginfo(f"SENDOING GOAL_CNT {self.goal_cnt}")
         rospy.loginfo("Sending goal pose " +
-                      str(self.goal_cnt+1)+" to Action Server")
+                      str(self.goal_cnt)+" to Action Server")
         #rospy.loginfo(str(self.pose_seq[self.goal_cnt]))
         self.client.send_goal(goal)
         rospy.loginfo("==========* GOAL SENT *==========")
@@ -209,7 +232,7 @@ class Patroller():
 
         #Save time at waypoint
         time_at_waypoint = time.time() - self.start_time 
-        data = ["waypoint_" + str(self.goal_cnt),time_at_waypoint]
+        data = [self.goal_cnt,time_at_waypoint]
         self.save_to_csv(self.time_csv_path,data)
 
         # #ts = Tag_scan(self.start_time,self.reward_csv_path) #calls tag scan, does the thing, continues
@@ -222,7 +245,6 @@ class Patroller():
         #     print("Scanning " + str(i+1) + "/" + str(t) + "...")
         #     rospy.sleep(1)
         self.continue_patrol()
-
     
     #checks robot patrol state, determines whether to continue looping or whether to return home
     # and stop. Can definitely be cleaned up but im not gonna do that now.
@@ -272,41 +294,29 @@ class Patroller():
 
             position = self.goal_cnt
             neighbours = self.adjacency_dict[str(position)]["neighbours"]
-            if len(neighbours) = 1:
-                self.goal_cnt = neighbours[0]
-                arrivedAtNodeMessage(None,position)
+            rospy.loginfo(f"Neighbours = {neighbours}")
+            if len(neighbours) == 1:
+                self.goal_cnt = neighbours[0] 
+                self.arrivedAtNodeMessage(None,position)
                 self.state_patrolling()
 
-            else
+            else:
                 for i in self.intention_log:
                     if i in neighbours:
                         neighbours.remove(i)
             
                 if len(neighbours) != 0:
                     self.goal_cnt = random.choice(neighbours)
-                    arrivedAtNodeMessage(None,position)
+                    self.arrivedAtNodeMessage(None,position)
                     self.state_patrolling()
 
                 elif len(neighbours) == 0: #all neighbours have intentions, should be rare
                     neighbours = self.adjacency_dict[str(position)]["neighbours"]
-                    self.goal_cnt = random.choice(neighbours)
-                    arrivedAtNodeMessage(None,position)
+                    self.goal_cnt = random.choice(neighbours) 
+                    self.arrivedAtNodeMessage(None,position)
                     self.state_patrolling()   
 
-    def arrivedAtNodeMessage(self,targets,position):
-        Message = { 
-                'source':0,
-                'type':"ArrivedAtNode",
-                'targets':targets,
-                'message':(position,self.goal_cnt)
-            }
-        self.server_pub.publish(json.dumps(Message))
-        rospy.loginfo("ArrivedAtNodeMessage Sent!")
 
-    def save_to_csv(self,csv_path,data):
-        with open(csv_path, "a", newline="") as file:
-            writer = csv.writer(file)
-            writer.writerow(data)
 
 class Tag_scan(): #==============================================================================
 

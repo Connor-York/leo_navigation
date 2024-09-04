@@ -1,9 +1,9 @@
 {
-    "23": {
+    "24": {
         "label": "",
         "neighbours": [
-            21,
-            24
+            22,
+            25
         ],
         "values": [false,false,true,false],
         "position": {
@@ -11,12 +11,12 @@
             "y": 9.76546096801758
         }
     },
-    "3": {
+    "4": {
         "label": "",
         "neighbours": [
-            1,
-            4,
-            5
+            2,
+            5,
+            6
         ],
         "values": [true,true,false,false],
         "position": {
@@ -24,10 +24,10 @@
             "y": -8.49644374847412
         }
     },
-    "0": {
+    "1": {
         "label": "",
         "neighbours": [
-            1
+            2
         ],
         "values": [false,true,true,true],
         "position": {
@@ -35,10 +35,10 @@
             "y": -1.50310730934143
         }
     },
-    "11": {
+    "12": {
         "label": "",
         "neighbours": [
-            10
+            11
         ],
         "values": [false,false,false,true],
         "position": {
@@ -46,12 +46,12 @@
             "y": -13.6504516601563
         }
     },
-    "19": {
+    "20": {
         "label": "",
         "neighbours": [
-            18,
-            20,
-            21
+            19,
+            21,
+            22
         ],
         "values": [false,false,true,true],
         "position": {
@@ -59,12 +59,12 @@
             "y": 1.6240953207016
         }
     },
-    "1": {
+    "2": {
         "label": "",
         "neighbours": [
-            0,
-            2,
-            3
+            1,
+            3,
+            4
         ],
         "values": [false,false,false,true],
         "position": {
@@ -72,12 +72,12 @@
             "y": -3.74898838996887
         }
     },
-    "5": {
+    "6": {
         "label": "",
         "neighbours": [
-            3,
-            6,
-            7
+            4,
+            7,
+            8
         ],
         "values": [true,false,false,false],
         "position": {
@@ -85,10 +85,10 @@
             "y": -11.901704788208
         }
     },
-    "24": {
+    "25": {
         "label": "",
         "neighbours": [
-            23
+            24
         ],
         "values": [false,false,false,true],
         "position": {
@@ -96,10 +96,10 @@
             "y": 10.8164014816284
         }
     },
-    "22": {
+    "23": {
         "label": "",
         "neighbours": [
-            21
+            22
         ],
         "values": [false,true,false,false],
         "position": {
@@ -107,12 +107,12 @@
             "y": 6.83427286148071
         }
     },
-    "21": {
+    "22": {
         "label": "",
         "neighbours": [
-            19,
-            22,
-            23
+            20,
+            23,
+            24
         ],
         "values": [true,true,false,true],
         "position": {
@@ -120,12 +120,12 @@
             "y": 6.9240779876709
         }
     },
-    "10": {
+    "11": {
         "label": "",
         "neighbours": [
-            8,
-            11,
-            12
+            9,
+            12,
+            13
         ],
         "values": [true,false,false,false],
         "position": {
@@ -133,11 +133,11 @@
             "y": -11.8850708007813
         }
     },
-    "12": {
+    "13": {
         "label": "",
         "neighbours": [
-            10,
-            13
+            11,
+            14
         ],
         "values": [true,true,true,true],
         "position": {
@@ -145,10 +145,10 @@
             "y": -10.9218187332153
         }
     },
-    "4": {
+    "5": {
         "label": "",
         "neighbours": [
-            3
+            4
         ],
         "values": [true,false,false,true],
         "position": {
@@ -156,10 +156,10 @@
             "y": -8.52617835998535
         }
     },
-    "14": {
+    "15": {
         "label": "",
         "neighbours": [
-            13
+            14
         ],
         "values": [true,true,true,true],
         "position": {
@@ -167,11 +167,11 @@
             "y": -12.5603847503662
         }
     },
-    "15": {
+    "16": {
         "label": "",
         "neighbours": [
-            13,
-            16
+            14,
+            17
         ],
         "values": [true,true,true,false],
         "position": {
@@ -179,12 +179,12 @@
             "y": -7.77083301544189
         }
     },
-    "13": {
+    "14": {
         "label": "",
         "neighbours": [
-            12,
-            14,
-            15
+            13,
+            15,
+            16
         ],
         "values": [false,true,true,true],
         "position": {
@@ -192,10 +192,10 @@
             "y": -9.80316162109375
         }
     },
-    "20": {
+    "21": {
         "label": "",
         "neighbours": [
-            19
+            20
         ],
         "values": [false,true,true,true],
         "position": {
@@ -203,11 +203,11 @@
             "y": 1.87269866466522
         }
     },
-    "6": {
+    "7": {
         "label": "",
         "neighbours": [
-            5,
-            7
+            6,
+            8
         ],
         "values": [false,false,false,true],
         "position": {
@@ -215,12 +215,12 @@
             "y": -13.2456674575806
         }
     },
-    "7": {
+    "8": {
         "label": "",
         "neighbours": [
-            5,
             6,
-            8
+            7,
+            9
         ],
         "values": [true,true,false,false],
         "position": {
@@ -228,12 +228,12 @@
             "y": -13.2115869522095
         }
     },
-    "16": {
+    "17": {
         "label": "",
         "neighbours": [
-            15,
-            17,
-            18
+            16,
+            18,
+            19
         ],
         "values": [true,true,true,false],
         "position": {
@@ -241,10 +241,10 @@
             "y": -5.16673994064331
         }
     },
-    "9": {
+    "10": {
         "label": "",
         "neighbours": [
-            8
+            9
         ],
         "values": [false,true,false,false],
         "position": {
@@ -252,11 +252,11 @@
             "y": -19.2029647827148
         }
     },
-    "18": {
+    "19": {
         "label": "",
         "neighbours": [
-            16,
-            19
+            17,
+            20
         ],
         "values": [true,true,false,false],
         "position": {
@@ -264,12 +264,12 @@
             "y": -2.91856026649475
         }
     },
-    "8": {
+    "9": {
         "label": "",
         "neighbours": [
-            7,
-            9,
-            10
+            8,
+            10,
+            11
         ],
         "values": [false,false,false,false],
         "position": {
@@ -277,10 +277,10 @@
             "y": -13.0199174880981
         }
     },
-    "17": {
+    "18": {
         "label": "",
         "neighbours": [
-            16
+            17
         ],
         "values": [false,true,false,true],
         "position": {
@@ -288,10 +288,10 @@
             "y": -10.4343090057373
         }
     },
-    "2": {
+    "3": {
         "label": "",
         "neighbours": [
-            1
+            2
         ],
         "values": [true,true,true,false],
         "position": {
