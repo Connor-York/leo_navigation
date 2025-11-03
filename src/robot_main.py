@@ -37,7 +37,7 @@ class Patroller():
         current_time_save = current_time_save.strftime("%H:%M:%S")
         self.time_to_end = rospy.get_param("~time_to_end") * 60.0
         self.patrol_count_goal = rospy.get_param("~patrols")
-        # ^ Time after which to end patrolling (if decided) received in minutes, then into seconds
+        # ^ Time after which to end patrolling (if decided) received in minutes, then into seconds / number of patrol loops to do
 
         with open('/home/latte/ros_ws/src/leo_navigation/waypoints/Full_Office_Adjacency.json','r') as file:
             self.adjacency_dict = json.load(file)
@@ -109,6 +109,8 @@ class Patroller():
 
         # Create a Twist publisher to send velocity commands to the robot
         self.vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
+        
+        self.status_pub = rospy.Publisher('/patrol_status', String, queue_size=10, latch=True)
 
         #initiate publisher and subscriber for messaging service
         self.server_pub = rospy.Publisher('/server_pub', String, queue_size=10) 
@@ -200,6 +202,10 @@ class Patroller():
         #print("Dist to wayp = " + str(dist))
         return dist
 
+    def patrol_status_update(self):
+        Message = f"{self.goal_cnt},{self.patrol_count}"
+        self.status_pub.publish(Message)
+
     def arrivedAtNodeMessage(self,targets,position):
         Message = { 
                 'source':0,
@@ -220,11 +226,12 @@ class Patroller():
         goal.target_pose.header.frame_id = "map"
         goal.target_pose.header.stamp = rospy.Time.now()
         goal.target_pose.pose = self.pose_seq[self.goal_cnt]
-        rospy.loginfo(f"SENDOING GOAL_CNT {self.goal_cnt}")
+        self.patrol_status_update() # Publish current goal count, and patrol count to ros message
         rospy.loginfo("Sending goal pose " +
                       str(self.goal_cnt)+" to Action Server")
         #rospy.loginfo(str(self.pose_seq[self.goal_cnt]))
         self.client.send_goal(goal)
+        
         rospy.loginfo("==========* GOAL SENT *==========")
         
 
@@ -301,7 +308,7 @@ class Patroller():
                 #else:
                 rospy.loginfo("Repeating patrol ...")
                 self.goal_cnt = rospy.get_param("~start_node")
-                self.client.cancel_goal()
+                # self.client.cancel_goal()
                 self.state_patrolling()
 
         elif patrol_method == 'random/sebs':
