@@ -12,7 +12,7 @@
     pkg="amcl"
     type="amcl"
     clear_params="true">
-    <rosparam command="load" file="$(find leo_navigation)/config/amcl/$(amcl_file)" />
+    <rosparam command="load" file="$(find leo_navigation)/config/amcl/$(arg amcl_file)" />
     <remap from="scan" to="scan_filtered"/>
   </node>
 
