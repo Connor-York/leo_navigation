@@ -1,13 +1,14 @@
 <?xml version="1.0"?>
 <launch>
+
     <include file="$(find leo_navigation)/launch/slam.launch" />
 
     <node pkg="leo_navigation" type="robot_main.py" name="patroller" output="screen">  
         <rosparam command="load" file="$(find leo_navigation)/config/Robot_config.yaml" /> 
     </node>
 
-    <!--include file="$(find leo_navigation)/launch/ar_tags.launch"/-->
-    <!-- <include file="$(find leo_navigation)/launch/pogger.launch"/> -->
+    <!--include file="$(find leo_navigation)/launch/subprocesses/ar_tags.launch"/-->
+    <!-- <include file="$(find leo_navigation)/launch/subprocesses/pogger.launch"/> -->
 
 
 </launch>

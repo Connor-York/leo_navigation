@@ -1,16 +1,21 @@
 <?xml version="1.0"?>
 <launch>
 
-   <include file="$(find leo_navigation)/launch/odometry.launch" />
-   <!--include file="$(find leo_navigation)/launch/gmapping.launch" /-->
-   <!--include file="$(find leo_navigation)/launch/hectormapping.launch"/-->
-   <include file="$(find leo_navigation)/launch/amcl.launch"/>
+   <arg name="map_file" default="Full_Office_Map.yaml"/>
+   <arg name="amcl_file" default="amcl_3.yaml"/>
 
-   <include file="$(find leo_navigation)/launch/navigation.launch" />
-   <!--include file="$(find ublox_gps)/launch/ublox_device.launch" /-->
+   <include file="$(find leo_navigation)/launch/subprocesses/odometry.launch" />
 
-   <!--node pkg="laser_filters" type="scan_to_scan_filter_chain" name="laser_filter">
-      <rosparam command="load" file="$(find leo_navigation)/config/laser_config.yaml"/>
-   </node-->
+   <!-- Only include gmapping or AMCL, gmapping for making the maps and AMCL for using them-->
+   <!--include file="$(find leo_navigation)/launch/subprocesses/gmapping.launch" /--> 
+   <include file="$(find leo_navigation)/launch/subprocesses/amcl.launch">
+      <arg name="map_file" value="$(arg map_file)"/>
+      <arg name="amcl_file" value="$(arg amcl_file)"/>
+   </include>
+
+
+   <include file="$(find leo_navigation)/launch/subprocesses/twist_mux.launch" />
+   <include file="$(find leo_navigation)/launch/subprocesses/move_base.launch" />
+
 
 </launch>

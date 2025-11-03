@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="map_file" default="Full_Office_Map.yaml"/>
+  <arg name="amcl_file" default="amcl_3.yaml"/>
+
+  <node name="map_server"
+    pkg="map_server"
+    type="map_server"
+    args="$(find leo_navigation)/maps/$(arg map_file)" />
+
+  <node name="amcl"
+    pkg="amcl"
+    type="amcl"
+    clear_params="true">
+    <rosparam command="load" file="$(find leo_navigation)/config/amcl/$(amcl_file)" />
+    <remap from="scan" to="scan_filtered"/>
+  </node>
+
+</launch>
