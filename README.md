@@ -4,7 +4,17 @@ Built ontop of code written for Leo_navigation_tutorial by Leo Rover devs:
 
 This package was created as part of the [Autonomous Navigation tutorial] for Leo Rover. It provides configuration for SLAM and autonomous navigation for Leo Rover equipped with IMU and LiDAR sensors. 
 
-## Launch files
+## Launch Files
+
+* **`robot_main.launch`**
+
+    Primary file: launches localisation, navigation, and the main robot node containing patrolling / other behaviours.
+
+* **`slam.launch`** 
+    
+    Launches all of the navigation and localisation processes without the main robot behaviour for manual control/ testing. 
+
+## Subprocess Launch Files
 
 * **`odometry.launch`** 
  
