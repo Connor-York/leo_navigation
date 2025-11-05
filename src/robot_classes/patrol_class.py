@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 import rospy
-
+from geometry_msgs.msg import Pose, Point, Quaternion
+from tf.transformations import quaternion_from_euler
+import math
+import pandas as pd
+import json
+import numpy as np
 
 class Patroller:
     
-    def __init__(self, package_path):
+    def __init__(self, id, package_path, server_pub, num_robots):
         
         # Initialise Patrolling 
         patrol_route = package_path + "/waypoints/" + rospy.get_param("~patrol_route")
@@ -12,7 +17,10 @@ class Patroller:
         self.current_goal = rospy.get_param("~start_node")
         self.current_lap = 0
         
+        self.intention_table = np.empty(num_robots, dtype=int)
+        self.node_idleness = np.zeros(len(self.waypoint_list))
         
+        self.server_pub = server_pub # For sending communications
         
         
     def waypoint_gen(self, waypoint_csv):
@@ -47,3 +55,24 @@ class Patroller:
             n += 1
             
         return pose_seq
+    
+    def send_sebs_msg(self, current_node):
+        if current_node == self.current_goal:
+            rospy.logerr(f"Current Node {current_node} is the same as goal {self.current_goal} when sending sebs message.")
+        Message = { 
+            'source':self.id,
+            'type':"sebs",
+            'position':current_node, 
+            'intention':self.current_goal
+        }
+        self.server_pub.publish(json.dumps(Message))
+        rospy.loginfo("Sebs message sent!")
+        
+    def receive_sebs_msg(self, message):
+        rospy.loginfo(f"Received SEBS message from {message["message"]}")
+        self.intention_table[message["source"]] = message["intention"]
+        self.node_idleness[message["position"]] = 0
+    
+    
+        
+    
