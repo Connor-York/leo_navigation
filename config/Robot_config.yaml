@@ -1,6 +1,6 @@
 #Parameters for the robot
 #Logging
-robot_name: connor
+robot_id: 0
 trial_scenario: test_run
 
 #Experiment Parameters
@@ -8,6 +8,7 @@ end_condition: laps # "laps" for number of patrol loops or "time" for an end tim
 time_to_end: 30     # time in minutes
 patrol_laps: 3      
 robot_role: patroller #"patroller", "searcher"
+num_robots: 4
 
 #Patrol
 start_node: 0
