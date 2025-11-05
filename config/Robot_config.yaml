@@ -3,11 +3,15 @@
 robot_name: connor
 trial_scenario: test_run
 
-#End conditions
+#Experiment Parameters
 end_condition: laps # "laps" for number of patrol loops or "time" for an end time
 time_to_end: 30     # time in minutes
 patrol_laps: 3      
+robot_role: patroller #"patroller", "searcher"
 
 #Patrol
 start_node: 0
 patrol_route: signal_mapping_test.csv 
+
+#Search
+search_method: PSO # "PSO", "ECOLI", "HYBRID"
