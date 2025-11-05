@@ -8,8 +8,11 @@ class Searcher:
         self.search_method = rospy.get_param("~search_method")
     
     def PSO_step(self):
+        pass
         
     def ECOLI_step(self):
+        pass
     
     def HYBRID_step(self):
+        pass
 
