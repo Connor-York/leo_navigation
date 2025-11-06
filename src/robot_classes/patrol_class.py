@@ -2,6 +2,7 @@
 import rospy
 from geometry_msgs.msg import Pose, Point, Quaternion
 from tf.transformations import quaternion_from_euler
+from move_base_msgs.msg import MoveBaseGoal
 import math
 import pandas as pd
 import json
@@ -18,13 +19,16 @@ class Patroller:
         # Initialise Patrolling 
         patrol_route = package_path + "/waypoints/" + rospy.get_param("~patrol_route")
         self.waypoint_list = self.waypoint_gen(patrol_route)
-        self.current_goal = rospy.get_param("~start_node")
+        self.start_node = rospy.get_param("~start_node")
+        self.current_goal = self.start_node
         self.patrol_method = rospy.get_param("~patrol_method")
+        if self.patrol_method not in ["CGG","SEBS"]:
+            rospy.logfatal(f"Patrol method: {self.patrol_method} not recognised.")
+            rospy.signal_shutdown(f"Invalid patrol method.")
         self.intention_table = np.empty(num_robots, dtype=int)
         self.node_idleness = np.full(len(self.waypoint_list), self.start_time) # node_idleness array is the last time each node was visited 
         
         self.server_pub = server_pub # For sending communications
-
         
     def waypoint_gen(self, waypoint_csv):
         """
@@ -62,6 +66,16 @@ class Patroller:
             
         return pose_seq
     
+    def set_nav_goal(self):
+        """
+        Set Nav goal to current_goal
+        """
+        goal = MoveBaseGoal()
+        goal.target_pose.header.frame_id = "map"
+        goal.target_pose.header.stamp = rospy.Time.now()
+        goal.target_pose.pose = self.waypoint_list[self.current_goal]
+        rospy.loginfo("Sending goal pose " + str(self.current_goal) + " to Action Server")
+        return goal
     
     def send_sebs_msg(self, current_node, arrival_time):
         """
@@ -83,21 +97,54 @@ class Patroller:
         """
         Handles a received sebs message, updating intention table and believed node idleness
         """
-        rospy.loginfo(f"Received SEBS message from {message["message"]}")
+        rospy.loginfo(f"Received SEBS message from {message['source']}")
         self.intention_table[message["source"]] = message["intention"]
         self.node_idleness[message["position"]] = message["time"]
             
     def arrived_at_node(self):
+        """
+        Actions for an agent to take upon arriving at a set waypoint (current_goal)
+            Called at successful actionclient goal complete from Main.nav_cb
+            Updates idleness and sends a sebs message
+            Calls relevant patrol method
+        """
         arrival_time = time.time()
         current_node = self.current_goal
-        
+        rospy.loginfo(f"Arrived at node {current_node}")
         self.node_idleness[current_node] = arrival_time
         
+        if self.patrol_method == "SEBS":
+            self.sebs()
+        elif self.patrol_method == "CGG":
+            self.cgg()
+            
+        self.send_sebs_msg(current_node, arrival_time)
+        
+        
+        
     def sebs(self):
+        """
+        State Exchange Bayesian Strategy (D.Portugal)
+            Sets self.current_goal
+        """
         pass
     
     def cgg(self):
-        pass
+        """
+        Cyclic Algorithm for Generic Graphs
+            Sets self.current_goal
+        """
+        self.current_goal += 1
+        
+        if self.current_goal == len(self.waypoint_list):
+            self.current_goal = 0
+            
+        if self.current_goal == self.start_node:
+            rospy.loginfo("Lap complete, repeating...")
+            
+        rospy.loginfo(f"- CGG - Continuing to node {self.current_goal}")
+        
+            
         
         
         

@@ -4,7 +4,7 @@ import rospy
 import rospkg
 import actionlib
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
-from actionlib_msgs.msg import GoalStatus, GoalStatusArray
+from actionlib_msgs.msg import GoalStatus
 from geometry_msgs.msg import Twist
 from std_msgs.msg import String
 import time
@@ -21,7 +21,7 @@ class Main:
     
     def __init__(self):
         rospy.init_node('Robot_Main')
-        rospy.on_shutdown(self.cleanup)
+        
         
         rpkg = rospkg.RosPack()
         package_path = rpkg.get_path("leo_navigation")
@@ -31,12 +31,13 @@ class Main:
         self.id = rospy.get_param("~robot_id")
         trial_no = str(rospy.get_param("~trial_no"))
         trial_scenario = rospy.get_param("~trial_scenario")
+        self.status_dict = {v: k for k, v in GoalStatus.__dict__.items() if not k.startswith('_')}  #Converts GoalStatus values to their 
             
         # TODO: add csv logging stuff here
         
         # Experiment Parameters            
         self.role = rospy.get_param("~robot_role")
-        self.num_robots = rospy.get_param("~num_agents")
+        self.num_robots = rospy.get_param("~num_robots")
         self.time_to_end = rospy.get_param("~time_to_end") * 60.0
             
         # Communication
@@ -45,7 +46,7 @@ class Main:
         rospy.Subscriber('/server_sub', String, self.comms_cb)
 
         # Patrol
-        self.patrolling = Patroller(self.id, package_path, self.server_pub, self.start_time)
+        self.patrolling = Patroller(self.id, package_path, self.server_pub, self.num_robots, self.start_time)
         
         # Search
         self.searching = Searcher()
@@ -55,6 +56,8 @@ class Main:
         
         self.robot_state = "patrolling"
         self.goal_active = False
+        
+        rospy.on_shutdown(self.cleanup)
         self.main_loop()
     
     
@@ -64,8 +67,7 @@ class Main:
         """
         rate = rospy.Rate(25) # TODO set HZ here to be closer to the signal reading speed
         while not rospy.is_shutdown():
-        
-            elapsed_time = time.time() - self.start_time()
+            elapsed_time = time.time() - self.start_time
             
             self.read_inbox()
             
@@ -76,30 +78,27 @@ class Main:
             # MEASURE SIGNAL
                 
             if self.robot_state == "patrolling":
+                if self.goal_active == False:
+                    self.goal_active = True
+                    goal = self.patrolling.set_nav_goal()
+                    self.nav_client.send_goal(goal, done_cb=self.nav_cb)
+                   
                 # If no goal set, and at node? set goal, check if state is succeeded or failed and handle.
                 # return goal via self.patrolling.sebs or cgg
                 # send goal using self.set_nav_goal
-                pass
+
                 
-            elif self.robot_state == "searching":
-                pass
+            # elif self.robot_state == "searching":
+            #     pass
         
         rate.sleep()
             
     
-    def cleanup(self):
-        rospy.loginfo("Shutting down: cleaning up resources...")
-        
-        # End any threads here
-        
-        if self.nav_client:
-            self.nav_client.cancel_all_goals()
-
-        rospy.loginfo("Cleanup complete.")
-    
     def nav_init(self):
         """
         Initialise movebase client "nav_client" to send goals to
+            Called in self.__init__
+            Returns simpleactionclient object
         """
         nav_client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
         rospy.loginfo("Waiting for move_base action server...")
@@ -111,14 +110,21 @@ class Main:
         rospy.loginfo("Connected to move base server")
         return nav_client
     
-    def set_nav_goal(self):
-        goal = MoveBaseGoal()
-        goal.target_pose.header.frame_id = "map"
-        goal.target_pose.header.stamp = rospy.Time.now()
-        goal.target_pose.pose = self.pose_seq[self.current_goal]
-        rospy.loginfo("Sending goal pose " + str(self.current_goal) + " to Action Server")
-        self.nav_client.send_goal(goal)
-        rospy.loginfo("==========* GOAL SENT *==========")
+    def nav_cb(self, state, status):
+        """
+        Callback triggered upon completion or failure of sent nav goal
+            Set in self.main_loop
+            Calls relevant next step decision (patroller arrived at node, searcher next step)
+            state is 
+        """
+        rospy.loginfo(f"Goal finished with state: {self.status_dict.get(state, 'UNKNOWN')}")
+        self.goal_active = False
+        if state == GoalStatus.SUCCEEDED:
+            if self.robot_state == 'patrolling':
+                self.patrolling.arrived_at_node()
+                self.main_loop() 
+        else:
+            rospy.logerr(f"GOAL DID NOT SUCCEED, STATUS: {self.status_dict.get(state, 'UNKNOWN')}")
     
     def comms_cb(self, msg):
         """
@@ -126,6 +132,7 @@ class Main:
         """
         data = json.loads(msg.data)
         self.inbox.put(data)
+    
     
     def read_inbox(self):
         """
@@ -140,9 +147,16 @@ class Main:
             if message.get("type") == "sebs":
                 self.patrolling.receive_sebs_message(message)
             
-    
-            
-            
+        
+    def cleanup(self):
+        rospy.loginfo("Shutting down: cleaning up resources...")
+        
+        # End any threads here
+        
+        if self.nav_client:
+            self.nav_client.cancel_all_goals()
+
+        rospy.loginfo("Cleanup complete.")
         
         
     
