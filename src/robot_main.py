@@ -70,6 +70,7 @@ class Main:
             elapsed_time = time.time() - self.start_time
             
             self.read_inbox()
+            self.nav_check() #check current goal status and act accordingly
             
             if elapsed_time >= self.time_to_end:
                 rospy.loginfo("Shutting down. Patrol Time Elapsed")
@@ -82,6 +83,7 @@ class Main:
                     self.goal_active = True
                     goal = self.patrolling.set_nav_goal()
                     self.nav_client.send_goal(goal, done_cb=self.nav_cb)
+                    rospy.loginfo("Sending goal")
                    
                 # If no goal set, and at node? set goal, check if state is succeeded or failed and handle.
                 # return goal via self.patrolling.sebs or cgg
@@ -104,27 +106,28 @@ class Main:
         rospy.loginfo("Waiting for move_base action server...")
         wait = nav_client.wait_for_server(rospy.Duration(0.0))
         if not wait:
-            rospy.logerr("Action server not available!")
+            rospy.logfatal("Action server not available!")
             rospy.signal_shutdown("Action server not available!")
             return
         rospy.loginfo("Connected to move base server")
         return nav_client
     
-    def nav_cb(self, state, status):
+    def nav_check(self):
         """
-        Callback triggered upon completion or failure of sent nav goal
-            Set in self.main_loop
+        Check on current nav goal triggered each main loop
             Calls relevant next step decision (patroller arrived at node, searcher next step)
             state is 
         """
-        rospy.loginfo(f"Goal finished with state: {self.status_dict.get(state, 'UNKNOWN')}")
+        state = self.nav_client.SimpleClientGoalState
+        if state 
+        rospy.loginfo(f"- GOAL - Finished with status: {self.status_dict.get(state, 'UNKNOWN')}")
         self.goal_active = False
         if state == GoalStatus.SUCCEEDED:
             if self.robot_state == 'patrolling':
                 self.patrolling.arrived_at_node()
-                self.main_loop() 
+                rospy.loginfo(f"Goal active: {self.goal_active}")
         else:
-            rospy.logerr(f"GOAL DID NOT SUCCEED, STATUS: {self.status_dict.get(state, 'UNKNOWN')}")
+            rospy.logerr(f"- GOAL - FAILURE, STATUS: {self.status_dict.get(state, 'UNKNOWN')}")
     
     def comms_cb(self, msg):
         """

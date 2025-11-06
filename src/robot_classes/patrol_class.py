@@ -18,7 +18,7 @@ class Patroller:
         
         # Initialise Patrolling 
         patrol_route = package_path + "/waypoints/" + rospy.get_param("~patrol_route")
-        self.waypoint_list = self.waypoint_gen(patrol_route)
+        self.node_list = self.waypoint_gen(patrol_route)
         self.start_node = rospy.get_param("~start_node")
         self.current_goal = self.start_node
         self.patrol_method = rospy.get_param("~patrol_method")
@@ -26,7 +26,7 @@ class Patroller:
             rospy.logfatal(f"Patrol method: {self.patrol_method} not recognised.")
             rospy.signal_shutdown(f"Invalid patrol method.")
         self.intention_table = np.empty(num_robots, dtype=int)
-        self.node_idleness = np.full(len(self.waypoint_list), self.start_time) # node_idleness array is the last time each node was visited 
+        self.node_idleness = np.full(len(self.node_list), self.start_time) # node_idleness array is the last time each node was visited 
         
         self.server_pub = server_pub # For sending communications
         
@@ -73,13 +73,13 @@ class Patroller:
         goal = MoveBaseGoal()
         goal.target_pose.header.frame_id = "map"
         goal.target_pose.header.stamp = rospy.Time.now()
-        goal.target_pose.pose = self.waypoint_list[self.current_goal]
-        rospy.loginfo("Sending goal pose " + str(self.current_goal) + " to Action Server")
+        goal.target_pose.pose = self.node_list[self.current_goal]
+        rospy.loginfo(f"- GOAL - Navigating to node: {self.current_goal}")
         return goal
     
     def send_sebs_msg(self, current_node, arrival_time):
         """
-        Constructs and sends a sebs message, to be called when agent arrives at a waypoint (goal node)
+        Constructs and sends a sebs message, to be called when agent arrives at a goal node
         """
         if current_node == self.current_goal:
             rospy.logerr(f"Current Node {current_node} is the same as goal {self.current_goal} when sending sebs message.")
@@ -91,26 +91,26 @@ class Patroller:
             'time':arrival_time
         }
         self.server_pub.publish(json.dumps(Message))
-        rospy.loginfo("Sebs message sent!")
+        rospy.loginfo("- COMMS - Sebs message sent")
         
     def receive_sebs_msg(self, message):
         """
         Handles a received sebs message, updating intention table and believed node idleness
         """
-        rospy.loginfo(f"Received SEBS message from {message['source']}")
+        rospy.loginfo(f"- COMMS - Received SEBS message from: ID {message['source']}")
         self.intention_table[message["source"]] = message["intention"]
         self.node_idleness[message["position"]] = message["time"]
             
     def arrived_at_node(self):
         """
-        Actions for an agent to take upon arriving at a set waypoint (current_goal)
+        Actions for an agent to take upon arriving at a set node (current_goal)
             Called at successful actionclient goal complete from Main.nav_cb
             Updates idleness and sends a sebs message
             Calls relevant patrol method
         """
         arrival_time = time.time()
         current_node = self.current_goal
-        rospy.loginfo(f"Arrived at node {current_node}")
+        rospy.loginfo(f"- GOAL - Arrived at node: {current_node}")
         self.node_idleness[current_node] = arrival_time
         
         if self.patrol_method == "SEBS":
@@ -119,6 +119,7 @@ class Patroller:
             self.cgg()
             
         self.send_sebs_msg(current_node, arrival_time)
+        rospy.loginfo("Done at node :)")
         
         
         
@@ -136,11 +137,12 @@ class Patroller:
         """
         self.current_goal += 1
         
-        if self.current_goal == len(self.waypoint_list):
+        if self.current_goal == len(self.node_list):
+            rospy.loginfo("- GOAL - looping node list")
             self.current_goal = 0
             
         if self.current_goal == self.start_node:
-            rospy.loginfo("Lap complete, repeating...")
+            rospy.loginfo("- GOAL - Lap complete, repeating...")
             
         rospy.loginfo(f"- CGG - Continuing to node {self.current_goal}")
         
