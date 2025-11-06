@@ -11,7 +11,7 @@ num_robots: 4
 #Patrol
 start_node: 0
 patrol_route: signal_mapping_test.csv 
-patrol_method: SEBS # "SEBS", "CGG" 
+patrol_method: test # "SEBS", "CGG" 
 
 #Search
 search_method: PSO # "PSO", "ECOLI", "HYBRID"
