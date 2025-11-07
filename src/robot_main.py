@@ -82,8 +82,7 @@ class Main:
                 if self.goal_active == False:
                     self.goal_active = True
                     goal = self.patrolling.set_nav_goal()
-                    self.nav_client.send_goal(goal, done_cb=self.nav_cb)
-                    rospy.loginfo("Sending goal")
+                    self.nav_client.send_goal(goal)
                    
                 # If no goal set, and at node? set goal, check if state is succeeded or failed and handle.
                 # return goal via self.patrolling.sebs or cgg
@@ -118,16 +117,15 @@ class Main:
             Calls relevant next step decision (patroller arrived at node, searcher next step)
             state is 
         """
-        state = self.nav_client.SimpleClientGoalState
-        if state 
-        rospy.loginfo(f"- GOAL - Finished with status: {self.status_dict.get(state, 'UNKNOWN')}")
-        self.goal_active = False
-        if state == GoalStatus.SUCCEEDED:
-            if self.robot_state == 'patrolling':
-                self.patrolling.arrived_at_node()
-                rospy.loginfo(f"Goal active: {self.goal_active}")
-        else:
-            rospy.logerr(f"- GOAL - FAILURE, STATUS: {self.status_dict.get(state, 'UNKNOWN')}")
+        state = self.nav_client.get_state()
+        if state in [3,4,5,8]: # terminal states
+            rospy.loginfo(f"- GOAL - Finished with status: {self.status_dict.get(state, 'UNKNOWN')} --")
+            self.goal_active = False
+            if state == GoalStatus.SUCCEEDED:
+                if self.robot_state == 'patrolling':
+                    self.patrolling.arrived_at_node()
+            else:
+                rospy.logerr(f"- GOAL - FAILURE, STATUS: {self.status_dict.get(state, 'UNKNOWN')} --")
     
     def comms_cb(self, msg):
         """

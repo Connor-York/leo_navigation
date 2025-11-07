@@ -119,7 +119,6 @@ class Patroller:
             self.cgg()
             
         self.send_sebs_msg(current_node, arrival_time)
-        rospy.loginfo("Done at node :)")
         
         
         
@@ -138,13 +137,12 @@ class Patroller:
         self.current_goal += 1
         
         if self.current_goal == len(self.node_list):
-            rospy.loginfo("- GOAL - looping node list")
             self.current_goal = 0
             
         if self.current_goal == self.start_node:
-            rospy.loginfo("- GOAL - Lap complete, repeating...")
+            rospy.loginfo("- CGG - Lap complete, repeating...")
             
-        rospy.loginfo(f"- CGG - Continuing to node {self.current_goal}")
+        rospy.loginfo(f"- CGG - New goal node: {self.current_goal}")
         
             
         
