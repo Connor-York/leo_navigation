@@ -2,10 +2,8 @@
 <launch>
     
     <!--include file="$(find leo_navigation)/launch/slam.launch" /-->
-
-    <node pkg="leo_navigation" type="waypoint_saver.py" name="waypoint_saver" output="screen">
-
-    </node>
+    <arg name="save_file" default="saved_waypoints"/> 
+    <node pkg="leo_navigation" type="waypoint_saver.py" name="waypoint_saver" output="screen" args="$(arg save_file)"/>
 
     <!-- set up a way to name the saved file from here, as a parameter /-->
 
