@@ -83,10 +83,6 @@ class Main:
                     self.goal_active = True
                     goal = self.patrolling.set_nav_goal()
                     self.nav_client.send_goal(goal)
-                   
-                # If no goal set, and at node? set goal, check if state is succeeded or failed and handle.
-                # return goal via self.patrolling.sebs or cgg
-                # send goal using self.set_nav_goal
 
                 
             # elif self.robot_state == "searching":
@@ -111,23 +107,25 @@ class Main:
         rospy.loginfo("Connected to move base server")
         return nav_client
     
+    
     def nav_check(self):
         """
         Check on current nav goal triggered each main loop
             Calls relevant next step decision (patroller arrived at node, searcher next step)
         """
-        state = self.nav_client.get_state()
-        if state in [3,4,5,8]: # terminal states
-            rospy.loginfo(f"- GOAL - Finished with status: {self.status_dict.get(state, 'UNKNOWN')} --")
+        goal_state = self.nav_client.get_state()
+        if goal_state in [3,4,5,8]: # terminal states
+            rospy.loginfo(f"- GOAL - Finished with status: {self.status_dict.get(goal_state, 'UNKNOWN')} --")
             self.goal_active = False
-            if state == GoalStatus.SUCCEEDED:
+            if goal_state == GoalStatus.SUCCEEDED:
                 if self.robot_state == 'patrolling':
                     self.patrolling.arrived_at_node()
             # elif state == GoalStatus.ABORTED: TODO add handling for aborted goal, 
             # likely to occur from multi-robot tests/ search behaviour -- Perhaps a delay and retry?, 
             # continue to next node without "going there" for patrol?
             else:
-                rospy.logerr(f"- GOAL - FAILURE, STATUS: {self.status_dict.get(state, 'UNKNOWN')} --")
+                rospy.logerr(f"- GOAL - FAILURE, STATUS: {self.status_dict.get(goal_state, 'UNKNOWN')} --")
+    
     
     def comms_cb(self, msg):
         """

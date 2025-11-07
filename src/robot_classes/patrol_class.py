@@ -18,15 +18,20 @@ class Patroller:
         
         # Initialise Patrolling 
         patrol_route = package_path + "/waypoints/" + rospy.get_param("~patrol_route")
+        adjacency = package_path + "/waypoints/" + rospy.get_param("~patrol_adjacency")
+            #Generate waypoint list and adjacency matrix
         self.node_list = self.waypoint_gen(patrol_route)
+        self.node_neighbours = self.neighbours_gen(adjacency)
+        
         self.start_node = rospy.get_param("~start_node")
         self.current_goal = self.start_node
         self.patrol_method = rospy.get_param("~patrol_method")
         if self.patrol_method not in ["CGG","SEBS"]:
             rospy.logfatal(f"Patrol method: {self.patrol_method} not recognised.")
             rospy.signal_shutdown(f"Invalid patrol method.")
+            
         self.intention_table = np.empty(num_robots, dtype=int)
-        self.node_idleness = np.full(len(self.node_list), self.start_time) # node_idleness array is the last time each node was visited 
+        self.node_idleness = np.full(len(self.node_list), self.start_time, dtype=np.float64) # node_idleness array is the last time each node was visited 
         
         self.server_pub = server_pub # For sending communications
         
@@ -46,16 +51,16 @@ class Patroller:
                 waypoints.append(item)
 
         points_seq = waypoints  # coordinates for each waypoint
-        yaweulerangles_seq = theta  # heading angle for each waypoint
+        yaweulerangles_seq = theta  # heading angle for each waypoint in radians
 
-        # Convert waypoint & heading values into a list of robot poses (quaternions?) -----------
+        # Converting headings to quarternians from radians and forming them into a list
         quat_seq = list()
         # List of goal poses:
         pose_seq = list()
         for yawangle in yaweulerangles_seq:
-            # Unpacking the quaternion list and passing it as arguments to Quaternion message constructor
+            # Taking the yaw, converting it to quarternian
             quat_seq.append(Quaternion(
-                *(quaternion_from_euler(0, 0, yawangle*math.pi/180, axes='sxyz'))))
+                *(quaternion_from_euler(0, 0, yawangle, axes='sxyz'))))
         n = 3
         # Returns a list of lists [[point1], [point2],...[pointn]]
         points = [points_seq[i:i+n] for i in range(0, len(points_seq), n)]
@@ -91,13 +96,15 @@ class Patroller:
             'time':arrival_time
         }
         self.server_pub.publish(json.dumps(Message))
-        rospy.loginfo("- COMMS - Sebs message sent")
+        rospy.loginfo(f"- COMMS - Sebs message sent: ")
+        rospy.loginfo(f"Position: {Message['position']} | Intention: {Message['intention']} | T: {Message['time']}")
         
-    def receive_sebs_msg(self, message):
+    def receive_sebs_message(self, message):
         """
         Handles a received sebs message, updating intention table and believed node idleness
         """
-        rospy.loginfo(f"- COMMS - Received SEBS message from: ID {message['source']}")
+        rospy.loginfo(f"- COMMS - Received SEBS message from: ID {message['source']}: ")
+        rospy.loginfo(f"Position: {message['position']} | Intention: {message['intention']} | T: {message['time']}")
         self.intention_table[message["source"]] = message["intention"]
         self.node_idleness[message["position"]] = message["time"]
             
@@ -120,18 +127,32 @@ class Patroller:
             
         self.send_sebs_msg(current_node, arrival_time)
         
+    def calculate_node_idleness(self, node, current_time):
+        """
+        Returns the idleness of requested node in seconds
+        """
+        return current_time - self.node_idleness[node]
         
         
-    def sebs(self):
+    def sebs(self, gain1=0.1, gain2=20.0, edge_min=30.0):
         """
         State Exchange Bayesian Strategy (D.Portugal)
             Sets self.current_goal
+            Built off of zaks implementation in py_patrol :) 
+            @param gain1: A float representing the gain factor.
+            @param gain2: A float representing the gain threshold.
+            @param edge_min: A float representing the minimum edge weight.
         """
+        
+        
+        
         pass
     
     def cgg(self):
         """
-        Cyclic Algorithm for Generic Graphs
+        Cyclic Patrol
+        Assumes path is outlined in order. Will go from node 0 to node 1 etc. 
+        If you want to use this one make sure to create the waypoint file accordingly
             Sets self.current_goal
         """
         self.current_goal += 1
