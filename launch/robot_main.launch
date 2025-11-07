@@ -10,6 +10,9 @@
             <arg name="amcl_file" value="$(arg amcl_file)"/>
     </include>
 
+    <!-- LAUNCH leo_communication rosclient.launch for COMMS-->
+    <!-- for our robot it is on a seperate raspberry pi -->
+
     <node pkg="leo_navigation" type="robot_main.py" name="patroller" output="screen">  
         <rosparam command="load" file="$(find leo_navigation)/config/Robot_config.yaml" /> 
         <param name="trial_no" value="$(arg trial_no)"/>

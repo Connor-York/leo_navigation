@@ -115,7 +115,6 @@ class Main:
         """
         Check on current nav goal triggered each main loop
             Calls relevant next step decision (patroller arrived at node, searcher next step)
-            state is 
         """
         state = self.nav_client.get_state()
         if state in [3,4,5,8]: # terminal states
@@ -124,6 +123,9 @@ class Main:
             if state == GoalStatus.SUCCEEDED:
                 if self.robot_state == 'patrolling':
                     self.patrolling.arrived_at_node()
+            # elif state == GoalStatus.ABORTED: TODO add handling for aborted goal, 
+            # likely to occur from multi-robot tests/ search behaviour -- Perhaps a delay and retry?, 
+            # continue to next node without "going there" for patrol?
             else:
                 rospy.logerr(f"- GOAL - FAILURE, STATUS: {self.status_dict.get(state, 'UNKNOWN')} --")
     
