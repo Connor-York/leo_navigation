@@ -10,8 +10,8 @@ num_robots: 4
 
 #Patrol
 start_node: 0
-patrol_route: two_nodes_positions.csv
-patrol_adjacency: two_nodes_adj_matrix.npy
+patrol_route: sebstest.csv
+patrol_adjacency: sebstest_unit_adj.csv  # Unit adjacency matrix, each row represents a node and the values within are the connected nodes, i.e. row 0 = 1,2
 patrol_method: CGG # "SEBS", "CGG" 
 
 #Search

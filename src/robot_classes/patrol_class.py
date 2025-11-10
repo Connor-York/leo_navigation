@@ -18,10 +18,16 @@ class Patroller:
         
         # Initialise Patrolling 
         patrol_route = package_path + "/waypoints/" + rospy.get_param("~patrol_route")
-        adjacency = package_path + "/waypoints/" + rospy.get_param("~patrol_adjacency")
-            #Generate waypoint list and adjacency matrix
+        unit_adjacency = package_path + "/waypoints/" + rospy.get_param("~patrol_adjacency")
+        
+        #Generate waypoint list and adjacency matrices
         self.node_list = self.waypoint_gen(patrol_route)
-        self.node_neighbours = self.neighbours_gen(adjacency)
+        self.adjacency, self.node_neighbours = self.gen_adjacencies(unit_adjacency, patrol_route)
+        
+        rospy.loginfo(self.adjacency)
+        rospy.loginfo(self.node_neighbours)
+        while(True):
+            pass
         
         self.start_node = rospy.get_param("~start_node")
         self.current_goal = self.start_node
@@ -70,6 +76,28 @@ class Patroller:
             n += 1
             
         return pose_seq
+    
+    
+    def gen_adjacencies(self, unit_adj, waypoint_csv):
+        """
+        Takes unit_adjacency txt and returns it as array, and full adjacency matrix with weights
+        """
+        waypoints = np.loadtxt(waypoint_csv, delimiter=',')
+    
+        with open(unit_adj) as file:
+            unit_adj = list()
+            for line in file:            
+                unit_adj.append(np.fromstring(line, sep=',', dtype=int))
+    
+        adj_matrix = np.zeros((len(waypoints),len(waypoints)))
+        for node, item in enumerate(unit_adj):
+            node_coordinates = np.array([ waypoints[node][0] , waypoints[node][1] ])
+            for neighbour in item:
+                neighbour_coordinates = np.array([ waypoints[neighbour][0] , waypoints[neighbour][1] ])
+                adj_matrix[node][neighbour] = np.linalg.norm(node_coordinates - neighbour_coordinates)
+        
+        return adj_matrix, unit_adj
+        
     
     def set_nav_goal(self):
         """
