@@ -80,7 +80,7 @@ class Patroller:
     
     def gen_adjacencies(self, unit_adj, waypoint_csv):
         """
-        Takes unit_adjacency txt and returns it as array, and full adjacency matrix with weights
+        Takes unit_adjacency txt and returns it as array, and generates a full adjacency matrix with weights
         """
         waypoints = np.loadtxt(waypoint_csv, delimiter=',')
     
