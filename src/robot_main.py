@@ -56,8 +56,8 @@ class Main:
         
         self.robot_state = "patrolling"
         self.goal_active = False
-        
         rospy.on_shutdown(self.cleanup)
+        
         self.main_loop()
     
     

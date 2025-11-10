@@ -8,6 +8,7 @@ import pandas as pd
 import json
 import numpy as np
 import time
+import random
 
 class Patroller:
     
@@ -23,11 +24,6 @@ class Patroller:
         #Generate waypoint list and adjacency matrices
         self.node_list = self.waypoint_gen(patrol_route)
         self.adjacency, self.node_neighbours = self.gen_adjacencies(unit_adjacency, patrol_route)
-        
-        rospy.loginfo(self.adjacency)
-        rospy.loginfo(self.node_neighbours)
-        while(True):
-            pass
         
         self.start_node = rospy.get_param("~start_node")
         self.current_goal = self.start_node
@@ -67,6 +63,8 @@ class Patroller:
             # Taking the yaw, converting it to quarternian
             quat_seq.append(Quaternion(
                 *(quaternion_from_euler(0, 0, yawangle, axes='sxyz'))))
+            
+            #rospy.loginfo(f"Going to: {Quaternion(*(quaternion_from_euler(0, 0, yawangle, axes='sxyz')))} <=================================")
         n = 3
         # Returns a list of lists [[point1], [point2],...[pointn]]
         points = [points_seq[i:i+n] for i in range(0, len(points_seq), n)]
@@ -110,6 +108,7 @@ class Patroller:
         rospy.loginfo(f"- GOAL - Navigating to node: {self.current_goal}")
         return goal
     
+    
     def send_sebs_msg(self, current_node, arrival_time):
         """
         Constructs and sends a sebs message, to be called when agent arrives at a goal node
@@ -127,6 +126,7 @@ class Patroller:
         rospy.loginfo(f"- COMMS - Sebs message sent: ")
         rospy.loginfo(f"Position: {Message['position']} | Intention: {Message['intention']} | T: {Message['time']}")
         
+        
     def receive_sebs_message(self, message):
         """
         Handles a received sebs message, updating intention table and believed node idleness
@@ -135,6 +135,7 @@ class Patroller:
         rospy.loginfo(f"Position: {message['position']} | Intention: {message['intention']} | T: {message['time']}")
         self.intention_table[message["source"]] = message["intention"]
         self.node_idleness[message["position"]] = message["time"]
+            
             
     def arrived_at_node(self):
         """
@@ -149,11 +150,12 @@ class Patroller:
         self.node_idleness[current_node] = arrival_time
         
         if self.patrol_method == "SEBS":
-            self.sebs()
+            self.current_goal = self.sebs(current_node, arrival_time)
         elif self.patrol_method == "CGG":
-            self.cgg()
-            
+            self.current_goal = self.cgg(current_node)
+        
         self.send_sebs_msg(current_node, arrival_time)
+        
         
     def calculate_node_idleness(self, node, current_time):
         """
@@ -162,37 +164,93 @@ class Patroller:
         return current_time - self.node_idleness[node]
         
         
-    def sebs(self, gain1=0.1, gain2=20.0, edge_min=30.0):
+    def count_intentions(self, node):
+        """
+        Takes node number and returns number of intentions going there
+        """
+        count = 0
+        for intention in self.intention_table:
+            if intention == node:
+                count += 1 
+        return count
+        
+    def sebs(self, current_node, current_time, gain1=0.1, gain2=20.0, edge_min=1.0):
         """
         State Exchange Bayesian Strategy (D.Portugal)
             Sets self.current_goal
-            Built off of zaks implementation in py_patrol :) 
+            Built off of zaks implementation in py_patrol which is built off patrol_sim implementation by D.Portugal
             @param gain1: A float representing the gain factor.
             @param gain2: A float representing the gain threshold.
-            @param edge_min: A float representing the minimum edge weight.
+            @param edge_min: A float representing the minimum edge weight
         """
+        neighbours = self.node_neighbours[current_node]
+        rospy.loginfo(f"- SEBS - Neighbours: {neighbours}")
         
-        
-        
-        pass
+        if len(neighbours) > 1:
+            log_result = math.log10(1.0/gain1)
+            posterior_probability = np.zeros(len(neighbours))
+            for i in range(len(neighbours)):
+                
+                neighbour_id = neighbours[i]
+                neighbour_edge_weight = self.adjacency[current_node][neighbour_id]
+                # Might need to add that minimum edge weight thing here to make sure that really short edges arent over-represented, will have to trial and error it
+                neighbour_edge_weight = min(neighbour_edge_weight, edge_min)
+                gain = self.calculate_node_idleness(neighbour_id, current_time) / neighbour_edge_weight
+                
+                if gain < gain2:
+                    exp_param = (log_result/gain2) * gain
+                    posterior_probability[i] = gain1 * math.exp(exp_param)
+                    
+                else:
+                    posterior_probability[i] = 1.0
+                
+                count = self.count_intentions(neighbour_id)
+                
+                if count >0:
+                    num_agents = len(self.intention_table)
+                    p_gain_state = math.pow(2, num_agents - count) / (math.pow(2, num_agents) - 1.0)
+                    posterior_probability[i] *= p_gain_state
+                
+            # Choose the one in the posterior probability with the largest value
+            # return a numpy array, and if there are more than one include the index that each are found at
+            # Return the 0th element of the tuple, as np.where returns a tuple
+            max_posterior_prob_index = np.where(posterior_probability == np.max(posterior_probability))[0]
+            number_of_max_probs = len(max_posterior_prob_index)
+            # If there are more than 1 max_probs, choose randomly
+            if number_of_max_probs > 1:
+                # generate random int between 0 - number_of_max_probs
+                random_index = random.randint(0, number_of_max_probs-1)         # Not including total length
+                # Choose randomly from the array of elements with the highest posterior_probability
+                next_goal = neighbours[max_posterior_prob_index[random_index]]
+            else:
+                # If there is only one choice of max_posterior_prob, use this value
+                next_goal = neighbours[max_posterior_prob_index[0]]
+                
+        else:
+            # if only one go there
+            next_goal = neighbours[0]
+
+        rospy.loginfo(f"- SEBS - New goal node: {next_goal}")
+        return int(next_goal)
     
-    def cgg(self):
+    def cgg(self, current_node):
         """
         Cyclic Patrol
         Assumes path is outlined in order. Will go from node 0 to node 1 etc. 
         If you want to use this one make sure to create the waypoint file accordingly
-            Sets self.current_goal
+            Returns next_goal (to be set as self.current_goal)
         """
-        self.current_goal += 1
+        next_goal = current_node + 1
         
-        if self.current_goal == len(self.node_list):
-            self.current_goal = 0
+        if next_goal == len(self.node_list):
+            next_goal = 0
             
-        if self.current_goal == self.start_node:
+        if next_goal == self.start_node:
             rospy.loginfo("- CGG - Lap complete, repeating...")
             
-        rospy.loginfo(f"- CGG - New goal node: {self.current_goal}")
+        rospy.loginfo(f"- CGG - New goal node: {next_goal}")
         
+        return next_goal
             
         
         
