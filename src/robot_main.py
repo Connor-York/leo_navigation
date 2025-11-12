@@ -15,7 +15,7 @@ import json
 # CLASSES
 from robot_classes.patrol_class import Patroller
 from robot_classes.search_class import Searcher
-    
+
 
 class Main:
     
@@ -54,7 +54,9 @@ class Main:
         # Move Base
         self.nav_client = self.nav_init()
         
-        self.robot_state = "patrolling"
+        
+        
+        self.robot_state = "searching" # searching / patrolling
         self.goal_active = False
         rospy.on_shutdown(self.cleanup)
         
@@ -65,11 +67,12 @@ class Main:
         """
         Main robot loop
         """
-        rate = rospy.Rate(25) # TODO set HZ here to be closer to the signal reading speed
+        rate = rospy.Rate(20) # signal reading spead is ~20Hz
         while not rospy.is_shutdown():
             elapsed_time = time.time() - self.start_time
             
             self.read_inbox()
+            self.searching.read_signal()
             self.nav_check() #check current goal status and act accordingly
             
             if elapsed_time >= self.time_to_end:
@@ -88,7 +91,7 @@ class Main:
             # elif self.robot_state == "searching":
             #     pass
         
-        rate.sleep()
+            rate.sleep()
             
     
     def nav_init(self):
@@ -98,13 +101,13 @@ class Main:
             Returns simpleactionclient object
         """
         nav_client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
-        rospy.loginfo("Waiting for move_base action server...")
+        rospy.loginfo("- init - Waiting for move_base action server...")
         wait = nav_client.wait_for_server(rospy.Duration(0.0))
         if not wait:
             rospy.logfatal("Action server not available!")
             rospy.signal_shutdown("Action server not available!")
             return
-        rospy.loginfo("Connected to move base server")
+        rospy.loginfo("- init - Connected to move base server")
         return nav_client
     
     
@@ -150,6 +153,8 @@ class Main:
             if message.get("type") == "sebs":
                 self.patrolling.receive_sebs_message(message)
             
+        
+
         
     def cleanup(self):
         rospy.loginfo("Shutting down: cleaning up resources...")
