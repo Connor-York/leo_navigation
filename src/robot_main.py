@@ -115,7 +115,8 @@ class Main:
         """
         goal_state = self.nav_client.get_state()
         if goal_state in [3,4,5,8]: # terminal states
-            rospy.loginfo(f"- GOAL - Finished with status: {self.status_dict.get(goal_state, 'UNKNOWN')} --")
+            rospy.loginfo(f"- GOAL - Finished with status: {self.status_dict.get(goal_state, 'UNKNOWN')} ")
+            rospy.loginfo("=======================================================")
             self.goal_active = False
             if goal_state == GoalStatus.SUCCEEDED:
                 if self.robot_state == 'patrolling':
@@ -125,6 +126,7 @@ class Main:
             # continue to next node without "going there" for patrol?
             else:
                 rospy.logerr(f"- GOAL - FAILURE, STATUS: {self.status_dict.get(goal_state, 'UNKNOWN')} --")
+                rospy.loginfo("=======================================================")
     
     
     def comms_cb(self, msg):
