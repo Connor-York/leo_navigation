@@ -6,7 +6,7 @@ trial_scenario: test_run
 #Experiment Parameters
 time_to_end: 30     # time in minutes   
 robot_role: patroller #"patroller", "searcher"
-num_robots: 4
+num_robots: 2
 
 #Patrol
 start_node: 0
