@@ -3,9 +3,8 @@
 import rospy
 import rospkg
 import actionlib
-from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+from move_base_msgs.msg import MoveBaseAction
 from actionlib_msgs.msg import GoalStatus
-from geometry_msgs.msg import Twist
 from std_msgs.msg import String
 import time
 import threading
@@ -49,7 +48,9 @@ class Main:
         self.patrolling = Patroller(self.id, package_path, self.server_pub, self.num_robots, self.start_time)
         
         # Search
-        self.searching = Searcher()
+        step_distance = 0.4 # distance in metres to step each search step 
+                            # (robot top speed is 0.4m/s so this is 1s of moving forward)
+        self.searching = Searcher(step_distance)
         
         # Move Base
         self.nav_client = self.nav_init()
@@ -86,6 +87,10 @@ class Main:
                     self.goal_active = True
                     goal = self.patrolling.set_nav_goal()
                     self.nav_client.send_goal(goal)
+            
+            elif self.robot_state == "searching":
+                if self.goal_active == False:
+                    self.searching.ECOLI_step()
 
                 
             # elif self.robot_state == "searching":
