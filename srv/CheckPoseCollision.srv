@@ -1,0 +1,5 @@
+geometry_msgs/PoseStamped pose
+---
+bool is_free
+float64 cost
+string message

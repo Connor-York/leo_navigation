@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<launch>
+    <node pkg="leo_navigation" 
+        type="footprint_collision_checker_node" 
+        name="footprint_collision_checker" 
+        output="screen">
+    <param name="global_frame" value="map"/>
+    <param name="robot_base_frame" value="base_link"/>
+    </node>
+</launch>

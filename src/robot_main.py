@@ -57,7 +57,7 @@ class Main:
         
         
         
-        self.robot_state = "searching" # searching / patrolling
+        self.robot_state = "patrolling" # searching / patrolling
         self.goal_active = False
         rospy.on_shutdown(self.cleanup)
         
@@ -90,7 +90,9 @@ class Main:
             
             elif self.robot_state == "searching":
                 if self.goal_active == False:
-                    self.searching.ECOLI_step()
+                    self.goal_active = True
+                    goal = self.searching.ECOLI_step()
+                    self.nav_client.send_goal(goal)
 
                 
             # elif self.robot_state == "searching":
@@ -128,7 +130,8 @@ class Main:
             self.goal_active = False
             if goal_state == GoalStatus.SUCCEEDED:
                 if self.robot_state == 'patrolling':
-                    self.patrolling.arrived_at_node()
+                    self.robot_state = 'searching'
+                    #self.patrolling.arrived_at_node()
             # elif state == GoalStatus.ABORTED: TODO add handling for aborted goal, 
             # likely to occur from multi-robot tests/ search behaviour -- Perhaps a delay and retry?, 
             # continue to next node without "going there" for patrol?

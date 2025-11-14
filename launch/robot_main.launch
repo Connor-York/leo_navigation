@@ -19,6 +19,7 @@
     </node>
 
     <include file="$(find signal_detection)/launch/signal_service.launch"/>
+    <include file="$(find leo_navigation)/launch/subprocesses/collision_checker.launch"/>
 
     <!--include file="$(find leo_navigation)/launch/subprocesses/ar_tags.launch"/-->
     <!-- <include file="$(find leo_navigation)/launch/subprocesses/pogger.launch"/> -->
