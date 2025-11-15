@@ -339,11 +339,11 @@ public:
         res.cost = max_cost;
         res.message = message;
         
-        ROS_INFO("Checked pose (%.2f, %.2f): %s (cost: %.2f)", 
-                 pose_in_map.pose.position.x, 
-                 pose_in_map.pose.position.y,
-                 is_free ? "FREE" : "COLLISION",
-                 max_cost);
+        // ROS_INFO("Checked pose (%.2f, %.2f): %s (cost: %.2f)", 
+        //          pose_in_map.pose.position.x, 
+        //          pose_in_map.pose.position.y,
+        //          is_free ? "FREE" : "COLLISION",
+        //          max_cost);
         
         return true;
     }

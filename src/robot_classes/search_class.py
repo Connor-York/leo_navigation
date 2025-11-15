@@ -6,6 +6,7 @@ import tf
 from geometry_msgs.msg import Quaternion, PoseStamped
 from tf.transformations import quaternion_from_euler
 from move_base_msgs.msg import MoveBaseGoal
+import json
 
 #from costmap_2d import Costmap2DROS
 
@@ -36,16 +37,33 @@ def random_turn(current_yaw, max_degrees):
 # Main Class
 class Searcher:
     
-    def __init__(self, step_distance):
+    def __init__(self, step_distance, num_agents, id, server_pub):
+        
+        self.id = id
         self.search_method = rospy.get_param("~search_method")
         self.pose_x = rospy.get_param("/amcl/initial_pose_x")
         self.pose_y = rospy.get_param("/amcl/initial_pose_y")
         self.pose_yaw = rospy.get_param("/amcl/initial_pose_a")
         self.rssi_avg = -999
+        self.rssi_raw = -999
         
-        self.rssi_previous = self.rssi_avg # For ECOLI
+        # For ECOLI
+        self.rssi_previous = self.rssi_avg
+        # For PSO
+        self.p_best = (self.rssi_avg, (self.pose_x, self.pose_y)) # value, position (x,y)
+        self.g_best = (self.rssi_avg, (self.pose_x, self.pose_y)) # value, position (x,y)
+        self.isbest = True                     # Whether the g_best was found by this agent
+        self.velocity = np.zeros(2)
+        self.repulsion_strength = rospy.get_param("~repulsion_strength")
+        self.c1 = rospy.get_param("~c1")
+        self.c2 = rospy.get_param("~c2")
+        self.w = rospy.get_param("~w")
+        
+        self.agent_positions = [None] * num_agents
+        self.source_found = (False, None) # Bool: Found? ID of agent that found it
         
         self.step_distance = step_distance
+        self.server_pub = server_pub # For sending communications
         
         #TODO add these services stuff to dependencies and add timeout for them not connecting with a failure
         
@@ -69,10 +87,53 @@ class Searcher:
             self.pose_y = resp.y
             self.pose_yaw = resp.yaw
             self.rssi_avg = resp.avg_rssi
+            self.rssi_raw = resp.rssi_val
+            
+            # update personal and global best
+            if self.rssi_avg > self.p_best[0]:
+                self.p_best = (self.rssi_avg, (self.pose_x,self.pose_y))
+                if self.rssi_avg > self.g_best[0]:
+                    self.g_best = self.p_best
         
         except rospy.ServiceException as e:
             rospy.logerr("Service call failed: %s", e)
+    
+    def send_signal_message(self):
+        Message = { 
+            'source':self.id,
+            'type':"signal",
+            'source_found':self.source_found,
+            'position':(self.pose_x, self.pose_y), 
+            'g_best':self.g_best
+        }
+        self.server_pub.publish(json.dumps(Message))
+        rospy.loginfo(f"- COMMS - Signal message sent")
+        
+    def receive_signal_message(self, message, current_state):
+        new_state = None
+        
+        rospy.loginfo(f"- COMMS - Signal message received from ID {message['source']}")
+        
+        if message['g_best'][0] > self.g_best[0]:
+            rospy.loginfo(f"- COMMS - Updating GBest from {self.g_best} to {message['g_best']}")
+            self.g_best = message['g_best']
+            self.isbest = False
             
+            if current_state == 'patrolling':
+                new_state = 'searching'
+        
+        self.agent_positions[message['source']] = message['position']
+        
+        if message['source_found'][0] == True:
+            if current_state == 'searching':
+                new_state = 'patrolling'
+        
+        return new_state
+         
+        
+        
+        
+               
     def generate_nav_goal(self,x,y,yaw):
         """
         generates nav goal from x,y,yaw
@@ -93,8 +154,66 @@ class Searcher:
         return goal
     
     
+    def calculate_repulsion(self, my_position):
+        forces = np.zeros([len(self.agent_positions), 2], dtype=float)
+
+        for count, agent_pos in enumerate(self.agent_positions):
+            if agent_pos is not None:
+                if count == self.ID: 
+                    continue
+                direction = my_position - agent_pos
+                distance = np.linalg.norm(direction)
+                if distance == 0.0:
+                    # if ontop of it, choose a random direction to go in 
+                    random_vector = np.random.uniform(-1,1,2)
+                    unit_direction = random_vector / np.linalg.norm(random_vector)
+                    magnitude = self.repulsion_strength 
+                else:
+                    unit_direction = direction / distance
+                    magnitude = max(self.repulsion_strength - distance, 0)  #self.repulsion_strength / distance**2
+                
+                agent_repulsion = unit_direction * magnitude
+                forces[count] = agent_repulsion
+                self.agent_positions[count] = None # clear (TODO change this to a queue i guess)
+
+        
+        repulsion_vector = np.sum(forces, axis=0)
+        return repulsion_vector
+    
     def PSO_step(self):
-        pass
+        r1, r2 = np.random.rand(2)
+        my_position = np.array([self.pose_x, self.pose_y])
+        repulsion_vector = self.calculate_repulsion(my_position)
+        
+        self.velocity = self.w * self.velocity + (self.c1 * r1 * (np.array(self.pbest[1]) - my_position)) + (self.c2 * r2 * (np.array(self.gbest[1]) - my_position))
+        dist = np.linalg.norm(self.velocity)
+        if dist > self.step_distance:
+            self.velocity = self.velocity * (self.top_speed / dist)
+        self.velocity = self.velocity + repulsion_vector 
+        
+        new_position = my_position + self.velocity
+        movement_vector = new_position - my_position
+        new_yaw = np.arctan2(movement_vector[1], movement_vector[0])
+        
+        goal = self.generate_nav_goal(new_position[0],new_position[1],new_yaw)
+        rospy.loginfo(f"Checking X: {new_position[0]} | Y: {new_position[1]}")
+        resp = self.check_collision(goal.target_pose)
+        
+        if resp.is_free:
+            rospy.loginfo("NEW POSE IS SAFE")
+            # If not colliding, go to that position
+            return goal
+        else:
+            new_pose_count = 0
+            while(resp.is_free == False):
+                new_pose_count += 1
+                rospy.loginfo(f"NEW POSE IS NOT SAFE - {new_pose_count}")
+                # WHAT TO DO WHEN NOT SAFE
+                rospy.sleep(1000)
+            
+            
+        return goal
+        
         
     def ECOLI_step(self):
         """
@@ -111,14 +230,18 @@ class Searcher:
                 rotate ± random(180◦) and move forward m
                 units 
         """
+        rospy.loginfo(f"== IN ECOLI === Prev: {self.rssi_previous},New: {self.rssi_avg}")
         if self.rssi_avg < self.rssi_previous: #maybe add a threshold here i.e. if its 5 rssi worse or smth
             new_yaw = random_turn(self.pose_yaw, 180) # turn rand +/- 180deg
-            rospy.loginfo("================WORSE================")
+            delta_yaw = 180
+            rospy.loginfo("BAD - TURNING AROUND")
         else:
             new_yaw = random_turn(self.pose_yaw, 5) # turn rand +/- 5deg
+            delta_yaw = 5
+            rospy.loginfo("GOOD - CONTINUE")
         
-        # new_x = self.pose_x + (self.step_distance * np.cos(new_yaw))
-        # new_y = self.pose_y + (self.step_distance * np.sin(new_yaw))
+        new_x = self.pose_x + (self.step_distance * np.cos(new_yaw))
+        new_y = self.pose_y + (self.step_distance * np.sin(new_yaw))
         
         # IN WALL
         # new_x = 0.677 
@@ -126,25 +249,44 @@ class Searcher:
         
         #-3.358 -3.767 OUTSIDE COMPLETELY
         # JUST TOUCHING INFLATION
-        new_x = 1.278 
-        new_y = -3.797 
-        new_yaw = 3.059 
+        # new_x = 1.278 
+        # new_y = -3.797 
+        # new_yaw = 3.059 
         
         # Check if its safe 
         goal = self.generate_nav_goal(new_x,new_y,new_yaw)
-        #rospy.loginfo(f"GEN GOAL: {goal}")
         rospy.loginfo(f"Checking X: {new_x} | Y: {new_y}")
-        is_safe = self.check_collision(goal.target_pose)
-        rospy.loginfo(f"GOAL COLLISION CHECK: {is_safe}")
-        rospy.loginfo(f"Prev: {self.rssi_previous},New: {self.rssi_avg}")
-        # if is_safe == False:
-        #     rospy.logerr(" POSE NOT SAFE POSE NOT SAFE POSE NOT SAFE :3 ")
-        #rospy.loginfo(f"Prev: {self.rssi_previous},{[self.pose_x,self.pose_y,self.pose_yaw]} new {self.rssi_avg},{[new_x,new_y,new_yaw]}")
+        resp = self.check_collision(goal.target_pose)
+        
+        #rospy.loginfo(f"GOAL COLLISION CHECK: {resp}")
+        
+
         self.rssi_previous = self.rssi_avg
-        
+
+        if resp.is_free:
+            rospy.loginfo("NEW POSE IS SAFE")
+            # If not colliding, go to that position
+        else:
+            new_pose_count = 0
+            while(resp.is_free == False):
+                new_pose_count += 1
+                rospy.loginfo(f"NEW POSE IS NOT SAFE - {new_pose_count}")
+                # If colliding, and you've turned around, don't.
+                # If you've not turned around, do.
+                if delta_yaw == 180:
+                    rospy.loginfo("WAIT NOT TURNING AROUND")
+                    new_yaw = random_turn(self.pose_yaw, 5)
+                elif delta_yaw == 5:
+                    rospy.loginfo("WAIT TURNING AROUND")
+                    new_yaw = random_turn(self.pose_yaw, 180)
+                    
+                new_x = self.pose_x + (self.step_distance * np.cos(new_yaw))
+                new_y = self.pose_y + (self.step_distance * np.sin(new_yaw))
+                goal = self.generate_nav_goal(new_x,new_y,new_yaw)
+                rospy.loginfo(f"WALL BLOCKED THEREFORE: Checking X: {new_x} | Y: {new_y}")
+                resp = self.check_collision(goal.target_pose)
+              
         return goal
-        
-        #TODO Update new intention to previous etc. 
         
     
     def HYBRID_step(self):

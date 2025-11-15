@@ -5,7 +5,7 @@ trial_scenario: test_run
 
 #Experiment Parameters
 time_to_end: 30     # time in minutes   
-robot_role: patroller #"patroller", "searcher"
+robot_role: searcher #"patroller", "searcher"
 num_robots: 2
 
 #Patrol
@@ -16,3 +16,10 @@ patrol_method: SEBS # "SEBS", "CGG"
 
 #Search
 search_method: PSO # "PSO", "ECOLI", "HYBRID"
+step_distance: 0.5 # Search step in m (for ecoli primarily but maybe for PSO limiting?)
+
+#PSO
+repulsion_strength: 10 # repulsion for C-PSO
+c1: 1.0 # weighting for pbest
+c2: 2.5 # weighting for gbest
+w: 1.0 # inertia (< 1.0 slows down over time )
