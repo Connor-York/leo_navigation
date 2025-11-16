@@ -181,14 +181,17 @@ class Searcher:
         return repulsion_vector
     
     def PSO_step(self):
+        rospy.loginfo(f"Current Position: {self.pose_x,self.pose_y}")
+        rospy.loginfo(f"PBEST: {self.p_best}")
+        rospy.loginfo(f"GBEST: {self.g_best}")
         r1, r2 = np.random.rand(2)
         my_position = np.array([self.pose_x, self.pose_y])
         repulsion_vector = self.calculate_repulsion(my_position)
         
-        self.velocity = self.w * self.velocity + (self.c1 * r1 * (np.array(self.pbest[1]) - my_position)) + (self.c2 * r2 * (np.array(self.gbest[1]) - my_position))
+        self.velocity = self.w * self.velocity + (self.c1 * r1 * (np.array(self.p_best[1]) - my_position)) + (self.c2 * r2 * (np.array(self.g_best[1]) - my_position))
         dist = np.linalg.norm(self.velocity)
         if dist > self.step_distance:
-            self.velocity = self.velocity * (self.top_speed / dist)
+            self.velocity = self.velocity * (self.step_distance / dist)
         self.velocity = self.velocity + repulsion_vector 
         
         new_position = my_position + self.velocity
@@ -204,15 +207,14 @@ class Searcher:
             # If not colliding, go to that position
             return goal
         else:
-            new_pose_count = 0
-            while(resp.is_free == False):
-                new_pose_count += 1
-                rospy.loginfo(f"NEW POSE IS NOT SAFE - {new_pose_count}")
-                # WHAT TO DO WHEN NOT SAFE
-                rospy.sleep(1000)
-            
-            
-        return goal
+            rospy.loginfo("NEW POSE ISNT SAFE")
+            return goal
+            # new_pose_count = 0
+            # while(resp.is_free == False):
+            #     new_pose_count += 1
+            #     rospy.loginfo(f"NEW POSE IS NOT SAFE - {new_pose_count}")
+            #     # WHAT TO DO WHEN NOT SAFE
+
         
         
     def ECOLI_step(self):

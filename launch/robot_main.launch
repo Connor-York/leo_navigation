@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <launch>
 
-    <arg name="map_file" default="Full_Office_Map.yaml"/>         <!-- Map -->
-    <arg name="amcl_file" default="amcl_3.yaml"/>                 <!-- Start Position -->
+    <arg name="map_file" default="GE_trials.yaml"/>         <!-- Map -->
+    <arg name="amcl_file" default="amcl_GE_Origin.yaml"/>                 <!-- Start Position -->
     <arg name="trial_no" default="0"/>                            <!-- Trial No. -->
 
     <include file="$(find leo_navigation)/launch/slam.launch">

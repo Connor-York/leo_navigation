@@ -39,7 +39,7 @@ linearUpdate: 0.1
 angularUpdate: 0.1
 temporalUpdate: -1.0
 resampleThreshold: 0.5
-particles: 10
+particles: 50
 
 # Initial map dimensions and resolution
 xmin: -10.0

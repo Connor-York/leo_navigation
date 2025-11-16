@@ -144,10 +144,13 @@ class Patroller:
             Updates idleness and sends a sebs message
             Calls relevant patrol method
         """
+        
         arrival_time = time.time()
         current_node = self.current_goal
         rospy.loginfo(f"- GOAL - Arrived at node: {current_node}")
+        rospy.loginfo(f"Idleness: {self.node_idleness[current_node]}")
         self.node_idleness[current_node] = arrival_time
+        rospy.loginfo(f"Idleness after: {self.node_idleness[current_node]}")
         
         if self.patrol_method == "SEBS":
             self.current_goal = self.sebs(current_node, arrival_time)

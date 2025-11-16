@@ -12,6 +12,7 @@ import queue
 import json
 import csv
 import os
+import numpy as np
 
 # CLASSES
 from robot_classes.patrol_class import Patroller
@@ -78,7 +79,9 @@ class Main:
         previous_log_time = time.time() - self.start_time
         
         while not rospy.is_shutdown():
-            elapsed_time = time.time() - self.start_time
+            
+            log_time = time.time()
+            elapsed_time = log_time - self.start_time
             
             
             self.read_inbox()
@@ -93,16 +96,15 @@ class Main:
             #log data
             if elapsed_time - previous_log_time >= 1:
                 self.searching.send_signal_message()
-                log_time = time.time()
                 
-                self.signallog.append([elapsed_time, self.robot_state, self.searching.pose_x, self.searching.pose_y, self.searching.pose_yaw, self.searching.rssi_avg, self.searching.rssi_raw])
                 if self.robot_state == 'patrolling':
-                    self.idlenesslog.append([log_time, self.patrolling.current_goal, self.patrolling.node_idleness])
+                    self.idlenesslog.append([log_time, self.patrolling.current_goal, self.patrolling.node_idleness.copy()])
                 previous_log_time = elapsed_time
+            self.signallog.append([elapsed_time, self.robot_state, self.searching.pose_x, self.searching.pose_y, self.searching.pose_yaw, self.searching.rssi_avg, self.searching.rssi_raw, self.searching.p_best[0], self.searching.p_best[1], self.searching.g_best[0], self.searching.p_best[1]])
                 
             
             if elapsed_time >= self.time_to_end:
-                rospy.loginfo("Shutting down. Patrol Time Elapsed")
+                rospy.loginfo(f"Shutting down. Patrol Time Elapsed - T+{elapsed_time/60}s")
                 rospy.signal_shutdown("Patrol Time Elapsed")
                 
                 
@@ -203,23 +205,25 @@ class Main:
         
         with open(f"{self.save_path}/signallog.csv", mode='w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(['elapsed_time', 'robot_state', 'x', 'y', 'yaw', 'rssi_avg', 'rssi_raw'])
+            writer.writerow(['elapsed_time', 'robot_state', 'x', 'y', 'yaw', 'rssi_avg', 'rssi_raw', 'pbest_val', 'pbest_pos', 'gbest_val', 'gbest_pos'])
             for row in self.signallog:
                 writer.writerow(row)
         
         with open(f"{self.save_path}/idlenesslog.csv", mode='w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(['elapsed_time', 'current_goal', 'idleness'])
+            
             for row in self.idlenesslog:
-                # convert from last visit timestamp to time since
-                #rospy.loginfo(f"Row: {row}")
-                for item in row[2]:
-                    
-                    #rospy.loginfo(f"Item: {item}")
-                    item = row[0] - item
-                    #rospy.loginfo(f"Item a: {item}")
-                row[0] = row[0] - self.start_time
-                writer.writerow(row)
+                current_time = row[0]
+                
+                # Convert to time since last visit using NumPy and round to 2 decimal places
+                idleness_time_since = np.round(current_time - np.array(row[2]), 2)
+                
+                # Convert elapsed time
+                elapsed_time = np.round(current_time - self.start_time, 2)
+                
+                # Write row (convert numpy array to list for CSV writing)
+                writer.writerow([elapsed_time, row[1], idleness_time_since.tolist()])
                 
         with open(f"{self.save_path}/robot_params.txt", mode='w', newline='') as file:
             writer = csv.writer(file)
