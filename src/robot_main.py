@@ -6,6 +6,8 @@ import actionlib
 from move_base_msgs.msg import MoveBaseAction
 from actionlib_msgs.msg import GoalStatus
 from std_msgs.msg import String
+from geometry_msgs.msg import PointStamped
+from visualization_msgs.msg import Marker
 import time
 import threading
 import queue
@@ -45,11 +47,15 @@ class Main:
         self.role = rospy.get_param("~robot_role")
         self.num_robots = rospy.get_param("~num_robots")
         self.time_to_end = rospy.get_param("~time_to_end") * 60.0
+        self.search_end_timer = rospy.get_param("~search_end_timer") * 60.0
             
         # Communication
         self.inbox = queue.Queue()
         self.server_pub = rospy.Publisher('/server_pub', String, queue_size=10) 
         rospy.Subscriber('/server_sub', String, self.comms_cb)
+        
+        self.gbest_pub_point = rospy.Publisher(f'/gbest_point', PointStamped, queue_size=10)
+        self.gbest_pub_text = rospy.Publisher(f'/gbest_text', Marker, queue_size=10)
 
         # Patrol
         self.patrolling = Patroller(self.id, package_path, self.server_pub, self.num_robots, self.start_time)
@@ -57,7 +63,8 @@ class Main:
         # Search
         step_distance = rospy.get_param("~step_distance") # distance in metres to step each search step 
                             # (robot top speed is 0.4m/s so this is 1s of moving forward)
-        self.searching = Searcher(step_distance, self.num_robots, self.id, self.server_pub)
+        self.searching = Searcher(step_distance, self.num_robots, self.id, self.server_pub, self.start_time)
+        self.search_delay = False # Flag to wait if no valid search step found
         
         # Move Base
         self.nav_client = self.nav_init()
@@ -77,36 +84,53 @@ class Main:
         """
         rate = rospy.Rate(20) # signal reading spead is ~20Hz
         previous_log_time = time.time() - self.start_time
+        search_delay_start = time.time()
         
         while not rospy.is_shutdown():
             
-            log_time = time.time()
-            elapsed_time = log_time - self.start_time
+            curr_time = time.time()
+            elapsed_time = curr_time - self.start_time
             
             
-            self.read_inbox()
+            self.read_inbox(curr_time)
             
-            self.searching.read_signal()
+            self.searching.read_signal(curr_time)
+            
+            if self.searching.source_found[0] == False:
+                if curr_time - self.searching.last_gbest_update > self.search_end_timer:
+                    rospy.loginfo(f"========================================================FOUND IT. GBEST IS: {self.searching.g_best[0]}")
+                    if self.searching.isbest:
+                        rospy.loginfo("Source found :)")
+                        self.searching.source_found = (True, self.searching.id)
+                        self.robot_state = 'patrolling'
+                        self.goal_active = True
+                        goal = self.patrolling.return_to_patrol(self.searching.pose_x, self.searching.pose_y)
+                        self.nav_client.send_goal(goal)
+                    else:
+                        rospy.loginfo("Im not even best ? ")
 
+            self.publish_gbest_visual() # publish for RVIZ visualisation (debugging)
 
-            self.nav_check() #check current goal status and act accordingly
-            
-            
+            if self.search_delay == False:
+                self.nav_check() #check current goal status and act accordingly
             
             #log data
             if elapsed_time - previous_log_time >= 1:
                 self.searching.send_signal_message()
-                
+                rospy.loginfo(f"State: {self.robot_state} | Reading: {self.searching.rssi_avg} | GBest: {self.searching.g_best[0]} | T-gb: {curr_time - self.searching.last_gbest_update}")
                 if self.robot_state == 'patrolling':
-                    self.idlenesslog.append([log_time, self.patrolling.current_goal, self.patrolling.node_idleness.copy()])
+                    self.idlenesslog.append([curr_time, self.patrolling.current_goal, self.patrolling.node_idleness.copy()])
                 previous_log_time = elapsed_time
-            self.signallog.append([elapsed_time, self.robot_state, self.searching.pose_x, self.searching.pose_y, self.searching.pose_yaw, self.searching.rssi_avg, self.searching.rssi_raw, self.searching.p_best[0], self.searching.p_best[1], self.searching.g_best[0], self.searching.p_best[1]])
+            self.signallog.append([elapsed_time, self.robot_state, self.searching.pose_x, self.searching.pose_y, self.searching.pose_yaw, self.searching.rssi_avg, self.searching.rssi_raw, self.searching.p_best[0], self.searching.p_best[1], self.searching.g_best[0], self.searching.p_best[1], self.searching.source_found])
                 
             
             if elapsed_time >= self.time_to_end:
                 rospy.loginfo(f"Shutting down. Patrol Time Elapsed - T+{elapsed_time/60}s")
                 rospy.signal_shutdown("Patrol Time Elapsed")
-                
+            
+            if self.search_delay and (curr_time - search_delay_start) >= 5.0: # 5 second delay after no valid search step found
+                rospy.loginfo(" Resuming search after delay")
+                self.search_delay = False  
                 
             if self.robot_state == "patrolling":
                 if self.goal_active == False:
@@ -115,7 +139,7 @@ class Main:
                     self.nav_client.send_goal(goal)
             
             elif self.robot_state == "searching":
-                if self.goal_active == False:
+                if self.goal_active == False and self.search_delay == False:
                     self.goal_active = True
                     if self.searching.search_method == 'PSO':
                         goal = self.searching.PSO_step()
@@ -123,8 +147,16 @@ class Main:
                         goal = self.searching.ECOLI_step()
                     elif self.searching.search_method == 'HYBRID':
                         goal = self.searching.HYBRID_step()
-                        
-                    self.nav_client.send_goal(goal)
+                    
+                    #rospy.loginfo(f" Goal type: {type(goal)}")
+                    
+                    if goal is not None:
+                        self.nav_client.send_goal(goal)
+                    else:
+                        # This is for PSO bounce back
+                        rospy.loginfo(" No valid search step found, delaying search for 5s")
+                        self.search_delay = True
+                        search_delay_start = curr_time
         
             rate.sleep()
             
@@ -160,7 +192,7 @@ class Main:
                 if self.robot_state == 'patrolling':
                     self.patrolling.arrived_at_node()
                     
-                    if self.role == 'searcher' and self.searching.rssi_avg > -999:
+                    if self.role == 'searcher' and self.searching.rssi_avg > -999 and self.searching.source_found[0] == False:
                         rospy.loginfo(f" STATE - CHANGE FROM PATROLLING TO SEARCHING")
                         self.robot_state = 'searching'
             # elif state == GoalStatus.ABORTED: TODO add handling for aborted goal, 
@@ -179,7 +211,7 @@ class Main:
         self.inbox.put(data)
     
     
-    def read_inbox(self):
+    def read_inbox(self, curr_time):
         """
         Empties inbox passing messages to relevant handlers, called every loop
         """
@@ -193,10 +225,16 @@ class Main:
                 self.patrolling.receive_sebs_message(message)
                 
             if message.get("type") == "signal":
-                new_state = self.searching.receive_signal_message(message, self.robot_state)
+                new_state = self.searching.receive_signal_message(message, self.robot_state, curr_time)
                 if new_state is not None and self.role == 'searcher':
-                    rospy.loginfo(f"- COMS - CHANGING STATE FROM {self.agent_state} to {new_state}")
-                    self.agent_state = new_state
+                    rospy.loginfo(f"- COMS - CHANGING STATE FROM {self.robot_state} to {new_state}")
+                    self.robot_state = new_state
+                    if new_state == 'patrolling':
+                        self.goal_active = True
+                        goal = self.patrolling.return_to_patrol(self.searching.pose_x, self.searching.pose_y)
+                        self.nav_client.send_goal(goal)
+                
+                
             
 
     def log_data(self):
@@ -234,7 +272,38 @@ class Main:
             writer.writerow(f"Robot Role: {self.role}")
             writer.writerow(f"Search Method: {self.searching.search_method}")
             
-            
+    def publish_gbest_visual(self):
+        point_msg = PointStamped()
+        point_msg.header.stamp = rospy.Time.now()
+        point_msg.header.frame_id = "map"
+        point_msg.point.x = self.searching.g_best[1][0]
+        point_msg.point.y = self.searching.g_best[1][1]
+        point_msg.point.z = 0
+        
+        text_marker = Marker()
+        text_marker.header.frame_id = "map"
+        text_marker.header.stamp = rospy.Time.now()
+        text_marker.ns = "sensor_values"
+        text_marker.id = 0
+        text_marker.type = Marker.TEXT_VIEW_FACING
+        text_marker.action = Marker.ADD
+        
+        # Position text slightly above your point
+        text_marker.pose.position.x = point_msg.point.x
+        text_marker.pose.position.y = point_msg.point.y
+        text_marker.pose.position.z = point_msg.point.z + 0.2  # Slightly above
+        text_marker.pose.orientation.w = 1.0
+        
+        text_marker.text = f"{self.searching.g_best[0]}"
+        
+        text_marker.scale.z = 0.2
+        text_marker.color.r = 1.0
+        text_marker.color.g = 1.0
+        text_marker.color.b = 0.0
+        text_marker.color.a = 1.0
+        
+        self.gbest_pub_point.publish(point_msg)
+        self.gbest_pub_text.publish(text_marker)
         
     def cleanup(self):
         rospy.loginfo("Shutting down: cleaning up resources...")

@@ -2,8 +2,8 @@
 <launch>
 
    <arg name="nav" default="true"/>
-   <arg name="map_file" default="GE_trials.yaml"/>   <!-- Map -->
-   <arg name="amcl_file" default="amcl_GE_Origin.yaml"/>           <!-- Start Position -->
+   <arg name="map_file" default="Full_Office_Map.yaml"/>   <!-- Map -->
+   <arg name="amcl_file" default="Office/amcl_3.yaml"/>           <!-- Start Position -->
 
    <include file="$(find leo_navigation)/launch/subprocesses/odometry.launch" />
 

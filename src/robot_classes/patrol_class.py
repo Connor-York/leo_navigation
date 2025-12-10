@@ -108,7 +108,22 @@ class Patroller:
         rospy.loginfo(f"- GOAL - Navigating to node: {self.current_goal}")
         return goal
     
-    
+    def return_to_patrol(self, pose_x, pose_y):
+        closest_node_dist = 99999
+        closest_node_id = None
+        for count, node in enumerate(self.node_list):
+            dist = np.linalg.norm(np.array([pose_x, pose_y]) - np.array([node.position.x,node.position.y]))
+            if dist < closest_node_dist:
+                closest_node_id = count
+                closest_node_dist = dist
+        
+        if closest_node_id == None:
+            self.current_goal = np.random.randint(len(self.node_list))
+        else:
+            self.current_goal = closest_node_id
+        
+        return self.set_nav_goal()
+        
     def send_sebs_msg(self, current_node, arrival_time):
         """
         Constructs and sends a sebs message, to be called when agent arrives at a goal node
