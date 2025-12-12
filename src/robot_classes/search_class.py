@@ -67,6 +67,11 @@ class Searcher:
         self.step_distance = step_distance
         self.server_pub = server_pub # For sending communications
         
+        if rospy.get_param("~delay_signal_start", False):
+            self.signal_start = False
+        else:
+            self.signal_start = True
+        
         #TODO add these services stuff to dependencies and add timeout for them not connecting with a failure
         
         rospy.wait_for_service('get_signal_data')
@@ -88,17 +93,19 @@ class Searcher:
             self.pose_x = resp.x
             self.pose_y = resp.y
             self.pose_yaw = resp.yaw
-            self.rssi_avg = resp.avg_rssi
-            self.rssi_raw = resp.rssi_val
             
-            if self.source_found[0] == False:
-            # update personal and global best
-                if self.rssi_avg > self.p_best[0]:
-                    self.p_best = (self.rssi_avg, (self.pose_x,self.pose_y))
-                    if self.rssi_avg > self.g_best[0]:
-                        self.g_best = self.p_best
-                        self.isbest = True
-                        self.last_gbest_update = current_time
+            if self.signal_start == True:
+                self.rssi_avg = resp.avg_rssi
+                self.rssi_raw = resp.rssi_val
+            
+                if self.source_found[0] == False:
+                # update personal and global best
+                    if self.rssi_avg > self.p_best[0]:
+                        self.p_best = (self.rssi_avg, (self.pose_x,self.pose_y))
+                        if self.rssi_avg > self.g_best[0]:
+                            self.g_best = self.p_best
+                            self.isbest = True
+                            self.last_gbest_update = current_time
         
         except rospy.ServiceException as e:
             rospy.logerr("Service call failed: %s", e)
@@ -180,37 +187,71 @@ class Searcher:
 
         
         repulsion_vector = np.sum(forces, axis=0)
+        if np.linalg.norm(repulsion_vector) > 0:
+            
+            rospy.loginfo(f"################## BEING REPULSED ####################")
+            rospy.loginfo(f"Repulsion Vector: {repulsion_vector} | Magnitude: {np.linalg.norm(repulsion_vector)}")
         return repulsion_vector
     
     
     def PSO_step(self):
-        rospy.loginfo(f"Current Position: {self.pose_x,self.pose_y}")
-        rospy.loginfo(f"PBEST: {self.p_best}")
-        rospy.loginfo(f"GBEST: {self.g_best}")
+        # rospy.loginfo(f"Current Position: {self.pose_x,self.pose_y}")
+        # rospy.loginfo(f"PBEST: {self.p_best}")
+        # rospy.loginfo(f"GBEST: {self.g_best}")
         r1, r2 = np.random.rand(2)
         my_position = np.array([self.pose_x, self.pose_y])
         repulsion_vector = self.calculate_repulsion(my_position)
         
         self.velocity = self.w * self.velocity + (self.c1 * r1 * (np.array(self.p_best[1]) - my_position)) + (self.c2 * r2 * (np.array(self.g_best[1]) - my_position))
         dist = np.linalg.norm(self.velocity)
+        rospy.loginfo(f"Velocity Vector before repulsion: {self.velocity} | Magnitude: {dist}")
         if dist > self.step_distance:
-            self.velocity = self.velocity * (self.step_distance / dist)
-        self.velocity = self.velocity + repulsion_vector 
+            velocity_clamped = self.velocity * (self.step_distance / dist)
+        else:
+            velocity_clamped = self.velocity
+        velocity_clamped = velocity_clamped + repulsion_vector 
+        rospy.loginfo(f"Velocity Vector after repulsion: {velocity_clamped} | Magnitude: {np.linalg.norm(velocity_clamped)}")
         
-        new_position = my_position + self.velocity
+        new_position = my_position + velocity_clamped
         movement_vector = new_position - my_position
         new_yaw = np.arctan2(movement_vector[1], movement_vector[0])
         
         goal = self.generate_nav_goal(new_position[0],new_position[1],new_yaw)
-        rospy.loginfo(f"Checking X: {new_position[0]} | Y: {new_position[1]}")
+        #rospy.loginfo(f"Checking X: {new_position[0]} | Y: {new_position[1]}")
         resp = self.check_collision(goal.target_pose)
+        
+        #rospy.loginfo(f"GOAL COLLISION CHECK: {resp}")
+        
+        # if resp.is_free:
+        #     rospy.loginfo("NEW POSE IS SAFE")
+        #     return goal
+        # else:
+        #     rospy.loginfo("NEW POSE ISNT SAFE")
+        #     return None
         
         if resp.is_free:
             rospy.loginfo("NEW POSE IS SAFE")
-            return goal
+            # If not colliding, go to that position
         else:
-            rospy.loginfo("NEW POSE ISNT SAFE")
-            return None
+            new_pose_count = 0
+            orig_yaw = new_yaw
+            while(resp.is_free == False):
+                new_pose_count += 1
+                rospy.loginfo(f"NEW POSE IS NOT SAFE - {new_pose_count}")
+                
+                # if new pose isnt safe, turn around 45deg and keep going (bounce off of wall) 
+                
+                new_yaw = new_yaw - np.deg2rad(45) 
+                new_yaw = normalise_angle(new_yaw)
+                    
+                new_x = self.pose_x + (self.step_distance * np.cos(new_yaw))
+                new_y = self.pose_y + (self.step_distance * np.sin(new_yaw))
+                goal = self.generate_nav_goal(new_x,new_y,new_yaw)
+                rospy.loginfo(f"WALL BLOCKED THEREFORE: Checking X: {new_x} | Y: {new_y}")
+                resp = self.check_collision(goal.target_pose)
+            rospy.loginfo(f"New pose safe after: {new_pose_count}")
+        return goal
+        
 
         
     def ECOLI_step(self):
@@ -252,7 +293,7 @@ class Searcher:
         
         # Check if its safe 
         goal = self.generate_nav_goal(new_x,new_y,new_yaw)
-        rospy.loginfo(f"Checking X: {new_x} | Y: {new_y}")
+        #rospy.loginfo(f"Checking X: {new_x} | Y: {new_y}")
         resp = self.check_collision(goal.target_pose)
         
         #rospy.loginfo(f"GOAL COLLISION CHECK: {resp}")

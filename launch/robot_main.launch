@@ -4,6 +4,7 @@
     <arg name="map_file" default="Full_Office_Map.yaml"/>   <!-- Map -->
     <arg name="amcl_file" default="Office/amcl_3.yaml"/>           <!-- Start Position -->
     <arg name="trial_no" default="0"/>                            <!-- Trial No. -->
+    <arg name="comm_start" default="True"/>  <!-- Wait for message from server to begin patrol/ search -->
 
     <include file="$(find leo_navigation)/launch/slam.launch">
             <arg name="map_file" value="$(arg map_file)"/>
@@ -16,6 +17,7 @@
     <node pkg="leo_navigation" type="robot_main.py" name="patroller" output="screen">  
         <rosparam command="load" file="$(find leo_navigation)/config/Robot_config.yaml" /> 
         <param name="trial_no" value="$(arg trial_no)"/>
+        <param name="comm_start" value="$(arg comm_start)"/>
     </node>
 
     <include file="$(find signal_detection)/launch/signal_service.launch"/>

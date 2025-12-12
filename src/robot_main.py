@@ -75,6 +75,13 @@ class Main:
         self.goal_active = False
         rospy.on_shutdown(self.cleanup)
         
+        self.comm_start = rospy.get_param("~comm_start")
+        if self.comm_start == True:
+            rospy.loginfo("================== Waiting for start message from server to begin... ==================")
+            self.ok_start = False
+        else:
+            self.ok_start = True
+        
         self.main_loop()
     
     
@@ -82,7 +89,18 @@ class Main:
         """
         Main robot loop
         """
+        rate = rospy.Rate(100) # signal reading spead is ~20Hz
+        
+        while self.ok_start == False and not rospy.is_shutdown():
+            # Wait for start message from server (or just start immediately if comm_start == False)
+            self.read_inbox(time.time())
+            rate.sleep()
+
         rate = rospy.Rate(20) # signal reading spead is ~20Hz
+        rospy.loginfo("=== Okay, let's go ===")
+            
+        self.start_time = time.time() 
+        self.searching.last_gbest_update = self.start_time
         previous_log_time = time.time() - self.start_time
         search_delay_start = time.time()
         
@@ -94,6 +112,7 @@ class Main:
             
             self.read_inbox(curr_time)
             
+
             self.searching.read_signal(curr_time)
             
             if self.searching.source_found[0] == False:
@@ -157,7 +176,7 @@ class Main:
                         rospy.loginfo(" No valid search step found, delaying search for 5s")
                         self.search_delay = True
                         search_delay_start = curr_time
-        
+            
             rate.sleep()
             
     
@@ -221,18 +240,32 @@ class Main:
             except queue.Empty:
                 break
             
-            if message.get("type") == "sebs" and self.robot_state == 'patrolling':
-                self.patrolling.receive_sebs_message(message)
+            rospy.loginfo(f"- COMS - Received message: {message}")
+            
+            if message.get("source") == "server":
+                if message.get("message") == "start" and self.comm_start == True:
+                    self.ok_start = True
+                elif message.get("message") == "signal_on":
+                    self.searching.signal_start = True
+                    rospy.loginfo("=== SIGNAL START ===")
+                else:
+                    rospy.logwarn(f"- COMS - Unknown server message: {message}")
                 
-            if message.get("type") == "signal":
-                new_state = self.searching.receive_signal_message(message, self.robot_state, curr_time)
-                if new_state is not None and self.role == 'searcher':
-                    rospy.loginfo(f"- COMS - CHANGING STATE FROM {self.robot_state} to {new_state}")
-                    self.robot_state = new_state
-                    if new_state == 'patrolling':
-                        self.goal_active = True
-                        goal = self.patrolling.return_to_patrol(self.searching.pose_x, self.searching.pose_y)
-                        self.nav_client.send_goal(goal)
+                
+            
+            if self.ok_start == True:
+                if message.get("type") == "sebs" and self.robot_state == 'patrolling':
+                    self.patrolling.receive_sebs_message(message)
+                    
+                elif message.get("type") == "signal":
+                    new_state = self.searching.receive_signal_message(message, self.robot_state, curr_time)
+                    if new_state is not None and self.role == 'searcher':
+                        rospy.loginfo(f"- COMS - CHANGING STATE FROM {self.robot_state} to {new_state}")
+                        self.robot_state = new_state
+                        if new_state == 'patrolling':
+                            self.goal_active = True
+                            goal = self.patrolling.return_to_patrol(self.searching.pose_x, self.searching.pose_y)
+                            self.nav_client.send_goal(goal)
                 
                 
             
@@ -243,7 +276,7 @@ class Main:
         
         with open(f"{self.save_path}/signallog.csv", mode='w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(['elapsed_time', 'robot_state', 'x', 'y', 'yaw', 'rssi_avg', 'rssi_raw', 'pbest_val', 'pbest_pos', 'gbest_val', 'gbest_pos'])
+            writer.writerow(['elapsed_time', 'robot_state', 'x', 'y', 'yaw', 'rssi_avg', 'rssi_raw', 'pbest_val', 'pbest_pos', 'gbest_val', 'gbest_pos', 'signal_found'])
             for row in self.signallog:
                 writer.writerow(row)
         
