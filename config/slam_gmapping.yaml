@@ -18,7 +18,7 @@ astep: 0.05
 iterations: 5
 lsigma: 0.075
 ogain: 3.0
-lskip: 0
+lskip: 10
 minimumScore: 0.0
 occ_thresh: 0.25
 
@@ -37,7 +37,7 @@ lasamplestep: 0.005
 # Other parameters
 linearUpdate: 0.1
 angularUpdate: 0.1
-temporalUpdate: -1.0
+temporalUpdate: 1.0
 resampleThreshold: 0.5
 particles: 50
 
