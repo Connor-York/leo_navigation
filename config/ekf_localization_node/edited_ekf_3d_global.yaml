@@ -1,83 +1,54 @@
-# https://github.com/cra-ros-pkg/robot_localization/blob/kinetic-devel/params/ekf_template.yaml
-
 frequency: 30
 sensor_timeout: 0.2
-two_d_mode: true
+two_d_mode: true  # Keep this for ground robot
 transform_time_offset: 0.0
 transform_timeout: 0.0
 print_diagnostics: true
 debug: false
 publish_tf: true
 publish_acceleration: false
-
 map_frame: map
 odom_frame: odom
 base_link_frame: base_footprint
 world_frame: odom
 
-# x, y, z
-# roll, pitch, yaw
-# vx, vy, vz
-# vroll, vpitch, vyaw
-# ax, ay, az.
-
+# Wheel odometry - ONLY use forward velocity, NOT yaw rate
 odom0: wheel_odom_with_covariance
 odom0_config: [false, false, false,
-                false, false, false,
-                true,  false, false,
-                false, false, false, # removed vyaw rate (third item)
-                false, false, false]
+               false, false, false,
+               true,  false, false,    # Only vx (forward velocity)
+               false, false, false,    # REMOVE wheel yaw rate (was true)
+               false, false, false]
 odom0_queue_size: 3
 odom0_rejection_threshold: 15
 odom0_nodelay: false
 
-#odom1: odometry/gps
-#odom1_config: [true, true, false,
-#               false, false, false,
-#               false, false, false,
-#               false, false, false,
-#               false, false, false]
-#odom1_queue_size: 3
-#odom1_rejection_threshold: 15
-#odom1_nodelay: false  
-
-imu0: imu/data_raw 
+# IMU - Use yaw rate for rotation
+imu0: imu/data_raw
 imu0_config: [false, false, false,
-              false,  false,  false, 
+              false, false, false,    # Don't use roll/pitch (was true for pitch in some configs)
               false, false, false,
-              true, false,  true, 
-              true,  false, false] #tff
+              false, false, true,     # USE yaw rate (gyro Z)
+              true,  false, false]    # USE x-acceleration
 imu0_nodelay: false
 imu0_differential: false
 imu0_relative: true
 imu0_queue_size: 5
-imu0_remove_gravitational_acceleration: false
+imu0_remove_gravitational_acceleration: false  # Keep false for 3d_global
 
-#twist0: imu2/mag #imu/data_raw
-#twist0_config: [false, false, false,
-#              true,  true,  true, 
-#              false, false, false,
-#              false, false,  false, 
-#              false,  false, false]
-#twist0_nodelay: false
-#twist0_queue_size: 5
-
-
-
-
-
+# Process noise - INCREASE yaw uncertainty for skid steering
 process_noise_covariance: [0.05, 0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
-                          0,    0.05, 0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
+                           0,    0.05, 0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
                            0,    0,    0.06, 0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
                            0,    0,    0,    0.03, 0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
                            0,    0,    0,    0,    0.03, 0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
-                           0,    0,    0,    0,    0,    0.06, 0,     0,     0,    0,    0,    0,    0,    0,    0,
+                           0,    0,    0,    0,    0,    0.6,  0,     0,     0,    0,    0,    0,    0,    0,    0,    # Yaw: 0.06 -> 0.6
                            0,    0,    0,    0,    0,    0,    0.5,   0,     0,    0,    0,    0,    0,    0,    0,
                            0,    0,    0,    0,    0,    0,    0,     0.025, 0,    0,    0,    0,    0,    0,    0,
                            0,    0,    0,    0,    0,    0,    0,     0,     0.04, 0,    0,    0,    0,    0,    0,
                            0,    0,    0,    0,    0,    0,    0,     0,     0,    0.01, 0,    0,    0,    0,    0,
                            0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0.01, 0,    0,    0,    0,
-                           0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0.4,  0,    0,    0,
+                           0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0.8,  0,    0,    0,    # Yaw rate: 0.4 -> 0.8
                            0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0.01, 0,    0,
                            0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0.01, 0,
-                           0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0.015]
+                           0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0.01]

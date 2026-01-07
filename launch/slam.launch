@@ -4,16 +4,21 @@
    <arg name="nav" default="true"/>
    <arg name="map_file" default="Full_Office_Map.yaml"/>   <!-- Map -->
    <arg name="amcl_file" default="Office/amcl_3.yaml"/>           <!-- Start Position -->
+   <arg name="mapping" default="false"/>
 
    <include file="$(find leo_navigation)/launch/subprocesses/odometry.launch" />
 
    <!-- Only include gmapping or AMCL, gmapping for making the maps and AMCL for using them-->
-   <!--include file="$(find leo_navigation)/launch/subprocesses/gmapping.launch" /--> 
-   <include file="$(find leo_navigation)/launch/subprocesses/amcl.launch">
-      <arg name="map_file" value="$(arg map_file)"/>
-      <arg name="amcl_file" value="$(arg amcl_file)"/>
-   </include>
+   <group if="$(arg mapping)">
+      <include file="$(find leo_navigation)/launch/subprocesses/gmapping.launch" />
+   </group> 
 
+   <group unless="$(arg mapping)">
+      <include file="$(find leo_navigation)/launch/subprocesses/amcl.launch">
+         <arg name="map_file" value="$(arg map_file)"/>
+         <arg name="amcl_file" value="$(arg amcl_file)"/>
+      </include>
+   </group>
 
    <!-- Conditionally launch move_base -->
    <group if="$(arg nav)">
