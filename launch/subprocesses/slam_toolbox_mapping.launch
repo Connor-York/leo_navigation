@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+  <node pkg="slam_toolbox" type="async_slam_toolbox_node" name="slam_toolbox" output="screen" launch-prefix="bash -c 'sleep 2; $0 $@'">
+    <rosparam command="load" file="$(find leo_navigation)/config/slam_toolbox_mapping.yaml" />
+  </node>
+</launch>

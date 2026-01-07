@@ -1,0 +1,54 @@
+solver_plugin: solver_plugins::CeresSolver
+ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
+ceres_preconditioner: SCHUR_JACOBI
+ceres_trust_strategy: LEVENBERG_MARQUARDT
+ceres_dogleg_type: TRADITIONAL_DOGLEG
+ceres_loss_function: None
+
+odom_frame: odom
+map_frame: map
+base_frame: base_footprint
+scan_topic: /scan_filtered
+mode: localization
+
+resolution: 0.05
+max_laser_range: 15.0
+minimum_time_interval: 0.2
+transform_timeout: 0.2
+tf_buffer_duration: 30.0
+stack_size_to_use: 40000000
+
+do_not_check_scan_count: true
+
+# Update thresholds - slightly less aggressive than mapping
+minimum_travel_distance: 0.1
+minimum_travel_heading: 0.1
+throttle_scans: 1
+
+# Scan matching
+use_scan_matching: true
+use_scan_barycenter: true
+scan_buffer_size: 15
+scan_buffer_maximum_scan_distance: 15.0
+link_match_minimum_response_fine: 0.05
+link_scan_maximum_distance: 1.5
+
+# Correlation - same as mapping for consistency
+correlation_search_space_dimension: 0.75
+correlation_search_space_resolution: 0.005
+correlation_search_space_smear_deviation: 0.05
+
+# Angular search
+fine_search_angle_offset: 0.00175
+coarse_search_angle_offset: 0.349
+coarse_angle_resolution: 0.0175
+
+# Penalties - relaxed for low-feature environments
+distance_variance_penalty: 0.5
+angle_variance_penalty: 1.0
+minimum_angle_penalty: 0.8
+minimum_distance_penalty: 0.4
+use_response_expansion: true
+
+# Loop closure disabled for localisation
+do_loop_closing: false
