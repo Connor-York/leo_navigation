@@ -25,7 +25,7 @@ odom0: wheel_odom_with_covariance
 odom0_config: [false, false, false,
                 false, false, false,
                 true,  false, false,
-                false, false, false, # removed vyaw rate (third item)
+                false, false, true, # removed vyaw rate (third item)
                 false, false, false]
 odom0_queue_size: 3
 odom0_rejection_threshold: 15
