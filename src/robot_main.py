@@ -28,7 +28,7 @@ class Main:
         
         
         rpkg = rospkg.RosPack()
-        package_path = rpkg.get_path("leo_navigation")
+        self.package_path = rpkg.get_path("leo_navigation")
         
         # Logging
         self.start_time = time.time()
@@ -36,7 +36,7 @@ class Main:
         trial_no = str(rospy.get_param("~trial_no"))
         trial_scenario = rospy.get_param("~trial_scenario")
         self.status_dict = {v: k for k, v in GoalStatus.__dict__.items() if not k.startswith('_')}  #Converts GoalStatus values to their 
-        self.save_path = f"{package_path}/logs/Robot{self.id}_{trial_scenario}_{trial_no}"    
+        self.save_path = f"{self.package_path}/logs/Robot{self.id}_{trial_scenario}_{trial_no}"    
         
         self.signallog = []
         self.idlenesslog = []    
@@ -57,13 +57,7 @@ class Main:
         self.gbest_pub_point = rospy.Publisher(f'/gbest_point', PointStamped, queue_size=10)
         self.gbest_pub_text = rospy.Publisher(f'/gbest_text', Marker, queue_size=10)
 
-        # Patrol
-        self.patrolling = Patroller(self.id, package_path, self.server_pub, self.num_robots, self.start_time)
-        
-        # Search
-        step_distance = rospy.get_param("~step_distance") # distance in metres to step each search step 
-                            # (robot top speed is 0.4m/s so this is 1s of moving forward)
-        self.searching = Searcher(step_distance, self.num_robots, self.id, self.server_pub, self.start_time)
+
         self.search_delay = False # Flag to wait if no valid search step found
         
         # Move Base
@@ -100,7 +94,15 @@ class Main:
         rospy.loginfo("=== Okay, let's go ===")
             
         self.start_time = time.time() 
-        self.searching.last_gbest_update = self.start_time
+        
+        # Patrol
+        self.patrolling = Patroller(self.id, self.package_path, self.server_pub, self.num_robots, self.start_time)
+        
+        # Search
+        step_distance = rospy.get_param("~step_distance") # distance in metres to step each search step 
+                            # (robot top speed is 0.4m/s so this is 1s of moving forward)
+        self.searching = Searcher(step_distance, self.num_robots, self.id, self.server_pub, self.start_time)
+        
         previous_log_time = time.time() - self.start_time
         search_delay_start = time.time()
         

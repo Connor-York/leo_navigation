@@ -8,6 +8,7 @@ from tf.transformations import quaternion_from_euler
 from move_base_msgs.msg import MoveBaseGoal
 import json
 import time
+import ast
 #from costmap_2d import Costmap2DROS
 
 #Service
@@ -42,9 +43,15 @@ class Searcher:
         self.id = id
         self.search_method = rospy.get_param("~search_method")
         self.bad_diff = rospy.get_param("~bad_diff")
-        self.pose_x = rospy.get_param("/amcl/initial_pose_x")
-        self.pose_y = rospy.get_param("/amcl/initial_pose_y")
-        self.pose_yaw = rospy.get_param("/amcl/initial_pose_a")
+        # self.pose_x = rospy.get_param("/amcl/initial_pose_x")
+        # self.pose_y = rospy.get_param("/amcl/initial_pose_y")
+        # self.pose_yaw = rospy.get_param("/amcl/initial_pose_a")
+        pose_str = rospy.get_param("/slam_toolbox/map_start_pose")
+        pose_list = ast.literal_eval(pose_str)
+        self.pose_x = pose_list[0]
+        self.pose_y = pose_list[1]
+        self.pose_yaw = pose_list[2]
+        print(f"START POSE: x={self.pose_x}, y={self.pose_y}, yaw={self.pose_yaw}")
         self.rssi_avg = -999
         self.rssi_raw = -999
         

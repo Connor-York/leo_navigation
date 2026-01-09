@@ -32,7 +32,7 @@ class Patroller:
             rospy.logfatal(f"Patrol method: {self.patrol_method} not recognised.")
             rospy.signal_shutdown(f"Invalid patrol method.")
             
-        self.intention_table = np.empty(num_robots, dtype=int)
+        self.intention_table = np.full(num_robots, -1, dtype=int)
         self.node_idleness = np.full(len(self.node_list), self.start_time, dtype=np.float64) # node_idleness array is the last time each node was visited 
         
         self.server_pub = server_pub # For sending communications
@@ -139,7 +139,7 @@ class Patroller:
         }
         self.server_pub.publish(json.dumps(Message))
         rospy.loginfo(f"- COMMS - Sebs message sent: ")
-        rospy.loginfo(f"Position: {Message['position']} | Intention: {Message['intention']} | T: {Message['time']}")
+        #rospy.loginfo(f"Position: {Message['position']} | Intention: {Message['intention']} | T: {Message['time']}")
         
         
     def receive_sebs_message(self, message):
@@ -163,9 +163,9 @@ class Patroller:
         arrival_time = time.time()
         current_node = self.current_goal
         rospy.loginfo(f"- GOAL - Arrived at node: {current_node}")
-        rospy.loginfo(f"Idleness: {self.node_idleness[current_node]}")
+        rospy.loginfo(f"Idleness: {arrival_time - self.node_idleness[current_node]}")
         self.node_idleness[current_node] = arrival_time
-        rospy.loginfo(f"Idleness after: {self.node_idleness[current_node]}")
+        rospy.loginfo(f"Idleness after: {arrival_time - self.node_idleness[current_node]}")
         
         if self.patrol_method == "SEBS":
             self.current_goal = self.sebs(current_node, arrival_time)
@@ -192,27 +192,27 @@ class Patroller:
                 count += 1 
         return count
         
-    def sebs(self, current_node, current_time, gain1=0.1, gain2=20.0, edge_min=1.0):
+    def sebs(self, current_node, current_time, gain1=0.1, gain2=50.0, edge_min=1.0):
         """
         State Exchange Bayesian Strategy (D.Portugal)
             Sets self.current_goal
             Built off of zaks implementation in py_patrol which is built off patrol_sim implementation by D.Portugal
             @param gain1: A float representing the gain factor.
             @param gain2: A float representing the gain threshold.
-            @param edge_min: A float representing the minimum edge weight
+            @param edge_min: A float representing the minimum edge weight (to avoid inflated gain on really short distances, 
+                                                                            set to minimum edge distance or ~0.5 maximum edge)
         """
         neighbours = self.node_neighbours[current_node]
-        rospy.loginfo(f"- SEBS - Neighbours: {neighbours}")
+        # rospy.loginfo(f"- SEBS - Neighbours: {[ (neighbour, self.calculate_node_idleness(neighbour, current_time)) for neighbour in neighbours ]}")
         
         if len(neighbours) > 1:
-            log_result = math.log10(1.0/gain1)
+            log_result = math.log(1.0/gain1)
             posterior_probability = np.zeros(len(neighbours))
             for i in range(len(neighbours)):
                 
                 neighbour_id = neighbours[i]
-                neighbour_edge_weight = self.adjacency[current_node][neighbour_id]
-                # Might need to add that minimum edge weight thing here to make sure that really short edges arent over-represented, will have to trial and error it
-                neighbour_edge_weight = min(neighbour_edge_weight, edge_min)
+                neighbour_edge_weight1 = self.adjacency[current_node][neighbour_id]
+                neighbour_edge_weight = max(neighbour_edge_weight1, edge_min)
                 gain = self.calculate_node_idleness(neighbour_id, current_time) / neighbour_edge_weight
                 
                 if gain < gain2:
@@ -229,6 +229,7 @@ class Patroller:
                     p_gain_state = math.pow(2, num_agents - count) / (math.pow(2, num_agents) - 1.0)
                     posterior_probability[i] *= p_gain_state
                 
+                rospy.loginfo(f"- SEBS - Neighbour: {neighbour_id} | Idleness: {self.calculate_node_idleness(neighbour_id, current_time):.2f} | Edge weight: {neighbour_edge_weight1:.2f}, {neighbour_edge_weight:.2f} | Gain: {gain:.2f} | Intentions: {count} | Posterior prob: {posterior_probability[i]:.4f}")
             # Choose the one in the posterior probability with the largest value
             # return a numpy array, and if there are more than one include the index that each are found at
             # Return the 0th element of the tuple, as np.where returns a tuple
