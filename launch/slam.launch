@@ -2,12 +2,12 @@
 <launch>
 
    <arg name="nav" default="true"/>
-   <arg name="map_file" default="office_test_map"/>   <!-- Map (.yaml for amcl)-->
-   <arg name="amcl_file" default="Office/amcl_3.yaml"/>           <!-- Start Position (AMCL)--> 
+   <arg name="map_file" default="test_map"/>   <!-- Map (.yaml for amcl)-->
+   <!-- <arg name="amcl_file" default="Office/amcl_3.yaml"/>           Start Position (AMCL)  -->
    <arg name="mapping" default="false"/>
    <arg name="start_pose" default="[0.0, 0.0, 0.0]"/> <!-- Start Position (slam_toolbox)-->
 
-   <include file="$(find leo_navigation)/launch/subprocesses/odometry.launch" />can
+   <include file="$(find leo_navigation)/launch/subprocesses/odometry.launch" />
 
    <group if="$(arg mapping)">
       <!--include file="$(find leo_navigation)/launch/subprocesses/gmapping.launch" /-->

@@ -3,9 +3,14 @@
   <arg name="map_file" default="my_map"/>
   <arg name="start_pose" default="[0.0, 0.0, 0.0]"/>
 
-  <node pkg="slam_toolbox" type="localization_slam_toolbox_node" name="slam_toolbox" output="screen">
+  <node name="keepout_map_server" pkg="map_server" type="map_server" args="$(find leo_navigation)/maps/$(arg map_file).yaml">
+    <remap from="map" to="/keepout_map"/>
+  </node>
+
+  <node pkg="slam_toolbox" type="localization_slam_toolbox_node" name="slam_toolbox" output="log">
     <rosparam command="load" file="$(find leo_navigation)/config/slam_toolbox_localization.yaml" />
     <param name="map_file_name" value="$(find leo_navigation)/maps/$(arg map_file)"/>
     <param name="map_start_pose" value="$(arg start_pose)"/>
   </node>
+
 </launch>

@@ -1,25 +1,25 @@
 #Parameters for the robot
 #Logging
 robot_id: 0
-trial_scenario: PSO_TEST
+trial_scenario: SEBS_TEST
 
 #Experiment Parameters
 time_to_end: 30     # time in minutes   
 robot_role: searcher #"patroller", "searcher"
-num_robots: 2
+num_robots: 1
 
 #Patrol
 start_node: 0
-patrol_route: sebstest.csv
-patrol_adjacency: sebstest_unit_adj.csv  # Unit adjacency matrix, each row represents a node and the values within are the connected nodes, i.e. row 0 = 1,2
+patrol_route: office_test.csv
+patrol_adjacency: office_test_unit_adj.csv  # Unit adjacency matrix, each row represents a node and the values within are the connected nodes, i.e. row 0 = 1,2
 patrol_method: SEBS # "SEBS", "CGG" 
 
 #Search
-search_method: PSO # "PSO", "ECOLI", "HYBRID"
+search_method: ECOLI # "PSO", "ECOLI", "HYBRID"
 step_distance: 0.5 # Search step in m (for ecoli primarily but maybe for PSO limiting?)
 bad_diff: 1  # RSSI difference to consider a move bad in ECOLI (i.e. if new_rssi < prev_rssi - bad_diff, its bad)
 search_end_timer: 3 #3 # time in mins, how long of gbest not moving until it is accepted as final estimate
-delay_signal_start: True # Whether to delay the signal being read until a "signal_on" message is received
+delay_signal_start: False # Whether to delay the signal being read until a "signal_on" message is received
 
 #PSO
 repulsion_strength: 2 # repulsion for C-PSO (IN METRES)
