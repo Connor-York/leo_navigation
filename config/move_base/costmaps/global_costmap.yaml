@@ -15,6 +15,6 @@ global_costmap:
   origin_y: -20.0
 
   plugins:
-    - {name: static_layer,      type: "costmap_2d::StaticLayer"}
-    - {name: obstacle_layer,    type: "costmap_2d::ObstacleLayer"}
-    - {name: inflation_layer,   type: "costmap_2d::InflationLayer"}
+    - {name: static_layer, type: "costmap_2d::StaticLayer"}
+    - {name: obstacle_layer, type: "costmap_2d::ObstacleLayer"}
+    - {name: inflation_layer, type: "costmap_2d::InflationLayer"}
