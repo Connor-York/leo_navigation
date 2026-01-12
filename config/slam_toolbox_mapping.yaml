@@ -30,7 +30,7 @@ throttle_scans: 1
 use_scan_matching: true
 use_scan_barycenter: true
 scan_buffer_size: 15
-scan_buffer_maximum_scan_distance: 15.0
+scan_buffer_maximum_scan_distance: 3.0
 link_match_minimum_response_fine: 0.05
 link_scan_maximum_distance: 1.5
 

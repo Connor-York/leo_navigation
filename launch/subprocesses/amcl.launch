@@ -6,7 +6,15 @@
   <node name="map_server"
     pkg="map_server"
     type="map_server"
-    args="$(find leo_navigation)/maps/$(arg map_file)" />
+    args="$(find leo_navigation)/maps/$(arg map_file).yaml" />
+
+  <node name="keepout_map_server"
+    pkg="map_server"
+    type="map_server"
+    args="$(find leo_navigation)/maps/$(arg map_file)_keepout.yaml" >
+    <remap from="map" to="keepout_map"/>
+  </node> 
+
 
   <node name="amcl"
     pkg="amcl"

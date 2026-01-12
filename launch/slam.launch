@@ -2,8 +2,8 @@
 <launch>
 
    <arg name="nav" default="true"/>
-   <arg name="map_file" default="test_map"/>   <!-- Map (.yaml for amcl)-->
-   <!-- <arg name="amcl_file" default="Office/amcl_3.yaml"/>           Start Position (AMCL)  -->
+   <arg name="map_file" default="Office_New/office_new"/>   <!-- Map (.yaml for amcl)-->
+   <arg name="amcl_file" default="Office/amcl_1.yaml"/>          
    <arg name="mapping" default="false"/>
    <arg name="start_pose" default="[0.0, 0.0, 0.0]"/> <!-- Start Position (slam_toolbox)-->
 
@@ -15,14 +15,14 @@
    </group> 
 
    <group unless="$(arg mapping)">
-      <!-- <include file="$(find leo_navigation)/launch/subprocesses/amcl.launch">
+      <include file="$(find leo_navigation)/launch/subprocesses/amcl.launch">
          <arg name="map_file" value="$(arg map_file)"/>
          <arg name="amcl_file" value="$(arg amcl_file)"/>
-      </include> -->
-      <include file="$(find leo_navigation)/launch/subprocesses/slam_toolbox_localization.launch">
+      </include>
+      <!-- <include file="$(find leo_navigation)/launch/subprocesses/slam_toolbox_localization.launch">
          <arg name="map_file" value="$(arg map_file)"/>
          <arg name="start_pose" value="$(arg start_pose)"/>
-      </include>
+      </include> -->
    </group>
 
    <!-- Conditionally launch move_base -->

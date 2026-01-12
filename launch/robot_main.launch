@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
 
-    <arg name="map_file" default="Test_Map/test_map"/>   <!-- Map -->
+    <arg name="map_file" default="Office_New/office_new"/>   <!-- Map -->
     <!-- <arg name="amcl_file" default="Office/amcl_3.yaml"/>   -->
     <arg name="trial_no" default="0"/>                            <!-- Trial No. -->
     <arg name="comm_start" default="True"/>  <!-- Wait for message from server to begin patrol/ search -->
