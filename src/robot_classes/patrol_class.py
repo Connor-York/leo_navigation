@@ -130,6 +130,7 @@ class Patroller:
         """
         if current_node == self.current_goal:
             rospy.logerr(f"Current Node {current_node} is the same as goal {self.current_goal} when sending sebs message.")
+        
         Message = { 
             'source':self.id,
             'type':"sebs",
@@ -149,7 +150,8 @@ class Patroller:
         rospy.loginfo(f"- COMMS - Received SEBS message from: ID {message['source']}: ")
         rospy.loginfo(f"Position: {message['position']} | Intention: {message['intention']} | T: {message['time']}")
         self.intention_table[message["source"]] = message["intention"]
-        self.node_idleness[message["position"]] = message["time"]
+        if message["position"] is not None:
+            self.node_idleness[message["position"]] = message["time"]
             
             
     def arrived_at_node(self):

@@ -143,7 +143,10 @@ class Main:
                     rospy.loginfo("- STATE CHANGE - Patrolling -> Searching")
                     self.robot_state = "searching"
                     self.search_flag = False
+                    # cancel goals, let other agents know you have no intention
                     self.nav_client.cancel_all_goals()
+                    self.patrolling.current_goal = -1
+                    self.patrolling.send_sebs_msg(None, None)
                     goal = self.searching.search_step()
                 
                 else:
@@ -252,7 +255,7 @@ class Main:
                 
             # Once start allowed, handle robot messages (main loop)
             if self.ok_start == True:
-                if message.get("type") == "sebs" and self.robot_state == 'patrolling':
+                if message.get("type") == "sebs":
                     self.patrolling.receive_sebs_message(message)
                     
                 elif message.get("type") == "signal":
