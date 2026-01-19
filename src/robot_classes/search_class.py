@@ -74,7 +74,7 @@ class Searcher:
         self.step_distance = step_distance
         self.server_pub = server_pub # For sending communications
         
-        if rospy.get_param("~delay_signal_start", False):
+        if rospy.get_param("~delay_signal_start"): # if waiting for signal start message, signal_start is false (set to true in read_inbox)
             self.signal_start = False
         else:
             self.signal_start = True
@@ -89,11 +89,12 @@ class Searcher:
         
         self.read_signal(start_time) # update initial parameters 
         
-    def read_signal(self, current_time):
+    def read_signal(self, current_time, current_state, measure):
         """
         Reads signal data from get_signal_data service (running from signal_detection package)
         also updates robot pose 
         """  
+        new_state = None
         try:
             
             resp = self.get_signal_data()
@@ -101,22 +102,27 @@ class Searcher:
             self.pose_y = resp.y
             self.pose_yaw = resp.yaw
             
-            if self.signal_start == True:
+            if self.signal_start and measure:    
                 self.rssi_avg = resp.avg_rssi
                 self.rssi_raw = resp.rssi_val
             
                 if self.source_found[0] == False:
-                # update personal and global best
+                    # return to patrol if source found
+                    if current_state == 'patrolling':
+                        new_state = 'searching'
+                    # update personal and global best
                     if self.rssi_avg > self.p_best[0]:
                         self.p_best = (self.rssi_avg, (self.pose_x,self.pose_y))
                         if self.rssi_avg > self.g_best[0]:
                             self.g_best = self.p_best
                             self.isbest = True
                             self.last_gbest_update = current_time
-        
+
         except rospy.ServiceException as e:
             rospy.logerr("Service call failed: %s", e)
-    
+            
+        return new_state
+        
     def send_signal_message(self):
         Message = { 
             'source':self.id,
@@ -135,6 +141,10 @@ class Searcher:
         
         if message['g_best'][0] > self.g_best[0]:
             rospy.loginfo(f"- COMMS - Updating GBest from {self.g_best} to {message['g_best']}")
+            if self.source_found[0] == True:
+                rospy.logerr("ERROR: SOURCE FOUND BUT RECEIVED BETTER GBEST FROM ANOTHER ROBOT ===========================")
+                rospy.loginfo(f"current gbest: {self.g_best}, received gbest: {message['g_best']}, source found: {self.source_found}, robot id: {self.id}, other robot id: {message['source']}")
+                rospy.logerr("===========================================================================================")
             self.g_best = message['g_best']
             self.isbest = False
             self.last_gbest_update = current_time
@@ -331,13 +341,19 @@ class Searcher:
             rospy.loginfo(f"New pose safe after: {new_pose_count}")
         return goal
         
-    
-    def HYBRID_step(self):
-        if self.isbest:
-            rospy.loginfo(f"Using ECOLI step (isbest={self.isbest})")
-            return self.ECOLI_step()
-        else:
-            rospy.loginfo(f"Using PSO step (isbest={self.isbest})")
-            return self.PSO_step()
-            
-
+    def search_step(self):
+        """
+        Chooses and performs a search step based on the selected search method
+        returns goal
+        """
+        if self.searching.search_method == 'PSO':
+            return self.searching.PSO_step()
+        elif self.searching.search_method == 'ECOLI':
+            return self.searching.ECOLI_step()
+        elif self.searching.search_method == 'HYBRID':
+            if self.isbest:
+                rospy.loginfo(f"Using ECOLI step (isbest={self.isbest})")
+                return self.ECOLI_step()
+            else:
+                rospy.loginfo(f"Using PSO step (isbest={self.isbest})")
+                return self.PSO_step()

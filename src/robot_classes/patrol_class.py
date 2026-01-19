@@ -174,6 +174,8 @@ class Patroller:
         
         self.send_sebs_msg(current_node, arrival_time)
         
+        return self.set_nav_goal()
+        
         
     def calculate_node_idleness(self, node, current_time):
         """
