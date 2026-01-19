@@ -20,6 +20,7 @@ step_distance: 0.5 # Search step in m (for ecoli primarily but maybe for PSO lim
 bad_diff: 1  # RSSI difference to consider a move bad in ECOLI (i.e. if new_rssi < prev_rssi - bad_diff, its bad)
 search_end_timer: 3 #3 # time in mins, how long of gbest not moving until it is accepted as final estimate
 delay_signal_start: False # Whether to delay the signal being read until a "signal_on" message is received
+patrollers_measure: True # Whether patrollers can take signal measurements
 
 #PSO
 repulsion_strength: 2 # repulsion for C-PSO (IN METRES)
