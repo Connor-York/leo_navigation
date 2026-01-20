@@ -106,8 +106,8 @@ class Searcher:
                 self.rssi_raw = resp.rssi_val
             
                 if self.source_found[0] == False:
-                    # return to patrol if source found
-                    if current_state == 'patrolling':
+                    # start search if first reading
+                    if current_state == 'patrolling' and self.rssi_avg > -999:
                         new_state = 'searching'
                     # update personal and global best
                     if self.rssi_avg > self.p_best[0]:
@@ -119,7 +119,7 @@ class Searcher:
 
         except rospy.ServiceException as e:
             rospy.logerr("Service call failed: %s", e)
-            
+
         return new_state
         
     def send_signal_message(self):
@@ -345,11 +345,11 @@ class Searcher:
         Chooses and performs a search step based on the selected search method
         returns goal
         """
-        if self.searching.search_method == 'PSO':
-            return self.searching.PSO_step()
-        elif self.searching.search_method == 'ECOLI':
-            return self.searching.ECOLI_step()
-        elif self.searching.search_method == 'HYBRID':
+        if self.search_method == 'PSO':
+            return self.PSO_step()
+        elif self.search_method == 'ECOLI':
+            return self.ECOLI_step()
+        elif self.search_method == 'HYBRID':
             if self.isbest:
                 rospy.loginfo(f"Using ECOLI step (isbest={self.isbest})")
                 return self.ECOLI_step()

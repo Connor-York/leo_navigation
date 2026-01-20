@@ -108,6 +108,9 @@ class Main:
             
             if self.patrol_flag or self.search_flag:
                 rospy.logerr(f"Flag set at start of loop: Patrol: {self.patrol_flag} | Search: {self.search_flag} ")
+                
+            if self.inbox.qsize() > 10:
+                rospy.logwarn(f"INBOX SIZE WARNING: Inbox size is {self.inbox.qsize()} messages")
             
             curr_time = time.time()
             elapsed_time = curr_time - self.start_time
@@ -123,10 +126,12 @@ class Main:
             self.read_signal(curr_time)
             if self.searching.source_found[0] == False:
                 self.check_found(curr_time) 
-                
-            rospy.loginfo(f" Flags - Patrol: {self.patrol_flag} | Search: {self.search_flag} ")
+            
+            if self.patrol_flag or self.search_flag:    
+                rospy.loginfo(f" Flags - Patrol: {self.patrol_flag} | Search: {self.search_flag} ")
             if self.patrol_flag and self.search_flag:
                 rospy.logerr("Flags are both set and should not be simultaneously")
+                
 
             self.searching.send_signal_message() 
             self.update_logs(curr_time, elapsed_time) 
@@ -291,7 +296,7 @@ class Main:
                 # Found it, return to patrol
                 self.patrol_flag = True
             else:
-                rospy.loginfo("Im not even best ? ")
+               rospy.logwarn("Im not even best ? ")
             
     def update_logs(self, curr_time, elapsed_time):
         """
