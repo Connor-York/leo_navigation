@@ -43,15 +43,14 @@ class Searcher:
         self.id = id
         self.search_method = rospy.get_param("~search_method")
         self.bad_diff = rospy.get_param("~bad_diff")
-        # self.pose_x = rospy.get_param("/amcl/initial_pose_x")
-        # self.pose_y = rospy.get_param("/amcl/initial_pose_y")
-        # self.pose_yaw = rospy.get_param("/amcl/initial_pose_a")
-        pose_str = rospy.get_param("/slam_toolbox/map_start_pose")
-        pose_list = ast.literal_eval(pose_str)
-        self.pose_x = pose_list[0]
-        self.pose_y = pose_list[1]
-        self.pose_yaw = pose_list[2]
-        print(f"START POSE: x={self.pose_x}, y={self.pose_y}, yaw={self.pose_yaw}")
+        self.pose_x = rospy.get_param("/amcl/initial_pose_x")
+        self.pose_y = rospy.get_param("/amcl/initial_pose_y")
+        self.pose_yaw = rospy.get_param("/amcl/initial_pose_a")
+        # pose_str = rospy.get_param("/slam_toolbox/map_start_pose")
+        # pose_list = ast.literal_eval(pose_str)
+        # self.pose_x = pose_list[0]
+        # self.pose_y = pose_list[1]
+        # self.pose_yaw = pose_list[2]
         self.rssi_avg = -999
         self.rssi_raw = -999
         
@@ -87,7 +86,7 @@ class Searcher:
         rospy.wait_for_service("check_pose_collision")
         self.check_collision = rospy.ServiceProxy("check_pose_collision", CheckPoseCollision)
         
-        self.read_signal(start_time) # update initial parameters 
+        self.read_signal(start_time, None, True) # update initial parameters 
         
     def read_signal(self, current_time, current_state, measure):
         """
