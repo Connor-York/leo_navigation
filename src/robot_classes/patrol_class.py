@@ -139,7 +139,7 @@ class Patroller:
             'time':arrival_time
         }
         self.server_pub.publish(json.dumps(Message))
-        rospy.loginfo(f"- COMMS - Sebs message sent: ")
+        #rospy.loginfo(f"- COMMS - Sebs message sent: ")
         #rospy.loginfo(f"Position: {Message['position']} | Intention: {Message['intention']} | T: {Message['time']}")
         
         
@@ -147,8 +147,8 @@ class Patroller:
         """
         Handles a received sebs message, updating intention table and believed node idleness
         """
-        rospy.loginfo(f"- COMMS - Received SEBS message from: ID {message['source']}: ")
-        rospy.loginfo(f"Position: {message['position']} | Intention: {message['intention']} | T: {message['time']}")
+        #rospy.loginfo(f"- COMMS - Received SEBS message from: ID {message['source']}: ")
+        #rospy.loginfo(f"Position: {message['position']} | Intention: {message['intention']} | T: {message['time']}")
         self.intention_table[message["source"]] = message["intention"]
         if message["position"] is not None:
             self.node_idleness[message["position"]] = message["time"]

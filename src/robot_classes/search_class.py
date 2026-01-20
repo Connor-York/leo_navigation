@@ -136,10 +136,10 @@ class Searcher:
     def receive_signal_message(self, message, current_state, current_time):
         new_state = None
         
-        rospy.loginfo(f"- COMMS - Signal message received from ID {message['source']}")
+        #rospy.loginfo(f"- COMMS - Signal message received from ID {message['source']}")
         
         if message['g_best'][0] > self.g_best[0]:
-            rospy.loginfo(f"- COMMS - Updating GBest from {self.g_best} to {message['g_best']}")
+            #rospy.loginfo(f"- COMMS - Updating GBest from {self.g_best} to {message['g_best']}")
             if self.source_found[0] == True:
                 rospy.logerr("ERROR: SOURCE FOUND BUT RECEIVED BETTER GBEST FROM ANOTHER ROBOT ===========================")
                 rospy.loginfo(f"current gbest: {self.g_best}, received gbest: {message['g_best']}, source found: {self.source_found}, robot id: {self.id}, other robot id: {message['source']}")
@@ -220,13 +220,13 @@ class Searcher:
         
         self.velocity = self.w * self.velocity + (self.c1 * r1 * (np.array(self.p_best[1]) - my_position)) + (self.c2 * r2 * (np.array(self.g_best[1]) - my_position))
         dist = np.linalg.norm(self.velocity)
-        rospy.loginfo(f"Velocity Vector before repulsion: {self.velocity} | Magnitude: {dist}")
+        #rospy.loginfo(f"Velocity Vector before repulsion: {self.velocity} | Magnitude: {dist}")
         if dist > self.step_distance:
             velocity_clamped = self.velocity * (self.step_distance / dist)
         else:
             velocity_clamped = self.velocity
         velocity_clamped = velocity_clamped + repulsion_vector 
-        rospy.loginfo(f"Velocity Vector after repulsion: {velocity_clamped} | Magnitude: {np.linalg.norm(velocity_clamped)}")
+        #rospy.loginfo(f"Velocity Vector after repulsion: {velocity_clamped} | Magnitude: {np.linalg.norm(velocity_clamped)}")
         
         new_position = my_position + velocity_clamped
         movement_vector = new_position - my_position

@@ -127,10 +127,15 @@ class Main:
             if self.searching.source_found[0] == False:
                 self.check_found(curr_time) 
             
-            if self.patrol_flag or self.search_flag:    
+            if self.patrol_flag or self.search_flag:     # fat error catch 
                 rospy.loginfo(f" Flags - Patrol: {self.patrol_flag} | Search: {self.search_flag} ")
-            if self.patrol_flag and self.search_flag:
-                rospy.logerr("Flags are both set and should not be simultaneously")
+                if self.patrol_flag and self.robot_state == "patrolling":
+                    rospy.logerror("Patrol flag set while already patrolling")
+                elif self.search_flag and self.robot_state == "searching":
+                    rospy.logwarn("Search flag set while already searching")
+                    
+                if self.patrol_flag and self.search_flag:
+                    rospy.logerr("Flags are both set and should not be simultaneously")
                 
 
             self.searching.send_signal_message() 
@@ -247,7 +252,7 @@ class Main:
             except queue.Empty:
                 break
             
-            rospy.loginfo(f"- COMS - Received message: {message}")
+            #rospy.loginfo(f"- COMS - Received message: {message}")
             
             # Handle server messages (start, signal_on) (prior to main loop, and in main loop)
             if message.get("source") == "server":
@@ -288,15 +293,13 @@ class Main:
         """
         Checks if gbest_timer has ran out without a new gbest update, if so declares source found
         """
-        if curr_time - self.searching.last_gbest_update > self.search_end_timer:
+        if self.searching.g_best[0] > -999 and self.searching.isbest and (curr_time - self.searching.last_gbest_update > self.search_end_timer):
             rospy.loginfo(f"========================================================FOUND IT. GBEST IS: {self.searching.g_best[0]}")
-            if self.searching.isbest:
-                rospy.loginfo("Source found :)")
-                self.searching.source_found = (True, self.searching.id)
-                # Found it, return to patrol
+            rospy.loginfo("Source found :)")
+            self.searching.source_found = (True, self.searching.id)
+            # Found it, return to patrol
+            if self.robot_state == 'searching':
                 self.patrol_flag = True
-            else:
-               rospy.logwarn("Im not even best ? ")
             
     def update_logs(self, curr_time, elapsed_time):
         """
