@@ -1,1 +1,3 @@
 logs
+src/__pycache__
+src/robot_classes/__pycache__
