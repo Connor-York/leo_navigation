@@ -26,7 +26,6 @@ class Main:
     def __init__(self):
         rospy.init_node('Robot_Main')
         
-        
         rpkg = rospkg.RosPack()
         self.package_path = rpkg.get_path("leo_navigation")
         
@@ -57,7 +56,7 @@ class Main:
         
         self.gbest_pub_point = rospy.Publisher(f'/gbest_point', PointStamped, queue_size=10)
         self.gbest_pub_text = rospy.Publisher(f'/gbest_text', Marker, queue_size=10)
-
+        
         # Move Base
         self.nav_client = self.nav_init()
         
@@ -95,7 +94,7 @@ class Main:
         rospy.loginfo("=== Okay, let's go ===")
             
         self.start_time = time.time() 
-        
+
         # Patrol
         self.patrolling = Patroller(self.id, self.package_path, self.server_pub, self.num_robots, self.start_time)
         
@@ -189,6 +188,8 @@ class Main:
         Initialise movebase client "nav_client" to send goals to
             Called in self.__init__
             Returns simpleactionclient object
+            !! Something here is updating /amcl/initial_pose_x/y/a params ??
+            Probably fine but just noting if it becomes an issue later.
         """
         nav_client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
         rospy.loginfo("- init - Waiting for move_base action server...")
@@ -334,7 +335,7 @@ class Main:
             writer.writerow(f"Trial No: {rospy.get_param('~trial_no')}")
             writer.writerow(f"Scenario: {rospy.get_param('~trial_scenario')}")
             writer.writerow(f"Robot Role: {self.role}")
-            writer.writerow(f"Search Method: {self.searching.search_method}")
+            writer.writerow(f"Search Method: {rospy.get_param('~search_method')}")
             writer.writerow(f"Number of Robots: {self.num_robots}")
             writer.writerow(f"Time to End (s): {self.time_to_end}")
             writer.writerow(f"Search End Timer (s): {self.search_end_timer}")
