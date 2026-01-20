@@ -14,8 +14,8 @@ static_layer:
 # http://wiki.ros.org/costmap_2d/hydro/obstacles
 obstacle_layer:
   max_obstacle_height: 0.3
-  obstacle_range: 2.5 #2.5
-  raytrace_range: 3.0
+  obstacle_range: 10 #2.5
+  raytrace_range: 10 #3.0
   footprint_clearing_enabled: true
   combination_method: 1
   track_unknown_space: true
