@@ -3,7 +3,7 @@
 
    <arg name="nav" default="true"/>
    <arg name="map_file" default="Office_New/office_new"/>   <!-- Map (.yaml for amcl)-->
-   <arg name="amcl_file" default="Office/amcl_1.yaml"/>          
+   <arg name="amcl_file" default="GE_1.yaml"/>          
    <arg name="mapping" default="false"/>
    <arg name="start_pose" default="[0.0, 0.0, 0.0]"/> <!-- Start Position (slam_toolbox)-->
 
