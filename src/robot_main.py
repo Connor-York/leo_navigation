@@ -37,7 +37,6 @@ class Main:
         self.save_path = f"{self.package_path}/logs/Robot{self.id}_{trial_scenario}_{trial_no}"    
         
         self.signallog = []
-        self.idlenesslog = []    
             
         # TODO: add csv logging stuff here
         
@@ -66,12 +65,11 @@ class Main:
         
         rospy.on_shutdown(self.cleanup)
         
-        self.server_pub.publish(json.dumps({'source': self.id, 'type': 'ready'}))
-        
         # Wait for start message from server if needed
         self.comm_start = rospy.get_param("~comm_start")
         if self.comm_start == True:
             rospy.loginfo("================== Waiting for start message from server to begin... ==================")
+            self.server_pub.publish(json.dumps({'source': self.id, 'type': 'ready'}))
             self.ok_start = False
         else:
             self.ok_start = True
@@ -94,6 +92,7 @@ class Main:
 
         self.start_time = time.time() 
         curr_time = 0.0
+        prev_time = 0.0
         rate = rospy.Rate(20) # signal reading spead is ~20Hz
         rospy.loginfo("=== Okay, let's go ===")
         
@@ -108,14 +107,18 @@ class Main:
         
         # Main Loop Proper
         while not rospy.is_shutdown():
-
+            
             curr_time = time.time() - self.start_time
+            
+            if curr_time - prev_time >= 1.0:
+                print(f"Elapsed time: {curr_time}s")
+                prev_time = curr_time
             
             if self.patrol_flag or self.search_flag:
                 rospy.logerr(f"Flag set at start of loop: Patrol: {self.patrol_flag} | Search: {self.search_flag} ")
                 
-            #if self.inbox.qsize() > 10:
-            rospy.logwarn(f"INBOX SIZE WARNING: Inbox size is {self.inbox.qsize()} messages")
+            if self.inbox.qsize() > 1:
+                rospy.logwarn(f"INBOX SIZE WARNING: Inbox size is {self.inbox.qsize()} messages")
             
             # Check for end of experiment
             if curr_time >= self.time_to_end:
@@ -163,7 +166,7 @@ class Main:
                 else:
                     goal_state = self.nav_client.get_state()
                     if goal_state == GoalStatus.SUCCEEDED:
-                        goal = self.patrolling.arrived_at_node()
+                        goal = self.patrolling.arrived_at_node(curr_time)
                     elif goal_state in [GoalStatus.ABORTED, GoalStatus.REJECTED, GoalStatus.RECALLED, GoalStatus.PREEMPTED]:
                         rospy.logerr(f"- GOAL - FAILURE, STATUS: {self.status_dict.get(goal_state, 'UNKNOWN')} --")
                     elif goal_state == GoalStatus.LOST:
@@ -307,27 +310,28 @@ class Main:
         """
         Updates log data each main loop
         """
-        self.signallog.append([curr_time, self.robot_state, self.searching.pose_x, self.searching.pose_y, self.searching.pose_yaw, self.searching.rssi_avg, self.searching.rssi_raw, self.searching.p_best[0], self.searching.p_best[1], self.searching.g_best[0], self.searching.g_best[1], self.searching.source_found])
+        self.patrolling.idlenesslog.append([curr_time, self.patrolling.current_goal, self.patrolling.node_idleness.copy(), 'reg'])
+        self.signallog.append([curr_time, self.robot_state, self.searching.pose_x, self.searching.pose_y, self.searching.pose_yaw, self.searching.rssi_avg, self.searching.rssi_raw, self.searching.p_best[0], self.searching.p_best[1][0], self.searching.p_best[1][1], self.searching.g_best[0], self.searching.g_best[1][0], self.searching.g_best[1][1], self.searching.source_found[0]])
 
     def log_data(self):
         if not os.path.exists(self.save_path):
-            os.mkdir(self.save_path)
+            os.makedirs(self.save_path)
         
         with open(f"{self.save_path}/signallog.csv", mode='w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(['elapsed_time', 'robot_state', 'x', 'y', 'yaw', 'rssi_avg', 'rssi_raw', 'pbest_val', 'pbest_pos', 'gbest_val', 'gbest_pos', 'signal_found'])
+            writer.writerow(['elapsed_time', 'robot_state', 'x', 'y', 'yaw', 'rssi_avg', 'rssi_raw', 'pbest_val', 'pbest_x', 'pbest_y', 'gbest_val', 'gbest_x', 'gbest_y', 'signal_found'])
             for row in self.signallog:
                 writer.writerow(row)
         
         with open(f"{self.save_path}/idlenesslog.csv", mode='w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(['elapsed_time', 'current_goal', 'idleness'])
+            writer.writerow(['elapsed_time', 'current_goal'] + [f'node_{i}' for i in range(len(self.patrolling.node_list))] + ['source'])
             
-            for row in self.idlenesslog:
+            for row in self.patrolling.idlenesslog:
                 current_time = row[0]
                 idleness_time_since = current_time - np.array(row[2])
                 # Write row (convert numpy array to list for CSV writing)
-                writer.writerow([current_time, row[1], idleness_time_since.tolist()])
+                writer.writerow([current_time, row[1]] + idleness_time_since.tolist() + [row[3]])
                 
         with open(f"{self.save_path}/sebs_sent_log.csv", mode='w', newline='') as file:
             writer = csv.writer(file)

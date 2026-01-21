@@ -35,6 +35,7 @@ class Patroller:
         self.node_idleness = np.full(len(self.node_list), start_time, dtype=np.float64) # node_idleness array is the last time each node was visited 
         self.sent_log = [] # curr_time , message['position'], message['intention']
         self.rec_log = [] # curr_time, message['source'], message['time'], message['position'], message['intention']
+        self.idlenesslog = [] # curr_time, self.current_goal, idleness array copy, node/message/reg (source of update)
         self.server_pub = server_pub # For sending communications
         
     def waypoint_gen(self, waypoint_csv):
@@ -153,7 +154,7 @@ class Patroller:
         if message["position"] is not None:
             self.node_idleness[message["position"]] = message["time"]
         self.rec_log.append([curr_time, message['source'], message['time'], message['position'], message['intention']])
-        self.idlenesslog.append([curr_time, self.current_goal, self.node_idleness.copy()])
+        self.idlenesslog.append([curr_time, self.current_goal, self.node_idleness.copy(), 'msg'])
             
     def arrived_at_node(self, curr_time):
         """
@@ -173,7 +174,7 @@ class Patroller:
             self.current_goal = self.cgg(current_node)
         
         self.send_sebs_msg(current_node, curr_time)
-        self.idlenesslog.append([curr_time, self.current_goal, self.node_idleness.copy()])
+        self.idlenesslog.append([curr_time, self.current_goal, self.node_idleness.copy(), 'node'])
         
         return self.set_nav_goal()
         
