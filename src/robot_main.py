@@ -67,6 +67,8 @@ class Main:
         
         rospy.on_shutdown(self.cleanup)
         
+        self.server_pub.publish(json.dumps({'source': self.id, 'type': 'ready'}))
+        
         # Wait for start message from server if needed
         self.comm_start = rospy.get_param("~comm_start")
         if self.comm_start == True:
