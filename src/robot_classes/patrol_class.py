@@ -15,7 +15,6 @@ class Patroller:
     def __init__(self, id, package_path, server_pub, num_robots, start_time):
         
         self.id = id
-        self.start_time = start_time
         
         # Initialise Patrolling 
         patrol_route = package_path + "/waypoints/" + rospy.get_param("~patrol_route")
@@ -33,8 +32,9 @@ class Patroller:
             rospy.signal_shutdown(f"Invalid patrol method.")
             
         self.intention_table = np.full(num_robots, -1, dtype=int)
-        self.node_idleness = np.full(len(self.node_list), self.start_time, dtype=np.float64) # node_idleness array is the last time each node was visited 
-        
+        self.node_idleness = np.full(len(self.node_list), start_time, dtype=np.float64) # node_idleness array is the last time each node was visited 
+        self.sent_log = [] # curr_time , message['position'], message['intention']
+        self.rec_log = [] # curr_time, message['source'], message['time'], message['position'], message['intention']
         self.server_pub = server_pub # For sending communications
         
     def waypoint_gen(self, waypoint_csv):
@@ -95,8 +95,7 @@ class Patroller:
                 adj_matrix[node][neighbour] = np.linalg.norm(node_coordinates - neighbour_coordinates)
         
         return adj_matrix, unit_adj
-        
-    
+
     def set_nav_goal(self):
         """
         Set Nav goal to current_goal
@@ -139,22 +138,24 @@ class Patroller:
             'time':arrival_time
         }
         self.server_pub.publish(json.dumps(Message))
+        self.sent_log.append([arrival_time, Message['position'], Message['intention']])
         #rospy.loginfo(f"- COMMS - Sebs message sent: ")
         #rospy.loginfo(f"Position: {Message['position']} | Intention: {Message['intention']} | T: {Message['time']}")
         
         
-    def receive_sebs_message(self, message):
+    def receive_sebs_message(self, message, curr_time):
         """
         Handles a received sebs message, updating intention table and believed node idleness
         """
-        #rospy.loginfo(f"- COMMS - Received SEBS message from: ID {message['source']}: ")
-        #rospy.loginfo(f"Position: {message['position']} | Intention: {message['intention']} | T: {message['time']}")
+        rospy.loginfo(f"- COMMS - Received SEBS message from: ID {message['source']}: ")
+        rospy.loginfo(f"Position: {message['position']} | Intention: {message['intention']} | T_msg: {message['time']} | T_now: {curr_time}")
         self.intention_table[message["source"]] = message["intention"]
         if message["position"] is not None:
             self.node_idleness[message["position"]] = message["time"]
+        self.rec_log.append([curr_time, message['source'], message['time'], message['position'], message['intention']])
+        self.idlenesslog.append([curr_time, self.current_goal, self.node_idleness.copy()])
             
-            
-    def arrived_at_node(self):
+    def arrived_at_node(self, curr_time):
         """
         Actions for an agent to take upon arriving at a set node (current_goal)
             Called at successful actionclient goal complete from Main.nav_cb
@@ -162,19 +163,17 @@ class Patroller:
             Calls relevant patrol method
         """
         
-        arrival_time = time.time()
         current_node = self.current_goal
         rospy.loginfo(f"- GOAL - Arrived at node: {current_node}")
-        rospy.loginfo(f"Idleness: {arrival_time - self.node_idleness[current_node]}")
-        self.node_idleness[current_node] = arrival_time
-        rospy.loginfo(f"Idleness after: {arrival_time - self.node_idleness[current_node]}")
+        self.node_idleness[current_node] = curr_time
         
         if self.patrol_method == "SEBS":
-            self.current_goal = self.sebs(current_node, arrival_time)
+            self.current_goal = self.sebs(current_node, curr_time)
         elif self.patrol_method == "CGG":
             self.current_goal = self.cgg(current_node)
         
-        self.send_sebs_msg(current_node, arrival_time)
+        self.send_sebs_msg(current_node, curr_time)
+        self.idlenesslog.append([curr_time, self.current_goal, self.node_idleness.copy()])
         
         return self.set_nav_goal()
         

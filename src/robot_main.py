@@ -30,7 +30,6 @@ class Main:
         self.package_path = rpkg.get_path("leo_navigation")
         
         # Logging
-        self.start_time = time.time()
         self.id = rospy.get_param("~robot_id")
         trial_no = str(rospy.get_param("~trial_no"))
         trial_scenario = rospy.get_param("~trial_scenario")
@@ -76,7 +75,6 @@ class Main:
             self.ok_start = False
         else:
             self.ok_start = True
-            self.start_time = time.time() 
 
         
         # Begin
@@ -91,22 +89,27 @@ class Main:
         
         while self.ok_start == False and not rospy.is_shutdown():
             # Wait for start message from server (or just start immediately if comm_start == False)
-            self.read_inbox(time.time())
+            self.read_inbox(0.0)
             rate.sleep()
 
+        self.start_time = time.time() 
+        curr_time = 0.0
         rate = rospy.Rate(20) # signal reading spead is ~20Hz
         rospy.loginfo("=== Okay, let's go ===")
+        
 
         # Patrol
-        self.patrolling = Patroller(self.id, self.package_path, self.server_pub, self.num_robots, self.start_time)
+        self.patrolling = Patroller(self.id, self.package_path, self.server_pub, self.num_robots, curr_time)
         
         # Search
         step_distance = rospy.get_param("~step_distance") # distance in metres to step each search step 
                             # (robot top speed is 0.4m/s so this is 1s of moving forward)
-        self.searching = Searcher(step_distance, self.num_robots, self.id, self.server_pub, self.start_time)
+        self.searching = Searcher(step_distance, self.num_robots, self.id, self.server_pub, curr_time)
         
         # Main Loop Proper
         while not rospy.is_shutdown():
+
+            curr_time = time.time() - self.start_time
             
             if self.patrol_flag or self.search_flag:
                 rospy.logerr(f"Flag set at start of loop: Patrol: {self.patrol_flag} | Search: {self.search_flag} ")
@@ -114,12 +117,9 @@ class Main:
             #if self.inbox.qsize() > 10:
             rospy.logwarn(f"INBOX SIZE WARNING: Inbox size is {self.inbox.qsize()} messages")
             
-            curr_time = time.time()
-            elapsed_time = curr_time - self.start_time
-            
             # Check for end of experiment
-            if elapsed_time >= self.time_to_end:
-                rospy.loginfo(f"Shutting down. Patrol Time Elapsed - T+{elapsed_time/60}s")
+            if curr_time >= self.time_to_end:
+                rospy.loginfo(f"Shutting down. Patrol Time Elapsed - T+{curr_time/60}s")
                 rospy.signal_shutdown("Patrol Time Elapsed")
                 break
             
@@ -141,7 +141,7 @@ class Main:
                 
 
             self.searching.send_signal_message() 
-            self.update_logs(curr_time, elapsed_time) 
+            self.update_logs(curr_time) 
             self.publish_gbest_visual() # publish for RVIZ visualisation (debugging)
             
 
@@ -260,7 +260,6 @@ class Main:
             if message.get("source") == "server":
                 if message.get("message") == "start" and self.comm_start == True:
                     self.ok_start = True
-                    self.start_time = time.time() 
                 elif message.get("message") == "signal_on":
                     self.searching.signal_start = True
                     rospy.loginfo("=== SIGNAL START ===")
@@ -270,7 +269,7 @@ class Main:
             # Once start allowed, handle robot messages (main loop)
             if self.ok_start == True:
                 if message.get("type") == "sebs":
-                    self.patrolling.receive_sebs_message(message)
+                    self.patrolling.receive_sebs_message(message, curr_time)
                     
                 elif message.get("type") == "signal":
                     new_state = self.searching.receive_signal_message(message, self.robot_state, curr_time)
@@ -304,14 +303,11 @@ class Main:
             if self.robot_state == 'searching':
                 self.patrol_flag = True
             
-    def update_logs(self, curr_time, elapsed_time):
+    def update_logs(self, curr_time):
         """
         Updates log data each main loop
         """
-        if self.robot_state == 'patrolling':
-            self.idlenesslog.append([curr_time, self.patrolling.current_goal, self.patrolling.node_idleness.copy()])
-        self.signallog.append([elapsed_time, self.robot_state, self.searching.pose_x, self.searching.pose_y, self.searching.pose_yaw, self.searching.rssi_avg, self.searching.rssi_raw, self.searching.p_best[0], self.searching.p_best[1], self.searching.g_best[0], self.searching.g_best[1], self.searching.source_found])
-        
+        self.signallog.append([curr_time, self.robot_state, self.searching.pose_x, self.searching.pose_y, self.searching.pose_yaw, self.searching.rssi_avg, self.searching.rssi_raw, self.searching.p_best[0], self.searching.p_best[1], self.searching.g_best[0], self.searching.g_best[1], self.searching.source_found])
 
     def log_data(self):
         if not os.path.exists(self.save_path):
@@ -329,16 +325,22 @@ class Main:
             
             for row in self.idlenesslog:
                 current_time = row[0]
-                
-                # Convert to time since last visit using NumPy and round to 2 decimal places
-                idleness_time_since = np.round(current_time - np.array(row[2]), 2)
-                
-                # Convert elapsed time
-                elapsed_time = np.round(current_time - self.start_time, 2)
-                
+                idleness_time_since = current_time - np.array(row[2])
                 # Write row (convert numpy array to list for CSV writing)
-                writer.writerow([elapsed_time, row[1], idleness_time_since.tolist()])
+                writer.writerow([current_time, row[1], idleness_time_since.tolist()])
                 
+        with open(f"{self.save_path}/sebs_sent_log.csv", mode='w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['elapsed_time', 'position', 'intention'])
+            for row in self.patrolling.sent_log:
+                writer.writerow(row)
+                
+        with open(f"{self.save_path}/sebs_rec_log.csv", mode='w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['elapsed_time', 'source', 'time_msg', 'position', 'intention'])
+            for row in self.patrolling.rec_log:
+                writer.writerow(row)
+
         with open(f"{self.save_path}/robot_params.txt", mode='w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow("Robot Parameters: ")
