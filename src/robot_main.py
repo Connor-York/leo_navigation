@@ -74,6 +74,8 @@ class Main:
             self.ok_start = False
         else:
             self.ok_start = True
+            self.start_time = time.time() 
+
         
         # Begin
         self.main_loop()
@@ -92,8 +94,6 @@ class Main:
 
         rate = rospy.Rate(20) # signal reading spead is ~20Hz
         rospy.loginfo("=== Okay, let's go ===")
-            
-        self.start_time = time.time() 
 
         # Patrol
         self.patrolling = Patroller(self.id, self.package_path, self.server_pub, self.num_robots, self.start_time)
@@ -109,8 +109,8 @@ class Main:
             if self.patrol_flag or self.search_flag:
                 rospy.logerr(f"Flag set at start of loop: Patrol: {self.patrol_flag} | Search: {self.search_flag} ")
                 
-            if self.inbox.qsize() > 10:
-                rospy.logwarn(f"INBOX SIZE WARNING: Inbox size is {self.inbox.qsize()} messages")
+            #if self.inbox.qsize() > 10:
+            rospy.logwarn(f"INBOX SIZE WARNING: Inbox size is {self.inbox.qsize()} messages")
             
             curr_time = time.time()
             elapsed_time = curr_time - self.start_time
@@ -258,6 +258,7 @@ class Main:
             if message.get("source") == "server":
                 if message.get("message") == "start" and self.comm_start == True:
                     self.ok_start = True
+                    self.start_time = time.time() 
                 elif message.get("message") == "signal_on":
                     self.searching.signal_start = True
                     rospy.loginfo("=== SIGNAL START ===")
