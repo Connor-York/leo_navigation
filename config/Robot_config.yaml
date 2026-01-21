@@ -4,7 +4,7 @@ robot_id: 0
 trial_scenario: SEBS_TEST
 
 #Experiment Parameters
-time_to_end: 2     # time in minutes   
+time_to_end: 5     # time in minutes   
 robot_role: searcher #"patroller", "searcher"
 num_robots: 2 # if using the server to send signal measurements it needs to be accounted for
 
