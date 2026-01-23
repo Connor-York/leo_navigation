@@ -128,6 +128,7 @@ class Patroller:
         """
         Constructs and sends a sebs message, to be called when agent arrives at a goal node
         """
+        
         if current_node == self.current_goal:
             rospy.logerr(f"Current Node {current_node} is the same as goal {self.current_goal} when sending sebs message.")
         
@@ -136,7 +137,7 @@ class Patroller:
             'type':"sebs",
             'position':current_node, 
             'intention':self.current_goal,
-            'time':arrival_time
+            't_sent':arrival_time
         }
         self.server_pub.publish(json.dumps(Message))
         self.sent_log.append([arrival_time, Message['position'], Message['intention']])
@@ -148,12 +149,12 @@ class Patroller:
         """
         Handles a received sebs message, updating intention table and believed node idleness
         """
-        rospy.loginfo(f"- COMMS - Received SEBS message from: ID {message['source']}: ")
-        rospy.loginfo(f"Position: {message['position']} | Intention: {message['intention']} | T_msg: {message['time']} | T_now: {curr_time}")
+        #rospy.loginfo(f"- COMMS - Received SEBS message from: ID {message['source']}: ")
+        #rospy.loginfo(f"Position: {message['position']} | Intention: {message['intention']} | T_msg: {message['t_sent']} | T_now: {curr_time} | Diff: {curr_time - message['t_sent']}")
         self.intention_table[message["source"]] = message["intention"]
         if message["position"] is not None:
-            self.node_idleness[message["position"]] = message["time"]
-        self.rec_log.append([curr_time, message['source'], message['time'], message['position'], message['intention']])
+            self.node_idleness[message["position"]] = message["t_sent"]
+        self.rec_log.append([curr_time, message['source'], message['t_sent'], message['position'], message['intention']])
         self.idlenesslog.append([curr_time, self.current_goal, self.node_idleness.copy(), 'msg'])
             
     def arrived_at_node(self, curr_time):
@@ -174,6 +175,7 @@ class Patroller:
             self.current_goal = self.cgg(current_node)
         
         self.send_sebs_msg(current_node, curr_time)
+        
         self.idlenesslog.append([curr_time, self.current_goal, self.node_idleness.copy(), 'node'])
         
         return self.set_nav_goal()
@@ -233,7 +235,7 @@ class Patroller:
                     p_gain_state = math.pow(2, num_agents - count) / (math.pow(2, num_agents) - 1.0)
                     posterior_probability[i] *= p_gain_state
                 
-                rospy.loginfo(f"- SEBS - Neighbour: {neighbour_id} | Idleness: {self.calculate_node_idleness(neighbour_id, current_time):.2f} | Edge weight: {neighbour_edge_weight1:.2f}, {neighbour_edge_weight:.2f} | Gain: {gain:.2f} | Intentions: {count} | Posterior prob: {posterior_probability[i]:.4f}")
+                #rospy.loginfo(f"- SEBS - Neighbour: {neighbour_id} | Idleness: {self.calculate_node_idleness(neighbour_id, current_time):.2f} | Edge weight: {neighbour_edge_weight1:.2f}, {neighbour_edge_weight:.2f} | Gain: {gain:.2f} | Intentions: {count} | Posterior prob: {posterior_probability[i]:.4f}")
             # Choose the one in the posterior probability with the largest value
             # return a numpy array, and if there are more than one include the index that each are found at
             # Return the 0th element of the tuple, as np.where returns a tuple
@@ -253,7 +255,7 @@ class Patroller:
             # if only one go there
             next_goal = neighbours[0]
 
-        rospy.loginfo(f"- SEBS - New goal node: {next_goal}")
+        #rospy.loginfo(f"- SEBS - New goal node: {next_goal}")
         return int(next_goal)
     
     def cgg(self, current_node):

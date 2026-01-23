@@ -73,6 +73,7 @@ class Main:
             self.ok_start = False
         else:
             self.ok_start = True
+            self.start_time = time.time()
 
         
         # Begin
@@ -90,9 +91,8 @@ class Main:
             self.read_inbox(0.0)
             rate.sleep()
 
-        self.start_time = time.time() 
-        curr_time = 0.0
-        prev_time = 0.0
+        curr_time = prev_time = prev_message_time = self.start_time
+        message_rate = max(0.05, 1.0 / rospy.get_param("~message_rate")) # seconds between messages, min 0.05s (20Hz)
         rate = rospy.Rate(20) # signal reading spead is ~20Hz
         rospy.loginfo("=== Okay, let's go ===")
         
@@ -108,16 +108,16 @@ class Main:
         # Main Loop Proper
         while not rospy.is_shutdown():
             
-            curr_time = time.time() - self.start_time
+            curr_time = time.time()
             
             if curr_time - prev_time >= 1.0:
-                print(f"Elapsed time: {curr_time}s")
+                rospy.loginfo(f"Elapsed time: {curr_time}s")
                 prev_time = curr_time
             
             if self.patrol_flag or self.search_flag:
                 rospy.logerr(f"Flag set at start of loop: Patrol: {self.patrol_flag} | Search: {self.search_flag} ")
                 
-            if self.inbox.qsize() > 1:
+            if self.inbox.qsize() > 5:
                 rospy.logwarn(f"INBOX SIZE WARNING: Inbox size is {self.inbox.qsize()} messages")
             
             # Check for end of experiment
@@ -131,6 +131,11 @@ class Main:
             self.read_signal(curr_time)
             if self.searching.source_found[0] == False:
                 self.check_found(curr_time) 
+                
+            if curr_time - prev_message_time >= message_rate:
+                rospy.logwarn(f"Sending signal message diff = {curr_time-prev_message_time}")
+                self.searching.send_signal_message(curr_time) 
+                prev_message_time = curr_time
             
             if self.patrol_flag or self.search_flag:     # fat error catch 
                 rospy.loginfo(f" Flags - Patrol: {self.patrol_flag} | Search: {self.search_flag} ")
@@ -143,10 +148,8 @@ class Main:
                     rospy.logerr("Flags are both set and should not be simultaneously")
                 
 
-            self.searching.send_signal_message() 
             self.update_logs(curr_time) 
             self.publish_gbest_visual() # publish for RVIZ visualisation (debugging)
-            
 
             # Get next goal
             goal = None
@@ -168,7 +171,8 @@ class Main:
                     if goal_state == GoalStatus.SUCCEEDED:
                         goal = self.patrolling.arrived_at_node(curr_time)
                     elif goal_state in [GoalStatus.ABORTED, GoalStatus.REJECTED, GoalStatus.RECALLED, GoalStatus.PREEMPTED]:
-                        rospy.logerr(f"- GOAL - FAILURE, STATUS: {self.status_dict.get(goal_state, 'UNKNOWN')} --")
+                        rospy.logerr(f"- GOAL - FAILURE, STATUS: {self.status_dict.get(goal_state, 'UNKNOWN')} -- TRYING AGAIN")
+                        goal = self.patrolling.set_nav_goal() # re-attempt current goal
                     elif goal_state == GoalStatus.LOST:
                         rospy.logwarn(f"- GOAL - None set, setting to current goal node (should only happen at start) ")
                         goal = self.patrolling.set_nav_goal()
@@ -187,14 +191,15 @@ class Main:
                     goal_state = self.nav_client.get_state()
                     if goal_state == GoalStatus.SUCCEEDED:
                         goal = self.searching.search_step()
+                        self.searching.current_goal = goal  # Store for re-attempt if needed
                     elif goal_state in [GoalStatus.ABORTED, GoalStatus.REJECTED, GoalStatus.RECALLED, GoalStatus.PREEMPTED]:
-                        rospy.logerr(f"- GOAL - FAILURE, STATUS: {self.status_dict.get(goal_state, 'UNKNOWN')} --")
+                        rospy.logerr(f"- GOAL - FAILURE, STATUS: {self.status_dict.get(goal_state, 'UNKNOWN')} -- TRYING AGAIN")
+                        goal = self.searching.current_goal 
                     elif goal_state == GoalStatus.LOST:
                         rospy.logwarn(f"- GOAL - None set ")
             
             if goal is not None:
                 self.nav_client.send_goal(goal)
-                        
             rate.sleep()
             
     
@@ -244,6 +249,7 @@ class Main:
         Callback to handle communications, queues them to agent inbox
         """
         data = json.loads(msg.data)
+        rospy.loginfo(f"Received message: t_sent {data.get('t_sent', 'N/A')} | raw: {data.get('raw_time', 'N/A')} | diff_cb {time.time() - data.get('raw_time', 0.0)}")
         self.inbox.put(data)
     
     

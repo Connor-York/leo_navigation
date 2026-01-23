@@ -65,6 +65,7 @@ class Searcher:
         self.c1 = rospy.get_param("~c1")
         self.c2 = rospy.get_param("~c2")
         self.w = rospy.get_param("~w")
+        self.current_goal = None # To store current goal for re-attempting if failed
         
         self.agent_positions = [None] * num_agents
         self.source_found = (False, None) # Bool: Found? ID of agent that found it
@@ -122,21 +123,27 @@ class Searcher:
 
         return new_state
         
-    def send_signal_message(self):
+    def send_signal_message(self, curr_time):
         Message = { 
             'source':self.id,
             'type':"signal",
             'source_found':self.source_found,
             'position':(self.pose_x, self.pose_y), 
-            'g_best':self.g_best
+            'g_best':self.g_best,
+            't_sent':curr_time,
+            'raw_time':time.time()
         }
         self.server_pub.publish(json.dumps(Message))
+        #rospy.loginfo(f"- COMMS - Signal message sent, t={curr_time}")
         #rospy.loginfo(f"- COMMS - Signal message sent")
         
     def receive_signal_message(self, message, current_state, current_time):
         new_state = None
         
         #rospy.loginfo(f"- COMMS - Signal message received from ID {message['source']}")
+        #rospy.loginfo(f"- COMMS - Signal message received, received t={current_time}, sent t={message['t_sent']} | diff = {current_time-message['t_sent']}")
+        now = time.time()
+        #rospy.loginfo(f"- RAW - Signal Sent: {message['raw_time']} Received: {now} | diff {now-message['raw_time']}")
         
         if message['g_best'][0] > self.g_best[0]:
             #rospy.loginfo(f"- COMMS - Updating GBest from {self.g_best} to {message['g_best']}")
