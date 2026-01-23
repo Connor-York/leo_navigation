@@ -145,10 +145,11 @@ class Patroller:
         #rospy.loginfo(f"Position: {Message['position']} | Intention: {Message['intention']} | T: {Message['time']}")
         
         
-    def receive_sebs_message(self, message, curr_time):
+    def receive_sebs_message(self, message):
         """
         Handles a received sebs message, updating intention table and believed node idleness
         """
+        curr_time = time.time()
         #rospy.loginfo(f"- COMMS - Received SEBS message from: ID {message['source']}: ")
         #rospy.loginfo(f"Position: {message['position']} | Intention: {message['intention']} | T_msg: {message['t_sent']} | T_now: {curr_time} | Diff: {curr_time - message['t_sent']}")
         self.intention_table[message["source"]] = message["intention"]
@@ -157,7 +158,7 @@ class Patroller:
         self.rec_log.append([curr_time, message['source'], message['t_sent'], message['position'], message['intention']])
         self.idlenesslog.append([curr_time, self.current_goal, self.node_idleness.copy(), 'msg'])
             
-    def arrived_at_node(self, curr_time):
+    def arrived_at_node(self):
         """
         Actions for an agent to take upon arriving at a set node (current_goal)
             Called at successful actionclient goal complete from Main.nav_cb
@@ -167,6 +168,7 @@ class Patroller:
         
         current_node = self.current_goal
         rospy.loginfo(f"- GOAL - Arrived at node: {current_node}")
+        curr_time = time.time()
         self.node_idleness[current_node] = curr_time
         
         if self.patrol_method == "SEBS":

@@ -73,7 +73,6 @@ class Main:
             self.ok_start = False
         else:
             self.ok_start = True
-            self.start_time = time.time()
 
         
         # Begin
@@ -91,7 +90,7 @@ class Main:
             self.read_inbox(0.0)
             rate.sleep()
 
-        curr_time = prev_time = prev_message_time = self.start_time
+        curr_time = prev_message_time = self.start_time = time.time()
         message_rate = max(0.05, 1.0 / rospy.get_param("~message_rate")) # seconds between messages, min 0.05s (20Hz)
         rate = rospy.Rate(20) # signal reading spead is ~20Hz
         rospy.loginfo("=== Okay, let's go ===")
@@ -108,12 +107,6 @@ class Main:
         # Main Loop Proper
         while not rospy.is_shutdown():
             
-            curr_time = time.time()
-            
-            if curr_time - prev_time >= 1.0:
-                rospy.loginfo(f"Elapsed time: {curr_time}s")
-                prev_time = curr_time
-            
             if self.patrol_flag or self.search_flag:
                 rospy.logerr(f"Flag set at start of loop: Patrol: {self.patrol_flag} | Search: {self.search_flag} ")
                 
@@ -121,17 +114,18 @@ class Main:
                 rospy.logwarn(f"INBOX SIZE WARNING: Inbox size is {self.inbox.qsize()} messages")
             
             # Check for end of experiment
-            if curr_time >= self.time_to_end:
-                rospy.loginfo(f"Shutting down. Patrol Time Elapsed - T+{curr_time/60}s")
+            if time.time() - self.start_time >= self.time_to_end:
+                rospy.loginfo(f"Shutting down. Patrol Time Elapsed - {rospy.get_param('~time_to_end')} + {(time.time() - self.start_time)}s")
                 rospy.signal_shutdown("Patrol Time Elapsed")
                 break
             
             # read comms and signal, check if you found the source, update state accordingly
-            self.read_inbox(curr_time)            
-            self.read_signal(curr_time)
+            self.read_inbox()            
+            self.read_signal()
             if self.searching.source_found[0] == False:
-                self.check_found(curr_time) 
-                
+                self.check_found() 
+            
+            curr_time = time.time()
             if curr_time - prev_message_time >= message_rate:
                 rospy.logwarn(f"Sending signal message diff = {curr_time-prev_message_time}")
                 self.searching.send_signal_message(curr_time) 
@@ -148,7 +142,7 @@ class Main:
                     rospy.logerr("Flags are both set and should not be simultaneously")
                 
 
-            self.update_logs(curr_time) 
+            self.update_logs() 
             self.publish_gbest_visual() # publish for RVIZ visualisation (debugging)
 
             # Get next goal
@@ -169,7 +163,7 @@ class Main:
                 else:
                     goal_state = self.nav_client.get_state()
                     if goal_state == GoalStatus.SUCCEEDED:
-                        goal = self.patrolling.arrived_at_node(curr_time)
+                        goal = self.patrolling.arrived_at_node()
                     elif goal_state in [GoalStatus.ABORTED, GoalStatus.REJECTED, GoalStatus.RECALLED, GoalStatus.PREEMPTED]:
                         rospy.logerr(f"- GOAL - FAILURE, STATUS: {self.status_dict.get(goal_state, 'UNKNOWN')} -- TRYING AGAIN")
                         goal = self.patrolling.set_nav_goal() # re-attempt current goal
@@ -249,11 +243,11 @@ class Main:
         Callback to handle communications, queues them to agent inbox
         """
         data = json.loads(msg.data)
-        rospy.loginfo(f"Received message: t_sent {data.get('t_sent', 'N/A')} | raw: {data.get('raw_time', 'N/A')} | diff_cb {time.time() - data.get('raw_time', 0.0)}")
+        #rospy.loginfo(f"Received message: t_sent {data.get('t_sent', 'N/A')} | raw: {data.get('raw_time', 'N/A')} | diff_cb {time.time() - data.get('raw_time', 0.0)}")
         self.inbox.put(data)
     
     
-    def read_inbox(self, curr_time):
+    def read_inbox(self):
         """
         Empties inbox passing messages to relevant handlers, called every loop
         """
@@ -270,7 +264,6 @@ class Main:
                 if message.get("message") == "start" and self.comm_start == True:
                     self.ok_start = True
                 elif message.get("message") == "signal_on":
-                    self.searching.signal_start = True
                     rospy.loginfo("=== SIGNAL START ===")
                 else:
                     rospy.logwarn(f"- COMS - Unknown server message: {message}")
@@ -278,10 +271,10 @@ class Main:
             # Once start allowed, handle robot messages (main loop)
             if self.ok_start == True:
                 if message.get("type") == "sebs":
-                    self.patrolling.receive_sebs_message(message, curr_time)
+                    self.patrolling.receive_sebs_message(message)
                     
                 elif message.get("type") == "signal":
-                    new_state = self.searching.receive_signal_message(message, self.robot_state, curr_time)
+                    new_state = self.searching.receive_signal_message(message, self.robot_state)
                     if new_state is not None and self.role == 'searcher':
                         if new_state == 'searching':
                             self.search_flag = True
@@ -289,22 +282,22 @@ class Main:
                             self.patrol_flag = True
 
                 
-    def read_signal(self, curr_time):
+    def read_signal(self):
         """
         Reads signal data from searching class, updates state if needed
         """
-        new_state = self.searching.read_signal(curr_time, self.robot_state,True if (self.role == 'searcher' or self.patrollers_measure ) else False)
+        new_state = self.searching.read_signal(self.robot_state, True if (self.role == 'searcher' or self.patrollers_measure ) else False)
         if self.role == 'searcher':
             # State change from read_signal is only patrol -> search (otherwise new_state = None)
             if new_state is not None:
                 self.search_flag = True
             
 
-    def check_found(self, curr_time):
+    def check_found(self):
         """
         Checks if gbest_timer has ran out without a new gbest update, if so declares source found
         """
-        if self.searching.g_best[0] > -999 and self.searching.isbest and (curr_time - self.searching.last_gbest_update > self.search_end_timer):
+        if self.searching.g_best[0] > -999 and self.searching.isbest and (time.time() - self.searching.last_gbest_update > self.search_end_timer):
             rospy.loginfo(f"========================================================FOUND IT. GBEST IS: {self.searching.g_best[0]}")
             rospy.loginfo("Source found :)")
             self.searching.source_found = (True, self.searching.id)
@@ -312,10 +305,11 @@ class Main:
             if self.robot_state == 'searching':
                 self.patrol_flag = True
             
-    def update_logs(self, curr_time):
+    def update_logs(self):
         """
         Updates log data each main loop
         """
+        curr_time = time.time()
         self.patrolling.idlenesslog.append([curr_time, self.patrolling.current_goal, self.patrolling.node_idleness.copy(), 'reg'])
         self.signallog.append([curr_time, self.robot_state, self.searching.pose_x, self.searching.pose_y, self.searching.pose_yaw, self.searching.rssi_avg, self.searching.rssi_raw, self.searching.p_best[0], self.searching.p_best[1][0], self.searching.p_best[1][1], self.searching.g_best[0], self.searching.g_best[1][0], self.searching.g_best[1][1], self.searching.source_found[0]])
 
@@ -325,13 +319,13 @@ class Main:
         
         with open(f"{self.save_path}/signallog.csv", mode='w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(['elapsed_time', 'robot_state', 'x', 'y', 'yaw', 'rssi_avg', 'rssi_raw', 'pbest_val', 'pbest_x', 'pbest_y', 'gbest_val', 'gbest_x', 'gbest_y', 'signal_found'])
+            writer.writerow(['time', 'robot_state', 'x', 'y', 'yaw', 'rssi_avg', 'rssi_raw', 'pbest_val', 'pbest_x', 'pbest_y', 'gbest_val', 'gbest_x', 'gbest_y', 'signal_found'])
             for row in self.signallog:
                 writer.writerow(row)
         
         with open(f"{self.save_path}/idlenesslog.csv", mode='w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(['elapsed_time', 'current_goal'] + [f'node_{i}' for i in range(len(self.patrolling.node_list))] + ['source'])
+            writer.writerow(['time', 'current_goal'] + [f'node_{i}' for i in range(len(self.patrolling.node_list))] + ['source'])
             
             for row in self.patrolling.idlenesslog:
                 current_time = row[0]
@@ -341,13 +335,13 @@ class Main:
                 
         with open(f"{self.save_path}/sebs_sent_log.csv", mode='w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(['elapsed_time', 'position', 'intention'])
+            writer.writerow(['time', 'position', 'intention'])
             for row in self.patrolling.sent_log:
                 writer.writerow(row)
                 
         with open(f"{self.save_path}/sebs_rec_log.csv", mode='w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(['elapsed_time', 'source', 'time_msg', 'position', 'intention'])
+            writer.writerow(['time', 'source', 'time_msg', 'position', 'intention'])
             for row in self.patrolling.rec_log:
                 writer.writerow(row)
 
@@ -363,6 +357,7 @@ class Main:
             writer.writerow(f"Time to End (s): {self.time_to_end}")
             writer.writerow(f"Search End Timer (s): {self.search_end_timer}")
             writer.writerow(f"Patrollers Measure: {self.patrollers_measure}")
+            writer.writerow(f"Start Time: {self.start_time}")
             
     def publish_gbest_visual(self):
         point_msg = PointStamped()

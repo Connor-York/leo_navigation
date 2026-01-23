@@ -87,9 +87,9 @@ class Searcher:
         rospy.wait_for_service("check_pose_collision")
         self.check_collision = rospy.ServiceProxy("check_pose_collision", CheckPoseCollision)
         
-        self.read_signal(start_time, None, True) # update initial parameters 
+        self.read_signal(None, True) # update initial parameters 
         
-    def read_signal(self, current_time, current_state, measure):
+    def read_signal(self, current_state, measure):
         """
         Reads signal data from get_signal_data service (running from signal_detection package)
         also updates robot pose 
@@ -116,7 +116,7 @@ class Searcher:
                         if self.rssi_avg > self.g_best[0]:
                             self.g_best = self.p_best
                             self.isbest = True
-                            self.last_gbest_update = current_time
+                            self.last_gbest_update = time.time()
 
         except rospy.ServiceException as e:
             rospy.logerr("Service call failed: %s", e)
@@ -130,8 +130,7 @@ class Searcher:
             'source_found':self.source_found,
             'position':(self.pose_x, self.pose_y), 
             'g_best':self.g_best,
-            't_sent':curr_time,
-            'raw_time':time.time()
+            't_sent':curr_time
         }
         self.server_pub.publish(json.dumps(Message))
         #rospy.loginfo(f"- COMMS - Signal message sent, t={curr_time}")
