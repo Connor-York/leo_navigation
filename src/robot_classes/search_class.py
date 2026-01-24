@@ -114,6 +114,7 @@ class Searcher:
                     if self.rssi_avg > self.p_best[0]:
                         self.p_best = (self.rssi_avg, (self.pose_x,self.pose_y))
                         if self.rssi_avg > self.g_best[0]:
+                            rospy.loginfo(f"- SEARCH - Updating GBest from {self.g_best} to {self.p_best} (rssi_avg)")
                             self.g_best = self.p_best
                             self.isbest = True
                             self.last_gbest_update = time.time()
@@ -145,7 +146,7 @@ class Searcher:
         #rospy.loginfo(f"- RAW - Signal Sent: {message['raw_time']} Received: {now} | diff {now-message['raw_time']}")
         
         if message['g_best'][0] > self.g_best[0]:
-            #rospy.loginfo(f"- COMMS - Updating GBest from {self.g_best} to {message['g_best']}")
+            rospy.loginfo(f"- COMMS - Updating GBest from {self.g_best} to {message['g_best']} (from robot {message['source']})")
             if self.source_found[0] == True:
                 rospy.logerr("ERROR: SOURCE FOUND BUT RECEIVED BETTER GBEST FROM ANOTHER ROBOT ===========================")
                 rospy.loginfo(f"current gbest: {self.g_best}, received gbest: {message['g_best']}, source found: {self.source_found}, robot id: {self.id}, other robot id: {message['source']}")
@@ -259,7 +260,7 @@ class Searcher:
             orig_yaw = new_yaw
             while(resp.is_free == False):
                 new_pose_count += 1
-                rospy.loginfo(f"NEW POSE IS NOT SAFE - {new_pose_count}")
+                #rospy.loginfo(f"NEW POSE IS NOT SAFE - {new_pose_count}")
                 
                 # if new pose isnt safe, turn around 45deg and keep going (bounce off of wall) 
                 
@@ -269,7 +270,7 @@ class Searcher:
                 new_x = self.pose_x + (self.step_distance * np.cos(new_yaw))
                 new_y = self.pose_y + (self.step_distance * np.sin(new_yaw))
                 goal = self.generate_nav_goal(new_x,new_y,new_yaw)
-                rospy.loginfo(f"WALL BLOCKED THEREFORE: Checking X: {new_x} | Y: {new_y}")
+                #rospy.loginfo(f"WALL BLOCKED THEREFORE: Checking X: {new_x} | Y: {new_y}")
                 resp = self.check_collision(goal.target_pose)
             rospy.loginfo(f"New pose safe after: {new_pose_count}")
         return goal
@@ -341,7 +342,7 @@ class Searcher:
                 new_x = self.pose_x + (self.step_distance * np.cos(new_yaw))
                 new_y = self.pose_y + (self.step_distance * np.sin(new_yaw))
                 goal = self.generate_nav_goal(new_x,new_y,new_yaw)
-                rospy.loginfo(f"WALL BLOCKED THEREFORE: Checking X: {new_x} | Y: {new_y}")
+                #rospy.loginfo(f"WALL BLOCKED THEREFORE: Checking X: {new_x} | Y: {new_y}")
                 resp = self.check_collision(goal.target_pose)
             rospy.loginfo(f"New pose safe after: {new_pose_count}")
         return goal

@@ -1,4 +1,4 @@
-image: /home/latte/ros_ws/src/leo_navigation/maps/LOBBY/lobby.pgm
+image: /home/latte/ros_ws/src/leo_navigation/maps/LOBBY/lobby_keepout.pgm
 resolution: 0.050000
 origin: [-1.071075, -20.571944, 0.000000]
 negate: 0

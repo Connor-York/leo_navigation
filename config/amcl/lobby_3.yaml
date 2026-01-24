@@ -1,0 +1,6 @@
+# http://wiki.ros.org/amcl#Parameters
+
+# Initial pose parameters
+initial_pose_x: 12.471
+initial_pose_y: -3.285
+initial_pose_a: -1.576

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
   <arg name="map_file" default="Full_Office_Map.yaml"/>
-  <arg name="amcl_file" default="amcl_3.yaml"/>
+  <arg name="start_pose" default="origin.yaml"/>
 
   <node name="map_server"
     pkg="map_server"
@@ -20,7 +20,8 @@
     pkg="amcl"
     type="amcl"
     clear_params="true">
-    <rosparam command="load" file="$(find leo_navigation)/config/amcl/$(arg amcl_file)" />
+    <rosparam command="load" file="$(find leo_navigation)/config/amcl/amcl.yaml" />
+    <rosparam command="load" file="$(find leo_navigation)/config/amcl/$(arg start_pose)" />
     <remap from="scan" to="scan_filtered"/>
   </node>
 

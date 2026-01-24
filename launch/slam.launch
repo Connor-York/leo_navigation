@@ -2,10 +2,9 @@
 <launch>
 
    <arg name="nav" default="true"/>
-   <arg name="map_file" default="LOBBY/lobby"/>   <!-- Map (.yaml for amcl)-->
-   <arg name="amcl_file" default="GE_0.yaml"/>          
+   <arg name="map_file" default="LOBBY/lobby"/>   <!-- Map (.yaml for amcl)-->      
    <arg name="mapping" default="false"/>
-   <arg name="start_pose" default="[0.0, 0.0, 0.0]"/> <!-- Start Position (slam_toolbox)-->
+   <arg name="start_pose" default="lobby_3.yaml"/> <!-- Start Position (slam_toolbox)-->
 
    <include file="$(find leo_navigation)/launch/subprocesses/odometry.launch" />
 
@@ -18,7 +17,7 @@
    <group unless="$(arg mapping)">
       <include file="$(find leo_navigation)/launch/subprocesses/amcl.launch">
          <arg name="map_file" value="$(arg map_file)"/>
-         <arg name="amcl_file" value="$(arg amcl_file)"/>
+         <arg name="start_pose" value="$(arg start_pose)"/>
       </include>
       <!-- <include file="$(find leo_navigation)/launch/subprocesses/slam_toolbox_localization.launch">
          <arg name="map_file" value="$(arg map_file)"/>

@@ -119,6 +119,9 @@ class Main:
                 rospy.signal_shutdown("Patrol Time Elapsed")
                 break
             
+            if (time.time() - self.start_time) % 60.0 < 0.1:
+                rospy.loginfo(f"Patrol Time Elapsed: {(time.time() - self.start_time)/60.0:.2f} minutes")
+            
             # read comms and signal, check if you found the source, update state accordingly
             self.read_inbox()            
             self.read_signal()
@@ -264,6 +267,7 @@ class Main:
                     self.ok_start = True
                 elif message.get("message") == "signal_on":
                     rospy.loginfo("=== SIGNAL START ===")
+                    self.searching.signal_start = True
                 else:
                     rospy.logwarn(f"- COMS - Unknown server message: {message}")
                 
@@ -296,14 +300,17 @@ class Main:
         """
         Checks if gbest_timer has ran out without a new gbest update, if so declares source found
         """
-        if self.searching.g_best[0] > -999 and self.searching.isbest and (time.time() - self.searching.last_gbest_update > self.search_end_timer):
-            rospy.loginfo(f"========================================================FOUND IT. GBEST IS: {self.searching.g_best[0]}")
-            rospy.loginfo("Source found :)")
-            self.searching.source_found = (True, self.searching.id)
-            # Found it, return to patrol
-            if self.robot_state == 'searching':
-                self.patrol_flag = True
-            
+        if self.searching.g_best[0] > -999 and self.searching.isbest:
+            if (time.time() - self.searching.last_gbest_update > self.search_end_timer):
+                rospy.loginfo(f"========================================================FOUND IT. GBEST IS: {self.searching.g_best[0]}")
+                rospy.loginfo("Source found :)")
+                self.searching.source_found = (True, self.searching.id)
+                # Found it, return to patrol
+                if self.robot_state == 'searching':
+                    self.patrol_flag = True
+            elif (time.time() - self.searching.last_gbest_update) % 30.0 < 0.1:
+                rospy.loginfo(f"I have been GBest for {(time.time() - self.searching.last_gbest_update)/60.0:.2f} mins")
+             
     def update_logs(self):
         """
         Updates log data each main loop
