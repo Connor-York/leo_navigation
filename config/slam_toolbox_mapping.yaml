@@ -19,8 +19,6 @@ tf_buffer_duration: 30.0
 stack_size_to_use: 40000000
 map_update_interval: 1.0
 
-do_not_check_scan_count: true
-
 # Frequent updates
 minimum_travel_distance: 0.05
 minimum_travel_heading: 0.05

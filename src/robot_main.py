@@ -87,13 +87,13 @@ class Main:
         
         while self.ok_start == False and not rospy.is_shutdown():
             # Wait for start message from server (or just start immediately if comm_start == False)
-            self.read_inbox(0.0)
+            self.read_inbox()
             rate.sleep()
 
         curr_time = prev_message_time = self.start_time = time.time()
+        rospy.loginfo(f"=== START! | T = {self.start_time} ===")
         message_rate = max(0.05, 1.0 / rospy.get_param("~message_rate")) # seconds between messages, min 0.05s (20Hz)
         rate = rospy.Rate(20) # signal reading spead is ~20Hz
-        rospy.loginfo("=== Okay, let's go ===")
         
 
         # Patrol
@@ -127,7 +127,6 @@ class Main:
             
             curr_time = time.time()
             if curr_time - prev_message_time >= message_rate:
-                rospy.logwarn(f"Sending signal message diff = {curr_time-prev_message_time}")
                 self.searching.send_signal_message(curr_time) 
                 prev_message_time = curr_time
             
