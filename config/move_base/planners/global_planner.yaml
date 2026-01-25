@@ -1,7 +1,7 @@
 # http://wiki.ros.org/global_planner#Parameters
 GlobalPlanner:
   allow_unknown: true
-  default_tolerance: 0.0
+  default_tolerance: 0.3
   visualize_potential: false
   use_dijkstra: true
   use_quadratic: true

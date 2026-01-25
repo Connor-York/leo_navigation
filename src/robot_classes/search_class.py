@@ -59,7 +59,7 @@ class Searcher:
         
         # For publishing teammate obstacles
         self.teammate_obstacle_pub = rospy.Publisher('/teammate_obstacles', PointCloud2, queue_size=1)
-        self.teammate_radius = 0.25  # radius around each robot to mark
+        self.teammate_radius = 0.3  # radius around each robot to mark
         self.obstacle_resolution = 0.05  # spacing between points
         
         # For ECOLI
@@ -236,7 +236,7 @@ class Searcher:
                 
                 agent_repulsion = unit_direction * magnitude
                 forces[count] = agent_repulsion
-                #self.agent_positions[count] = None # clear (TODO change this to a queue i guess)
+                self.agent_positions[count] = None # clear (TODO change this to a queue i guess)
 
         
         repulsion_vector = np.sum(forces, axis=0)

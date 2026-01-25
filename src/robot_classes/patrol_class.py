@@ -158,7 +158,7 @@ class Patroller:
         self.rec_log.append([curr_time, message['source'], message['t_sent'], message['position'], message['intention']])
         self.idlenesslog.append([curr_time, self.current_goal, self.node_idleness.copy(), 'msg'])
             
-    def arrived_at_node(self):
+    def arrived_at_node(self, succeeded=True):
         """
         Actions for an agent to take upon arriving at a set node (current_goal)
             Called at successful actionclient goal complete from Main.nav_cb
@@ -176,10 +176,13 @@ class Patroller:
         elif self.patrol_method == "CGG":
             self.current_goal = self.cgg(current_node)
         
-        self.send_sebs_msg(current_node, curr_time)
-        
-        self.idlenesslog.append([curr_time, self.current_goal, self.node_idleness.copy(), 'node'])
-        
+        if succeeded:
+            self.send_sebs_msg(current_node, curr_time)
+            
+            self.idlenesslog.append([curr_time, self.current_goal, self.node_idleness.copy(), 'node'])
+        else:
+            self.send_sebs_msg(-1, curr_time)   # Indicate failure to reach node
+            
         return self.set_nav_goal()
         
         
