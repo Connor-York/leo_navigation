@@ -124,6 +124,7 @@ class Main:
             
             # read comms and signal, check if you found the source, update state accordingly
             self.read_inbox()            
+            self.searching.publish_teammate_obstacles()
             self.read_signal()
             if self.searching.source_found[0] == False:
                 self.check_found() 
@@ -147,55 +148,55 @@ class Main:
             self.update_logs() 
             self.publish_gbest_visual() # publish for RVIZ visualisation (debugging)
 
-            # Get next goal
-            goal = None
-            if self.robot_state == "patrolling":
+            # # Get next goal
+            # goal = None
+            # if self.robot_state == "patrolling":
                 
-                # Switch to searching if needed (flag set from read_signal or read_inbox)
-                if self.search_flag:
-                    rospy.loginfo("- STATE CHANGE - Patrolling -> Searching")
-                    self.robot_state = "searching"
-                    self.search_flag = False
-                    # cancel goals, let other agents know you have no intention
-                    self.nav_client.cancel_all_goals()
-                    self.patrolling.current_goal = -1
-                    self.patrolling.send_sebs_msg(None, None)
-                    goal = self.searching.search_step()
+            #     # Switch to searching if needed (flag set from read_signal or read_inbox)
+            #     if self.search_flag:
+            #         rospy.loginfo("- STATE CHANGE - Patrolling -> Searching")
+            #         self.robot_state = "searching"
+            #         self.search_flag = False
+            #         # cancel goals, let other agents know you have no intention
+            #         self.nav_client.cancel_all_goals()
+            #         self.patrolling.current_goal = -1
+            #         self.patrolling.send_sebs_msg(None, None)
+            #         goal = self.searching.search_step()
                 
-                else:
-                    goal_state = self.nav_client.get_state()
-                    if goal_state == GoalStatus.SUCCEEDED:
-                        goal = self.patrolling.arrived_at_node()
-                    elif goal_state in [GoalStatus.ABORTED, GoalStatus.REJECTED, GoalStatus.RECALLED, GoalStatus.PREEMPTED]:
-                        rospy.logerr(f"- GOAL - FAILURE, STATUS: {self.status_dict.get(goal_state, 'UNKNOWN')} -- TRYING AGAIN")
-                        goal = self.patrolling.set_nav_goal() # re-attempt current goal
-                    elif goal_state == GoalStatus.LOST:
-                        rospy.logwarn(f"- GOAL - None set, setting to current goal node (should only happen at start) ")
-                        goal = self.patrolling.set_nav_goal()
+            #     else:
+            #         goal_state = self.nav_client.get_state()
+            #         if goal_state == GoalStatus.SUCCEEDED:
+            #             goal = self.patrolling.arrived_at_node()
+            #         elif goal_state in [GoalStatus.ABORTED, GoalStatus.REJECTED, GoalStatus.RECALLED, GoalStatus.PREEMPTED]:
+            #             rospy.logerr(f"- GOAL - FAILURE, STATUS: {self.status_dict.get(goal_state, 'UNKNOWN')} -- TRYING AGAIN")
+            #             goal = self.patrolling.set_nav_goal() # re-attempt current goal
+            #         elif goal_state == GoalStatus.LOST:
+            #             rospy.logwarn(f"- GOAL - None set, setting to current goal node (should only happen at start) ")
+            #             goal = self.patrolling.set_nav_goal()
             
-            elif self.robot_state == "searching":
+            # elif self.robot_state == "searching":
                 
-                # Switch to patrolling if needed (flag set from check_found or read_inbox)
-                if self.patrol_flag:
-                    rospy.loginfo("- STATE CHANGE - Searching -> Patrolling")
-                    self.robot_state = "patrolling"
-                    self.patrol_flag = False
-                    self.nav_client.cancel_all_goals()
-                    goal = self.patrolling.return_to_patrol(self.searching.pose_x, self.searching.pose_y)
+            #     # Switch to patrolling if needed (flag set from check_found or read_inbox)
+            #     if self.patrol_flag:
+            #         rospy.loginfo("- STATE CHANGE - Searching -> Patrolling")
+            #         self.robot_state = "patrolling"
+            #         self.patrol_flag = False
+            #         self.nav_client.cancel_all_goals()
+            #         goal = self.patrolling.return_to_patrol(self.searching.pose_x, self.searching.pose_y)
 
-                else:
-                    goal_state = self.nav_client.get_state()
-                    if goal_state == GoalStatus.SUCCEEDED:
-                        goal = self.searching.search_step()
-                        self.searching.current_goal = goal  # Store for re-attempt if needed
-                    elif goal_state in [GoalStatus.ABORTED, GoalStatus.REJECTED, GoalStatus.RECALLED, GoalStatus.PREEMPTED]:
-                        rospy.logerr(f"- GOAL - FAILURE, STATUS: {self.status_dict.get(goal_state, 'UNKNOWN')} -- TRYING AGAIN")
-                        goal = self.searching.current_goal 
-                    elif goal_state == GoalStatus.LOST:
-                        rospy.logwarn(f"- GOAL - None set ")
+            #     else:
+            #         goal_state = self.nav_client.get_state()
+            #         if goal_state == GoalStatus.SUCCEEDED:
+            #             goal = self.searching.search_step()
+            #             self.searching.current_goal = goal  # Store for re-attempt if needed
+            #         elif goal_state in [GoalStatus.ABORTED, GoalStatus.REJECTED, GoalStatus.RECALLED, GoalStatus.PREEMPTED]:
+            #             rospy.logerr(f"- GOAL - FAILURE, STATUS: {self.status_dict.get(goal_state, 'UNKNOWN')} -- TRYING AGAIN")
+            #             goal = self.searching.current_goal 
+            #         elif goal_state == GoalStatus.LOST:
+            #             rospy.logwarn(f"- GOAL - None set ")
             
-            if goal is not None:
-                self.nav_client.send_goal(goal)
+            # if goal is not None:
+            #     self.nav_client.send_goal(goal)
             rate.sleep()
             
     

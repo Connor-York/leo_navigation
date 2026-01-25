@@ -6,6 +6,9 @@ import tf
 from geometry_msgs.msg import Quaternion, PoseStamped
 from tf.transformations import quaternion_from_euler
 from move_base_msgs.msg import MoveBaseGoal
+from sensor_msgs.msg import PointCloud2
+import sensor_msgs.point_cloud2 as pc2
+from std_msgs.msg import Header
 import json
 import time
 import ast
@@ -53,6 +56,11 @@ class Searcher:
         # self.pose_yaw = pose_list[2]
         self.rssi_avg = -999
         self.rssi_raw = -999
+        
+        # For publishing teammate obstacles
+        self.teammate_obstacle_pub = rospy.Publisher('/teammate_obstacles', PointCloud2, queue_size=1)
+        self.teammate_radius = 0.25  # radius around each robot to mark
+        self.obstacle_resolution = 0.05  # spacing between points
         
         # For ECOLI
         self.rssi_previous = self.rssi_avg
@@ -137,12 +145,12 @@ class Searcher:
         #rospy.loginfo(f"- COMMS - Signal message sent, t={curr_time}")
         #rospy.loginfo(f"- COMMS - Signal message sent")
         
-    def receive_signal_message(self, message, current_state, current_time):
+    def receive_signal_message(self, message, current_state):
         new_state = None
         
         #rospy.loginfo(f"- COMMS - Signal message received from ID {message['source']}")
         #rospy.loginfo(f"- COMMS - Signal message received, received t={current_time}, sent t={message['t_sent']} | diff = {current_time-message['t_sent']}")
-        now = time.time()
+        current_time = time.time()
         #rospy.loginfo(f"- RAW - Signal Sent: {message['raw_time']} Received: {now} | diff {now-message['raw_time']}")
         
         if message['g_best'][0] > self.g_best[0]:
@@ -164,6 +172,28 @@ class Searcher:
                 new_state = 'patrolling'
         
         return new_state
+    
+    def publish_teammate_obstacles(self):
+        """
+        Publishes circles around known teammate positions as obstacles
+        """
+        points = []
+        
+        for i, pos in enumerate(self.agent_positions):
+            if pos is None or i == self.id:
+                continue
+            cx, cy = pos
+            # Generate filled circle
+            for r in np.arange(0, self.teammate_radius, self.obstacle_resolution):
+                for theta in np.arange(0, 2*np.pi, self.obstacle_resolution / max(r, 0.01)):
+                    px = cx + r * np.cos(theta)
+                    py = cy + r * np.sin(theta)
+                    points.append((px, py, 0.0))
+        
+        if points:
+            header = Header(stamp=rospy.Time.now(), frame_id="map")
+            cloud = pc2.create_cloud_xyz32(header, points)
+            self.teammate_obstacle_pub.publish(cloud)
         
                
     def generate_nav_goal(self,x,y,yaw):
@@ -206,7 +236,7 @@ class Searcher:
                 
                 agent_repulsion = unit_direction * magnitude
                 forces[count] = agent_repulsion
-                self.agent_positions[count] = None # clear (TODO change this to a queue i guess)
+                #self.agent_positions[count] = None # clear (TODO change this to a queue i guess)
 
         
         repulsion_vector = np.sum(forces, axis=0)
