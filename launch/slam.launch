@@ -2,9 +2,9 @@
 <launch>
 
    <arg name="nav" default="true"/>
-   <arg name="map_file" default="LOBBY/lobby"/>   <!-- Map (.yaml for amcl)-->      
+   <arg name="map_file" default="Office_New/office_new"/>   <!-- Map (.yaml for amcl)-->      
    <arg name="mapping" default="false"/>
-   <arg name="start_pose" default="lobby_3.yaml"/> <!-- Start Position (slam_toolbox)-->
+   <arg name="start_pose" default="Office/test.yaml"/> <!-- Start Position (slam_toolbox)-->
 
    <include file="$(find leo_navigation)/launch/subprocesses/odometry.launch" />
 

@@ -6,7 +6,10 @@
   <node name="move_base"
     pkg="move_base"
     type="move_base"
-    clear_params="true">
+    clear_params="true"
+    output="screen">
+    <!--env name="ROSCONSOLE_CONFIG_FILE" value="$(find leo_navigation)/config/move_base/rosconsole.conf"/-->
+
     <rosparam command="load"
       file="$(find leo_navigation)/config/move_base/move_base.yaml" />
 

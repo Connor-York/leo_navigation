@@ -97,7 +97,7 @@ class Patroller:
         
         return adj_matrix, unit_adj
 
-    def set_nav_goal(self):
+    def set_nav_goal(self, curr_x, curr_y):
         """
         Set Nav goal to current_goal
         """
@@ -105,6 +105,8 @@ class Patroller:
         goal.target_pose.header.frame_id = "map"
         goal.target_pose.header.stamp = rospy.Time.now()
         goal.target_pose.pose = self.node_list[self.current_goal]
+        yaw = np.arctan2(goal.target_pose.pose.y - curr_y, goal.target_pose.pose.x - curr_x)
+        goal.target_pose.pose.orientation = Quaternion(*(quaternion_from_euler(0, 0, yaw)))
         rospy.loginfo(f"- GOAL - Navigating to node: {self.current_goal}")
         return goal
     
@@ -122,7 +124,7 @@ class Patroller:
         else:
             self.current_goal = closest_node_id
         
-        return self.set_nav_goal()
+        return self.set_nav_goal(pose_x, pose_y)
         
     def send_sebs_msg(self, current_node, arrival_time):
         """
@@ -158,7 +160,7 @@ class Patroller:
         self.rec_log.append([curr_time, message['source'], message['t_sent'], message['position'], message['intention']])
         self.idlenesslog.append([curr_time, self.current_goal, self.node_idleness.copy(), 'msg'])
             
-    def arrived_at_node(self, succeeded=True):
+    def arrived_at_node(self, curr_x, curr_y, succeeded=True):
         """
         Actions for an agent to take upon arriving at a set node (current_goal)
             Called at successful actionclient goal complete from Main.nav_cb
@@ -183,7 +185,7 @@ class Patroller:
         else:
             self.send_sebs_msg(-1, curr_time)   # Indicate failure to reach node
             
-        return self.set_nav_goal()
+        return self.set_nav_goal(curr_x, curr_y)
         
         
     def calculate_node_idleness(self, node, current_time):
