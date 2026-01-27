@@ -105,7 +105,7 @@ class Patroller:
         goal.target_pose.header.frame_id = "map"
         goal.target_pose.header.stamp = rospy.Time.now()
         goal.target_pose.pose = self.node_list[self.current_goal]
-        yaw = np.arctan2(goal.target_pose.pose.y - curr_y, goal.target_pose.pose.x - curr_x)
+        yaw = np.arctan2(goal.target_pose.pose.position.y - curr_y, goal.target_pose.pose.position.x - curr_x)
         goal.target_pose.pose.orientation = Quaternion(*(quaternion_from_euler(0, 0, yaw)))
         rospy.loginfo(f"- GOAL - Navigating to node: {self.current_goal}")
         return goal
