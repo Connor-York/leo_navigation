@@ -78,6 +78,7 @@ class Searcher:
         self.agent_positions = [None] * num_agents
         self.source_found = (False, None) # Bool: Found? ID of agent that found it
         self.last_gbest_update = start_time
+        self.source_found_log = None
         
         self.step_distance = step_distance
         self.server_pub = server_pub # For sending communications
@@ -167,7 +168,9 @@ class Searcher:
         
         self.agent_positions[message['source']] = message['position']
         
-        if message['source_found'][0] == True:
+        if message['source_found'][0] == True and self.source_found[0] == False:
+            self.source_found = message['source_found']
+            self.source_found_log = [current_time, message['source_found'][1], 'message']
             if current_state == 'searching':
                 new_state = 'patrolling'
         

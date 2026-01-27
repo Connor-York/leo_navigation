@@ -284,10 +284,11 @@ class Main:
                 rospy.loginfo(f"========================================================FOUND IT. GBEST IS: {self.searching.g_best[0]}")
                 rospy.loginfo("Source found :)")
                 self.searching.source_found = (True, self.searching.id)
+                self.searching.source_found_log = [time.time(), self.searching.last_gbest_update, self.searching.g_best[0], self.searching.g_best[1][0], self.searching.g_best[1][1], 'me']
                 # Found it, return to patrol
                 if self.robot_state == 'searching':
                     self.patrol_flag = True
-            elif (time.time() - self.searching.last_gbest_update) % 30.0 < 0.1:
+            elif (time.time() - self.searching.last_gbest_update) % 30.0 < 0.06:
                 rospy.loginfo(f"I have been GBest for {(time.time() - self.searching.last_gbest_update)/60.0:.2f} mins")
              
     def update_logs(self):
@@ -296,7 +297,7 @@ class Main:
         """
         curr_time = time.time()
         self.patrolling.idlenesslog.append([curr_time, self.patrolling.current_goal, self.patrolling.node_idleness.copy(), 'reg'])
-        self.signallog.append([curr_time, self.robot_state, self.searching.pose_x, self.searching.pose_y, self.searching.pose_yaw, self.searching.rssi_avg, self.searching.rssi_raw, self.searching.p_best[0], self.searching.p_best[1][0], self.searching.p_best[1][1], self.searching.g_best[0], self.searching.g_best[1][0], self.searching.g_best[1][1], self.searching.source_found[0]])
+        self.signallog.append([curr_time, self.robot_state, self.searching.pose_x, self.searching.pose_y, self.searching.pose_yaw, self.searching.rssi_avg, self.searching.rssi_raw, self.searching.p_best[0], self.searching.p_best[1][0], self.searching.p_best[1][1], self.searching.g_best[0], self.searching.g_best[1][0], self.searching.g_best[1][1], self.searching.source_found[0], self.searching.source_found[1]])
 
     def log_data(self):
         if not os.path.exists(self.save_path):
@@ -304,7 +305,7 @@ class Main:
         
         with open(f"{self.save_path}/signallog.csv", mode='w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(['time', 'robot_state', 'x', 'y', 'yaw', 'rssi_avg', 'rssi_raw', 'pbest_val', 'pbest_x', 'pbest_y', 'gbest_val', 'gbest_x', 'gbest_y', 'signal_found'])
+            writer.writerow(['time', 'robot_state', 'x', 'y', 'yaw', 'rssi_avg', 'rssi_raw', 'pbest_val', 'pbest_x', 'pbest_y', 'gbest_val', 'gbest_x', 'gbest_y', 'signal_found', 'who_found'])
             for row in self.signallog:
                 writer.writerow(row)
         
@@ -329,6 +330,16 @@ class Main:
             writer.writerow(['time', 'source', 'time_msg', 'position', 'intention'])
             for row in self.patrolling.rec_log:
                 writer.writerow(row)
+                
+        with open(f"{self.save_path}/source_found_log.csv", mode='w', newline='') as file:
+            writer = csv.writer(file)
+            if self.searching.source_found_log is not None:
+                if self.searching.source_found_log[-1] == 'me':
+                    writer.writerow(['time_accept', 'time_found', 'gbest_val', 'gbest_x', 'gbest_y', 'source'])
+                    writer.writerow(self.searching.source_found_log)
+                else:
+                    writer.writerow(['time_accept', 'who', 'source'])
+                    writer.writerow(self.searching.source_found_log)
 
         with open(f"{self.save_path}/robot_params.txt", mode='w', newline='') as file:
             file.write("Robot Parameters: \n")
