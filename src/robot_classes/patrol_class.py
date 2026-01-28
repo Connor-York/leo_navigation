@@ -239,10 +239,10 @@ class Patroller:
                 
                 if count >0:
                     num_agents = len(self.intention_table)
-                    p_gain_state = math.pow(2, num_agents - count) / (math.pow(2, num_agents) - 1.0)
+                    p_gain_state = math.pow(2, num_agents - (count+1)) / (math.pow(2, num_agents) - 1.0)
                     posterior_probability[i] *= p_gain_state
                 
-                #rospy.loginfo(f"- SEBS - Neighbour: {neighbour_id} | Idleness: {self.calculate_node_idleness(neighbour_id, current_time):.2f} | Edge weight: {neighbour_edge_weight1:.2f}, {neighbour_edge_weight:.2f} | Gain: {gain:.2f} | Intentions: {count} | Posterior prob: {posterior_probability[i]:.4f}")
+                rospy.loginfo(f"- SEBS - Neighbour: {neighbour_id} | Idleness: {self.calculate_node_idleness(neighbour_id, current_time):.2f} | Edge weight: {neighbour_edge_weight1:.2f}, {neighbour_edge_weight:.2f} | Gain: {gain:.2f} | Intentions: {count} | Posterior prob: {posterior_probability[i]:.4f}")
             # Choose the one in the posterior probability with the largest value
             # return a numpy array, and if there are more than one include the index that each are found at
             # Return the 0th element of the tuple, as np.where returns a tuple
@@ -262,7 +262,7 @@ class Patroller:
             # if only one go there
             next_goal = neighbours[0]
 
-        #rospy.loginfo(f"- SEBS - New goal node: {next_goal}")
+        rospy.loginfo(f"- SEBS - New goal node: {next_goal}")
         return int(next_goal)
     
     def cgg(self, current_node):
