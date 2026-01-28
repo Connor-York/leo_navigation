@@ -272,41 +272,7 @@ class Searcher:
         movement_vector = new_position - my_position
         new_yaw = np.arctan2(movement_vector[1], movement_vector[0])
         
-        goal = self.generate_nav_goal(new_position[0],new_position[1],new_yaw)
-        #rospy.loginfo(f"Checking X: {new_position[0]} | Y: {new_position[1]}")
-        resp = self.check_collision(goal.target_pose)
-        
-        #rospy.loginfo(f"GOAL COLLISION CHECK: {resp}")
-        
-        # if resp.is_free:
-        #     rospy.loginfo("NEW POSE IS SAFE")
-        #     return goal
-        # else:
-        #     rospy.loginfo("NEW POSE ISNT SAFE")
-        #     return None
-        
-        if resp.is_free:
-            rospy.loginfo("NEW POSE IS SAFE")
-            # If not colliding, go to that position
-        else:
-            new_pose_count = 0
-            orig_yaw = new_yaw
-            while(resp.is_free == False):
-                new_pose_count += 1
-                #rospy.loginfo(f"NEW POSE IS NOT SAFE - {new_pose_count}")
-                
-                # if new pose isnt safe, turn around 45deg and keep going (bounce off of wall) 
-                
-                new_yaw = new_yaw - np.deg2rad(45) 
-                new_yaw = normalise_angle(new_yaw)
-                    
-                new_x = self.pose_x + (self.step_distance * np.cos(new_yaw))
-                new_y = self.pose_y + (self.step_distance * np.sin(new_yaw))
-                goal = self.generate_nav_goal(new_x,new_y,new_yaw)
-                #rospy.loginfo(f"WALL BLOCKED THEREFORE: Checking X: {new_x} | Y: {new_y}")
-                resp = self.check_collision(goal.target_pose)
-            rospy.loginfo(f"New pose safe after: {new_pose_count}")
-        return goal
+        return self.find_safe_goal(new_position[0], new_position[1], new_yaw)
         
 
         
@@ -336,49 +302,10 @@ class Searcher:
         
         new_x = self.pose_x + (self.step_distance * np.cos(new_yaw))
         new_y = self.pose_y + (self.step_distance * np.sin(new_yaw))
-        
-        # IN WALL
-        # new_x = 0.677 
-        # new_y = -3.814
-        
-        #-3.358 -3.767 OUTSIDE COMPLETELY
-        # JUST TOUCHING INFLATION
-        # new_x = 1.278 
-        # new_y = -3.797 
-        # new_yaw = 3.059 
-        
-        # Check if its safe 
-        goal = self.generate_nav_goal(new_x,new_y,new_yaw)
-        #rospy.loginfo(f"Checking X: {new_x} | Y: {new_y}")
-        resp = self.check_collision(goal.target_pose)
-        
-        #rospy.loginfo(f"GOAL COLLISION CHECK: {resp}")
-        
 
         self.rssi_previous = self.rssi_avg
-
-        if resp.is_free:
-            rospy.loginfo("NEW POSE IS SAFE")
-            # If not colliding, go to that position
-        else:
-            new_pose_count = 0
-            orig_yaw = new_yaw
-            while(resp.is_free == False):
-                new_pose_count += 1
-                rospy.loginfo(f"NEW POSE IS NOT SAFE - {new_pose_count}")
-                
-                # if new pose isnt safe, turn around 45deg and keep going (bounce off of wall) 
-                
-                new_yaw = new_yaw - np.deg2rad(45) 
-                new_yaw = normalise_angle(new_yaw)
-                    
-                new_x = self.pose_x + (self.step_distance * np.cos(new_yaw))
-                new_y = self.pose_y + (self.step_distance * np.sin(new_yaw))
-                goal = self.generate_nav_goal(new_x,new_y,new_yaw)
-                #rospy.loginfo(f"WALL BLOCKED THEREFORE: Checking X: {new_x} | Y: {new_y}")
-                resp = self.check_collision(goal.target_pose)
-            rospy.loginfo(f"New pose safe after: {new_pose_count}")
-        return goal
+        # check if its safe
+        return self.find_safe_goal(new_x, new_y, new_yaw)
         
     def search_step(self):
         """
@@ -396,3 +323,96 @@ class Searcher:
             else:
                 rospy.loginfo(f"Using PSO step (isbest={self.isbest})")
                 return self.PSO_step()
+
+    def find_goal_through_obstacle(self, start_x, start_y, direction_yaw, step_distance, max_raycast_distance=3.0, raycast_resolution=0.3):
+        """
+        If the immediate goal is blocked, raycast forward to find a free point
+        on the other side of the obstacle.
+        
+        Args:
+            start_x, start_y: Current position
+            direction_yaw: Intended direction of travel
+            step_distance: Desired step distance (used as minimum search distance)
+            max_raycast_distance: Maximum distance to search along ray
+            raycast_resolution: Distance between collision checks along ray
+        
+        Returns:
+            goal if found, None if no valid point found along ray
+        """
+        # Start checking from step_distance, incrementing by resolution
+        check_distance = step_distance
+        
+        dx = np.cos(direction_yaw)
+        dy = np.sin(direction_yaw)
+        
+        checks_made = 0
+        max_checks = int((max_raycast_distance - step_distance) / raycast_resolution) + 1
+        
+        while check_distance <= max_raycast_distance and checks_made < max_checks:
+            test_x = start_x + check_distance * dx
+            test_y = start_y + check_distance * dy
+            
+            goal = self.generate_nav_goal(test_x, test_y, direction_yaw)
+            resp = self.check_collision(goal.target_pose)
+            checks_made += 1
+            
+            if resp.is_free:
+                rospy.loginfo(f"Found free point at distance {check_distance:.2f}m after {checks_made} checks")
+                return goal
+            
+            check_distance += raycast_resolution
+        
+        rospy.loginfo(f"No free point found along ray after {checks_made} checks (max dist: {max_raycast_distance}m)")
+        return None
+
+
+    def find_safe_goal(self, new_x, new_y, new_yaw):
+        """
+        Wrapper that tries raycast first, then falls back to rotation.
+        Returns a valid goal.
+        """
+        goal = self.generate_nav_goal(new_x, new_y, new_yaw)
+        resp = self.check_collision(goal.target_pose)
+        
+        if resp.is_free:
+            return goal
+        
+        # Try raycasting through the obstacle
+        raycast_goal = self.find_goal_through_obstacle(
+            self.pose_x, self.pose_y, new_yaw,
+            step_distance=self.step_distance,
+            max_raycast_distance=3.0,  # Tune this based on your environment
+            raycast_resolution=0.3     # ~10 checks max for 3m range
+        )
+        
+        if raycast_goal is not None:
+            return raycast_goal
+        
+        # Fallback: rotation method (for corners or external walls)
+        rospy.loginfo("Raycast failed, falling back to rotation")
+        return self.find_goal_by_rotation(new_yaw)
+
+
+    def find_goal_by_rotation(self, starting_yaw):
+        """
+        Rotation fallback - try 45 degree increments.
+        Limited to 7 attempts (315 degrees) to avoid infinite loops.
+        """
+        new_yaw = starting_yaw
+        turn_ratio = 16 # 360/turn_ratio degrees per attempt
+        
+        for attempt in range(turn_ratio-1):  # -1 because the last resort is to stay in place
+            new_yaw = normalise_angle(new_yaw - ((2*np.pi)/turn_ratio))
+            new_x = self.pose_x + self.step_distance * np.cos(new_yaw)
+            new_y = self.pose_y + self.step_distance * np.sin(new_yaw)
+            
+            goal = self.generate_nav_goal(new_x, new_y, new_yaw)
+            resp = self.check_collision(goal.target_pose)
+            
+            if resp.is_free:
+                rospy.loginfo(f"Rotation found safe pose after {attempt + 1} attempts")
+                return goal
+        
+        # Last resort: stay in place (or handle error)
+        rospy.logwarn("**********No safe goal found in any direction!")
+        return self.generate_nav_goal(self.pose_x, self.pose_y, new_yaw)
