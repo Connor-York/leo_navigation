@@ -1,7 +1,7 @@
 #Parameters for the robot
 #Logging
 robot_id: 0
-trial_scenario: LOBBY_PSO
+trial_scenario: L_28_Patrol
 
 #Experiment Parameters
 time_to_end: 15     # time in minutes   
@@ -16,7 +16,7 @@ patrol_adjacency: lobby_unit_adj.csv  # Unit adjacency matrix, each row represen
 patrol_method: SEBS # "SEBS", "CGG" 
 
 #Search
-search_method: PSO # "PSO", "ECOLI", "HYBRID"
+search_method: ECOLI # "PSO", "ECOLI", "HYBRID"
 step_distance: 1.0 # Search step in m (for ecoli primarily but maybe for PSO limiting?)
 bad_diff: 1  # RSSI difference to consider a move bad in ECOLI (i.e. if new_rssi < prev_rssi - bad_diff, its bad)
 search_end_timer: 5 # time in mins, how long of gbest not moving until it is accepted as final estimate
