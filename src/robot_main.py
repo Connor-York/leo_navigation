@@ -169,7 +169,8 @@ class Main:
                         goal = self.patrolling.arrived_at_node(self.searching.pose_x, self.searching.pose_y)
                     elif goal_state in [GoalStatus.ABORTED, GoalStatus.REJECTED, GoalStatus.RECALLED, GoalStatus.PREEMPTED]:
                         rospy.logerr(f"- GOAL - FAILURE, STATUS: {self.status_dict.get(goal_state, 'UNKNOWN')} -- TRYING AGAIN")
-                        goal = self.patrolling.set_nav_goal(self.searching.pose_x, self.searching.pose_y) # try again :? 
+                        goal = self.patrolling.arrived_at_node(self.searching.pose_x, self.searching.pose_y, succeeded=False) # try again :? 
+
                     elif goal_state == GoalStatus.LOST:
                         rospy.logwarn(f"- GOAL - None set, setting to current goal node (should only happen at start) ")
                         goal = self.patrolling.set_nav_goal(self.searching.pose_x, self.searching.pose_y)
