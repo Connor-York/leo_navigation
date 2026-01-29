@@ -1,0 +1,9 @@
+<launch>
+  <node name="rplidar_node" pkg="rplidar_ros" type="rplidarNode" output="screen">
+    <param name="serial_port" value="/dev/rplidar"/>
+    <param name="serial_baudrate" value="256000"/>
+    <param name="frame_id" value="laser_frame"/>
+    <!--param name="scan_mode" value="Standard"/-->
+    <param name="angle_compensate" value="true"/>
+  </node>
+</launch>
