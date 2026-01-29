@@ -124,7 +124,7 @@ class Main:
             
             # read comms and signal, check if you found the source, update state accordingly
             self.read_inbox()            
-            self.searching.publish_teammate_obstacles()
+            #self.searching.publish_teammate_obstacles()
             self.read_signal()
             if self.searching.source_found[0] == False:
                 self.check_found() 
@@ -248,6 +248,19 @@ class Main:
                 elif message.get("message") == "signal_on":
                     rospy.loginfo("=== SIGNAL START ===")
                     self.searching.signal_start = True
+                elif message.get("message") == "explain":
+                    rospy.loginfo("=== WHAT AM I DOING? ===")
+                    rospy.loginfo(f" - Role: {self.role} | State: {self.robot_state} ")
+                    if self.robot_state == "patrolling":
+                        rospy.loginfo(f" - Current goal: {self.patrolling.current_goal} ")
+                        rospy.loginfo(f" - Goal status: {self.status_dict.get(self.nav_client.get_state(), 'UNKNOWN')} ")
+                    elif self.robot_state == "searching":
+                        rospy.loginfo(f" - Current goal: {self.searching.current_goal} ")
+                        rospy.loginfo(f" - Goal status: {self.status_dict.get(self.nav_client.get_state(), 'UNKNOWN')} ")
+                        rospy.loginfo(f" - PBest: {self.searching.p_best} | GBest: {self.searching.g_best} ")
+                        rospy.loginfo(f" - RSSI Avg: {self.searching.rssi_avg} | RSSI Raw: {self.searching.rssi_raw} ")
+                        rospy.loginfo(f" - Source Found: {self.searching.source_found} ")
+                    rospy.loginfo("=== END EXPLANATION ===")                              
                 else:
                     rospy.logwarn(f"- COMS - Unknown server message: {message}")
                 

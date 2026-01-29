@@ -58,7 +58,7 @@ class Searcher:
         self.rssi_raw = -999
         
         # For publishing teammate obstacles
-        self.teammate_obstacle_pub = rospy.Publisher('/teammate_obstacles', PointCloud2, queue_size=1)
+        #self.teammate_obstacle_pub = rospy.Publisher('/teammate_obstacles', PointCloud2, queue_size=1)
         self.teammate_radius = 0.3  # radius around each robot to mark
         self.obstacle_resolution = 0.05  # spacing between points
         
@@ -176,27 +176,27 @@ class Searcher:
         
         return new_state
     
-    def publish_teammate_obstacles(self):
-        """
-        Publishes circles around known teammate positions as obstacles
-        """
-        points = []
+    # def publish_teammate_obstacles(self):
+    #     """
+    #     Publishes circles around known teammate positions as obstacles
+    #     """
+    #     points = []
         
-        for i, pos in enumerate(self.agent_positions):
-            if pos is None or i == self.id:
-                continue
-            cx, cy = pos
-            # Generate filled circle
-            for r in np.arange(0, self.teammate_radius, self.obstacle_resolution):
-                for theta in np.arange(0, 2*np.pi, self.obstacle_resolution / max(r, 0.01)):
-                    px = cx + r * np.cos(theta)
-                    py = cy + r * np.sin(theta)
-                    points.append((px, py, 0.0))
+    #     for i, pos in enumerate(self.agent_positions):
+    #         if pos is None or i == self.id:
+    #             continue
+    #         cx, cy = pos
+    #         # Generate filled circle
+    #         for r in np.arange(0, self.teammate_radius, self.obstacle_resolution):
+    #             for theta in np.arange(0, 2*np.pi, self.obstacle_resolution / max(r, 0.01)):
+    #                 px = cx + r * np.cos(theta)
+    #                 py = cy + r * np.sin(theta)
+    #                 points.append((px, py, 0.0))
         
-        if points:
-            header = Header(stamp=rospy.Time.now(), frame_id="map")
-            cloud = pc2.create_cloud_xyz32(header, points)
-            self.teammate_obstacle_pub.publish(cloud)
+    #     if points:
+    #         header = Header(stamp=rospy.Time.now(), frame_id="map")
+    #         cloud = pc2.create_cloud_xyz32(header, points)
+    #         self.teammate_obstacle_pub.publish(cloud)
         
                
     def generate_nav_goal(self,x,y,yaw):
