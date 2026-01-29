@@ -21,7 +21,7 @@ obstacle_layer:
   track_unknown_space: true
   unknown_cost_value: 255
 
-  observation_sources: scan teammates
+  observation_sources: scan
 
   scan:
     topic: scan_filtered
@@ -34,15 +34,6 @@ obstacle_layer:
     max_obstacle_height: 0.3
     inf_is_valid: false
   
-  teammates:
-    topic: /teammate_obstacles
-    data_type: PointCloud2
-    marking: true
-    clearing: false
-    obstacle_range: 15.0
-    raytrace_range: 0.0
-    observation_persistence: 0.5
-
 # http://wiki.ros.org/costmap_2d/hydro/inflation <inflation radius default 0.4>
 inflation_layer: 
   inflation_radius: 0.4 #0.1 TIGHT 0.4 default
