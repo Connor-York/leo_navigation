@@ -338,7 +338,7 @@ class Searcher:
                 rospy.loginfo(f"Using PSO step (isbest={self.isbest})")
                 return self.PSO_step()
 
-    def find_goal_through_obstacle(self, start_x, start_y, direction_yaw, step_distance, max_raycast_distance=3.0, raycast_resolution=0.3):
+    def find_goal_through_obstacle(self, start_x, start_y, direction_yaw, step_distance, max_raycast_distance=5.0, raycast_resolution=0.3):
         """
         If the immediate goal is blocked, raycast forward to find a free point
         on the other side of the obstacle.
@@ -396,7 +396,7 @@ class Searcher:
         raycast_goal = self.find_goal_through_obstacle(
             self.pose_x, self.pose_y, new_yaw,
             step_distance=self.step_distance,
-            max_raycast_distance=3.0,  # Tune this based on your environment
+            max_raycast_distance=5.0,  # Tune this based on your environment
             raycast_resolution=0.3     # ~10 checks max for 3m range
         )
         
