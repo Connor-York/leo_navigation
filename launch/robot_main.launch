@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
 
-    <arg name="map_file" default="Office_New/office_new"/>   <!-- Map -->
+    <arg name="map_file" default="LOBBY/lobby"/>
     <arg name="start_pose" default="origin.yaml"/>
     <arg name="trial_no" default="0"/>                            <!-- Trial No. -->
     <arg name="comm_start" default="True"/>  <!-- Wait for message from server to begin patrol/ search -->
