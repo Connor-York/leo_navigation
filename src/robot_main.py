@@ -356,6 +356,22 @@ class Main:
                 else:
                     writer.writerow(['time_accept', 'who', 'source'])
                     writer.writerow(self.searching.source_found_log)
+                    
+        with open(f"{self.save_path}/search_log.csv", mode='w', newline='') as file:
+            writer = csv.writer(file)
+            for row in self.searching.search_log:
+                writer.writerow(row)
+                
+        search_headers = {
+            'PSO': ['time', 'method', 'pose_x', 'pose_y', 'pose_yaw', 'new_x', 'new_y', 'new_yaw', 'velocity_x', 'velocity_y', 'velocity_clamped_x', 'velocity_clamped_y', 'repulsion_x', 'repulsion_y'],
+            'ECOLI': ['time', 'method', 'pose_x', 'pose_y', 'pose_yaw', 'new_x', 'new_y', 'new_yaw', 'rssi_previous', 'rssi_avg', 'gradient_eval'],
+            'RAYCAST': ['time', 'method', 'check_distance', 'checks_made'],
+            'ROTATION': ['time', 'method', 'attempt_count']
+        }
+
+        with open(f"{self.save_path}/search_log_headers.txt", mode='w', newline='') as f:
+            for method, headers in search_headers.items():
+                f.write(f"{method}:\n  {headers}\n\n")
 
         with open(f"{self.save_path}/robot_params.txt", mode='w', newline='') as file:
             file.write("Robot Parameters: \n")

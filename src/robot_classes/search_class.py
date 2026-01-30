@@ -79,6 +79,7 @@ class Searcher:
         self.source_found = (False, None) # Bool: Found? ID of agent that found it
         self.last_gbest_update = start_time
         self.source_found_log = None
+        self.search_log = [] # time, method, other data depending on method
         
         self.step_distance = step_distance
         self.server_pub = server_pub # For sending communications
@@ -265,6 +266,14 @@ class Searcher:
             velocity_clamped = self.velocity * (self.step_distance / dist)
         else:
             velocity_clamped = self.velocity
+        self.search_log.append([
+            time.time(), 'PSO',
+            self.pose_x, self.pose_y, self.pose_yaw,
+            new_position[0], new_position[1], new_yaw,
+            self.velocity[0], self.velocity[1],
+            velocity_clamped[0], velocity_clamped[1],
+            repulsion_vector[0], repulsion_vector[1]
+        ])
         velocity_clamped = velocity_clamped + repulsion_vector 
         #rospy.loginfo(f"Velocity Vector after repulsion: {velocity_clamped} | Magnitude: {np.linalg.norm(velocity_clamped)}")
         
@@ -295,14 +304,19 @@ class Searcher:
         rospy.loginfo(f" GBEST: {self.g_best}")
         if self.rssi_avg < self.rssi_previous - self.bad_diff: 
             new_yaw = random_turn(self.pose_yaw, 180) # turn rand +/- 180deg
-            rospy.loginfo("BAD - TURNING AROUND")
+            val = 'bad'
         else:
             new_yaw = random_turn(self.pose_yaw, 5) # turn rand +/- 5deg
-            rospy.loginfo("GOOD - CONTINUE")
+            val = 'good'
         
         new_x = self.pose_x + (self.step_distance * np.cos(new_yaw))
         new_y = self.pose_y + (self.step_distance * np.sin(new_yaw))
-
+        self.search_log.append([
+            time.time(), 'ECOLI',
+            self.pose_x, self.pose_y, self.pose_yaw,
+            new_x, new_y, new_yaw,
+            self.rssi_previous, self.rssi_avg, val
+        ])
         self.rssi_previous = self.rssi_avg
         # check if its safe
         return self.find_safe_goal(new_x, new_y, new_yaw)
@@ -358,6 +372,7 @@ class Searcher:
             
             if resp.is_free:
                 rospy.loginfo(f"Found free point at distance {check_distance:.2f}m after {checks_made} checks")
+                self.search_log.append([time.time(), 'RAYCAST', check_distance, checks_made])
                 return goal
             
             check_distance += raycast_resolution
@@ -411,6 +426,7 @@ class Searcher:
             
             if resp.is_free:
                 rospy.loginfo(f"Rotation found safe pose after {attempt + 1} attempts")
+                self.search_log.append([time.time(), 'ROTATION', attempt + 1])
                 return goal
         
         # Last resort: stay in place (or handle error)
