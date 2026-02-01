@@ -248,6 +248,7 @@ class Main:
                 elif message.get("message") == "signal_on":
                     rospy.loginfo("=== SIGNAL START ===")
                     self.searching.signal_start = True
+                    break
                 elif message.get("message") == "explain":
                     rospy.loginfo("=== WHAT AM I DOING? ===")
                     rospy.loginfo(f" - Role: {self.role} | State: {self.robot_state} ")
