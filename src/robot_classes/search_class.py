@@ -266,6 +266,14 @@ class Searcher:
             velocity_clamped = self.velocity * (self.step_distance / dist)
         else:
             velocity_clamped = self.velocity
+
+        velocity_clamped = velocity_clamped + repulsion_vector 
+        #rospy.loginfo(f"Velocity Vector after repulsion: {velocity_clamped} | Magnitude: {np.linalg.norm(velocity_clamped)}")
+        
+        new_position = my_position + velocity_clamped
+        movement_vector = new_position - my_position
+        new_yaw = np.arctan2(movement_vector[1], movement_vector[0])
+        
         self.search_log.append([
             time.time(), 'PSO',
             self.pose_x, self.pose_y, self.pose_yaw,
@@ -274,12 +282,6 @@ class Searcher:
             velocity_clamped[0], velocity_clamped[1],
             repulsion_vector[0], repulsion_vector[1]
         ])
-        velocity_clamped = velocity_clamped + repulsion_vector 
-        #rospy.loginfo(f"Velocity Vector after repulsion: {velocity_clamped} | Magnitude: {np.linalg.norm(velocity_clamped)}")
-        
-        new_position = my_position + velocity_clamped
-        movement_vector = new_position - my_position
-        new_yaw = np.arctan2(movement_vector[1], movement_vector[0])
         
         return self.find_safe_goal(new_position[0], new_position[1], new_yaw)
         
@@ -338,7 +340,7 @@ class Searcher:
                 rospy.loginfo(f"Using PSO step (isbest={self.isbest})")
                 return self.PSO_step()
 
-    def find_goal_through_obstacle(self, start_x, start_y, direction_yaw, step_distance, max_raycast_distance=5.0, raycast_resolution=0.3):
+    def find_goal_through_obstacle(self, start_x, start_y, direction_yaw, step_distance, max_raycast_distance=3.0, raycast_resolution=0.3):
         """
         If the immediate goal is blocked, raycast forward to find a free point
         on the other side of the obstacle.
