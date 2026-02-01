@@ -398,7 +398,7 @@ class Searcher:
         raycast_goal = self.find_goal_through_obstacle(
             self.pose_x, self.pose_y, new_yaw,
             step_distance=self.step_distance,
-            max_raycast_distance=5.0,  # Tune this based on your environment
+            max_raycast_distance=3.0,  # Tune this based on your environment
             raycast_resolution=0.3     # ~10 checks max for 3m range
         )
         
