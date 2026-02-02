@@ -262,15 +262,14 @@ class Searcher:
         self.velocity = self.w * self.velocity + (self.c1 * r1 * (np.array(self.p_best[1]) - my_position)) + (self.c2 * r2 * (np.array(self.g_best[1]) - my_position))
         dist = np.linalg.norm(self.velocity)
         #rospy.loginfo(f"Velocity Vector before repulsion: {self.velocity} | Magnitude: {dist}")
+        # clamp velocity to step_distance
         if dist > self.step_distance:
             velocity_clamped = self.velocity * (self.step_distance / dist)
-        else:
-            velocity_clamped = self.velocity
 
-        velocity_clamped = velocity_clamped + repulsion_vector 
+        self.velocity = velocity_clamped + repulsion_vector 
         #rospy.loginfo(f"Velocity Vector after repulsion: {velocity_clamped} | Magnitude: {np.linalg.norm(velocity_clamped)}")
         
-        new_position = my_position + velocity_clamped
+        new_position = my_position + self.velocity
         movement_vector = new_position - my_position
         new_yaw = np.arctan2(movement_vector[1], movement_vector[0])
         
@@ -340,7 +339,7 @@ class Searcher:
                 rospy.loginfo(f"Using PSO step (isbest={self.isbest})")
                 return self.PSO_step()
 
-    def find_goal_through_obstacle(self, start_x, start_y, direction_yaw, step_distance, max_raycast_distance=3.0, raycast_resolution=0.3):
+    def find_goal_through_obstacle(self, start_x, start_y, direction_yaw, step_distance, max_raycast_distance=10.0, raycast_resolution=0.3):
         """
         If the immediate goal is blocked, raycast forward to find a free point
         on the other side of the obstacle.
@@ -398,7 +397,7 @@ class Searcher:
         raycast_goal = self.find_goal_through_obstacle(
             self.pose_x, self.pose_y, new_yaw,
             step_distance=self.step_distance,
-            max_raycast_distance=3.0,  # Tune this based on your environment
+            max_raycast_distance=10.0,  # Tune this based on your environment
             raycast_resolution=0.3     # ~10 checks max for 3m range
         )
         

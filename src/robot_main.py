@@ -192,7 +192,7 @@ class Main:
                         self.searching.current_goal = goal  # Store for re-attempt if needed
                     elif goal_state in [GoalStatus.ABORTED, GoalStatus.REJECTED, GoalStatus.RECALLED, GoalStatus.PREEMPTED]:
                         rospy.logerr(f"- GOAL - FAILURE, STATUS: {self.status_dict.get(goal_state, 'UNKNOWN')} -- TRYING AGAIN")
-                        goal = self.searching.current_goal 
+                        goal = self.searching.search_step() # try again :? 
                     elif goal_state == GoalStatus.LOST:
                         rospy.logwarn(f"- GOAL - None set ")
             
@@ -245,10 +245,10 @@ class Main:
             if message.get("source") == "server":
                 if message.get("message") == "start" and self.comm_start == True:
                     self.ok_start = True
+                    break
                 elif message.get("message") == "signal_on":
                     rospy.loginfo("=== SIGNAL START ===")
                     self.searching.signal_start = True
-                    break
                 elif message.get("message") == "explain":
                     rospy.loginfo("=== WHAT AM I DOING? ===")
                     rospy.loginfo(f" - Role: {self.role} | State: {self.robot_state} ")
@@ -261,7 +261,7 @@ class Main:
                         rospy.loginfo(f" - PBest: {self.searching.p_best} | GBest: {self.searching.g_best} ")
                         rospy.loginfo(f" - RSSI Avg: {self.searching.rssi_avg} | RSSI Raw: {self.searching.rssi_raw} ")
                         rospy.loginfo(f" - Source Found: {self.searching.source_found} ")
-                    rospy.loginfo("=== END EXPLANATION ===")                              
+                    rospy.loginfo("=== END EXPLANATION ===")                            
                 else:
                     rospy.logwarn(f"- COMS - Unknown server message: {message}")
                 
