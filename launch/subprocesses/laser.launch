@@ -4,6 +4,6 @@
     <param name="serial_baudrate" value="256000"/>
     <param name="frame_id" value="laser_frame"/>
     <!--param name="scan_mode" value="Standard"/-->
-    <param name="angle_compensate" value="true"/>
+    <param name="angle_compensate" value="false"/>
   </node>
 </launch>
